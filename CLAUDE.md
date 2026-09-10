@@ -239,3 +239,8 @@ une relecture attentive.
 - **Monter `ClerkProvider` sans clé publiable fait tomber toute
   l'application.** L'absence de Clerk est un état normal : `AuthProvider` rend
   ses enfants tels quels dans ce cas.
+- **« Redeploy » sur Vercel rejoue le déploiement existant, pas le dernier
+  commit.** Quand un webhook GitHub est manqué, le bouton reconstruit
+  l'ancienne version sans rien signaler. Vérifier le SHA du déploiement avant
+  de conclure qu'un réglage est en cause : on cherche une variable manquante
+  pendant une heure alors que c'est le code qui n'est pas là.

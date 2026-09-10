@@ -79,6 +79,30 @@ son foyer, et se heurte au foyer voisin sur les dix tables et le stockage.
 3. **Variables** — dans `.env.local` et dans Vercel :
    `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` et `CLERK_SECRET_KEY`.
 
+### Deux pièges rencontrés, notés pour la prochaine fois
+
+**La page « Connect with Supabase » de Clerk vise le mauvais compte.** Elle ne
+demande pas quel compte Supabase utiliser : elle réutilise la session déjà
+ouverte dans le navigateur. Avec deux comptes Supabase, c'est le mauvais qui
+répond. La documentation Supabase prévoit le cas et décrit une configuration
+manuelle en deux points — c'est la voie à prendre :
+
+1. Clerk › Sessions › Customize session token : ajouter `{"role": "authenticated"}`.
+   Sans ce claim, Supabase refuse les jetons Clerk, **silencieusement**.
+2. Supabase › Authentication › Third-Party Auth : ajouter Clerk avec le domaine
+   de l'instance.
+
+Pour éviter tout sélecteur de compte, viser le projet par son identifiant :
+`supabase.com/dashboard/project/<ref>/auth/third-party`.
+
+L'ordre compte : un jeton émis avant l'ajout du claim reste refusé jusqu'à son
+renouvellement. En cas de doute, se déconnecter et se reconnecter.
+
+**Un « Redeploy » depuis Vercel rejoue le déploiement existant**, pas le
+dernier commit. Si le webhook GitHub a été manqué — ça arrive — le bouton
+reconstruit l'ancienne version sans le dire. Vérifier le SHA affiché sur le
+déploiement, ou pousser un commit pour forcer une construction neuve.
+
 Tant que ces trois points ne sont pas faits, l'application reste sur le lien
 magique Supabase. Elle ne prétend rien : elle fonctionne, simplement avec
 l'autre fournisseur.
