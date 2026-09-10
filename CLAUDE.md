@@ -236,6 +236,15 @@ une relecture attentive.
 - **`auth.uid()` n'est pas neutre face à un identifiant non-UUID.** Il lève
   `22P02`, ce qui fait échouer la politique au lieu de simplement refuser
   l'accès. Toute nouvelle politique lit `auth.jwt() ->> 'sub'`.
+- **Ne pas surcharger `appearance.elements` de Clerk.** Les noms d'éléments
+  changent d'une version à l'autre, et une clé devenue obsolète n'échoue pas :
+  elle est ignorée, et l'écran se dégrade en silence. Passer par
+  `appearance.variables` (`src/lib/clerk-appearance.ts`), qui est l'interface
+  publique. Et surtout : **le thème `shadcn` de `@clerk/ui` ne convient pas
+  ici** — il attend `--background`, `--foreground`, `--border`, `--primary`,
+  que ce projet ne définit pas. Résultat observé : champs sans cadre, bouton
+  sans fond, et l'étiquette d'un champ affichée deux fois parce que le
+  placeholder d'un champ devenu invisible se lisait comme du texte.
 - **Monter `ClerkProvider` sans clé publiable fait tomber toute
   l'application.** L'absence de Clerk est un état normal : `AuthProvider` rend
   ses enfants tels quels dans ce cas.

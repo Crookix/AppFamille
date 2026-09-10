@@ -3,7 +3,6 @@ import { Nunito } from 'next/font/google';
 import { ToastProvider } from '@/components/ui/toast';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { ServiceWorker } from '@/components/pwa/service-worker';
-import '@clerk/ui/themes/shadcn.css';
 import './globals.css';
 
 const nunito = Nunito({
