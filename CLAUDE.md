@@ -260,6 +260,13 @@ une relecture attentive.
   configured with the accessToken option » **à l'exécution seulement** — la
   compilation passe. Quand un fournisseur tiers tient la session, utiliser
   `createClient` de `@supabase/supabase-js`, sans cookies.
+- **Un écran qui dépend d'un script distant doit dire quand il ne vient pas.**
+  Le formulaire de Clerk est monté côté navigateur : le HTML servi ne contient
+  que l'en-tête. Si le script est bloqué — Safari iPhone et les ressources d'un
+  domaine tiers, cas le plus fréquent — la page reste figée sur le logo, sans
+  bouton ni message, indéfiniment. Toujours prévoir `ClerkLoading` avec un état
+  de chargement, puis un aveu et une porte de sortie au-delà de quelques
+  secondes.
 - **Ne pas surcharger `appearance.elements` de Clerk.** Les noms d'éléments
   changent d'une version à l'autre, et une clé devenue obsolète n'échoue pas :
   elle est ignorée, et l'écran se dégrade en silence. Passer par

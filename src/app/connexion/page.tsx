@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { isSupabaseConfigured } from '@/lib/auth';
-import { isClerkConfigured } from '@/lib/clerk';
+import { clerkHostedSignInUrl, isClerkConfigured } from '@/lib/clerk';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { ClerkSignIn } from '@/components/auth/clerk-sign-in';
 import { SetupNotice } from '@/components/auth/setup-notice';
@@ -40,7 +40,10 @@ export default async function ConnexionPage({
       {!configured ? (
         <SetupNotice />
       ) : viaClerk ? (
-        <ClerkSignIn redirectTo={params.suite ?? '/'} />
+        <ClerkSignIn
+          redirectTo={params.suite ?? '/'}
+          portalUrl={clerkHostedSignInUrl(params.suite ?? '/')}
+        />
       ) : (
         <SignInForm
           redirectTo={params.suite ?? '/'}

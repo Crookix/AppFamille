@@ -54,3 +54,25 @@ export function clerkInstanceDomain(): string | null {
     return null;
   }
 }
+
+/**
+ * Adresse du portail de connexion hébergé par Clerk.
+ *
+ * Filet de secours quand le composant embarqué ne se monte pas : le portail
+ * est une page servie par Clerk, qui n'a besoin d'aucun script tiers. C'est
+ * exactement le cas des navigateurs qui bloquent les ressources d'un domaine
+ * tiers — Safari sur iPhone, en premier lieu.
+ *
+ * Le domaine du portail est celui de l'instance sans l'étiquette « clerk » :
+ * `mon-instance.clerk.accounts.dev` devient `mon-instance.accounts.dev`.
+ */
+export function clerkHostedSignInUrl(redirectTo = '/'): string | null {
+  const domain = clerkInstanceDomain();
+  if (!domain) return null;
+
+  const portal = domain.replace(/(^|\.)clerk\./, '$1');
+  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? '';
+  const retour = encodeURIComponent(`${base}${redirectTo}`);
+
+  return `https://${portal}/sign-in?redirect_url=${retour}`;
+}
