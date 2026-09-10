@@ -89,7 +89,10 @@ ce qui fait échouer la compilation si un composant client les importe.
 
 ## Hébergement
 
-Prévu pour Vercel : importer le dépôt, reporter les variables de `.env.example`
-dans les réglages du projet, et mettre `NEXT_PUBLIC_SITE_URL` à l'adresse
-publique. Penser à ajouter cette adresse aux URI de redirection autorisés côté
-Google et côté Supabase.
+En ligne sur Vercel : **<https://tribu-umber.vercel.app>**, redéployé à chaque
+push. Tant que les variables d'environnement ne sont pas renseignées dans les
+réglages du projet Vercel, l'application affiche « Installation à terminer » et
+la marche à suivre — c'est voulu, pas une panne.
+
+La liste exacte des variables, et l'URI de redirection à déclarer côté Google
+et côté Supabase, sont dans [`docs/AVANCEMENT.md`](docs/AVANCEMENT.md).

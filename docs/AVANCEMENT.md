@@ -29,14 +29,52 @@ donne 36 conformités sur 36. Le détail est dans [`TESTS.md`](TESTS.md).
 
 ---
 
+## Hébergement
+
+Le projet Vercel existe : **`tribu`**, sur l'équipe « Adri's projects », relié à
+`Crookix/AppFamille`. Chaque push sur la branche de production redéploie
+automatiquement.
+
+- Adresse publique : <https://tribu-umber.vercel.app>
+- Tableau de bord : <https://vercel.com/adris-projects-cf9c71fa/tribu>
+
+Le premier déploiement est en ligne et se comporte comme prévu : faute de
+variables d'environnement, il affiche « Installation à terminer » et la marche
+à suivre — pas une pile d'erreurs. C'est le comportement voulu, mais l'appli ne
+sera utilisable qu'une fois les variables renseignées (étape 1 ci-dessous).
+
+**À savoir : le dépôt GitHub est public.** Aucun secret n'y figure — c'est
+vérifié — mais le code, les migrations et cette documentation sont visibles de
+tous. Si ce n'est pas voulu, passez le dépôt en privé ; Vercel continuera de
+déployer.
+
+---
+
 ## Ce qui vous attend
 
 Trois choses ne peuvent pas être faites depuis l'environnement de
 développement. Elles sont classées de la plus courte à la plus longue.
 
-### 1. Renseigner les deux secrets manquants — 2 minutes
+### 1. Renseigner les variables d'environnement — 5 minutes
 
-`.env.local` contient déjà l'URL et la clé publiable du projet Supabase. Deux
+**Sur Vercel** (Settings › Environment Variables), pour les trois
+environnements. Les deux premières sont publiques par construction — la
+sécurité repose sur la RLS, pas sur leur secret :
+
+```
+NEXT_PUBLIC_SUPABASE_URL       = https://<votre-projet>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY  = sb_publishable_…
+NEXT_PUBLIC_SITE_URL           = https://tribu-umber.vercel.app
+NEXT_PUBLIC_ENABLE_DEMO        = 1
+SUPABASE_SERVICE_ROLE_KEY      = …            (secret)
+TOKEN_ENCRYPTION_KEY           = …            (secret)
+```
+
+`NEXT_PUBLIC_SITE_URL` compte : c'est elle qui fabrique les liens d'invitation
+et l'URI de retour Google. Laissée sur `localhost`, les invitations envoyées
+depuis la production pointeraient vers le poste de développement.
+
+**En local**, `.env.local` contient déjà l'URL et la clé publiable. Deux
 valeurs restent vides :
 
 ```bash
