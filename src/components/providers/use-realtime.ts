@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/components/providers/use-supabase';
 
 /**
  * Rafraîchit l'écran quand une table du foyer change chez quelqu'un d'autre.
@@ -20,7 +20,7 @@ import { createClient } from '@/lib/supabase/client';
  */
 export function useHouseholdRealtime(householdId: string, tables: string[]) {
   const router = useRouter();
-  const supabase = React.useMemo(() => createClient(), []);
+  const supabase = useSupabase();
 
   // Les appelants passent un tableau littéral, recréé à chaque rendu ; on le
   // fige en chaîne pour ne pas réabonner le canal à chaque fois.

@@ -664,6 +664,15 @@ export type Database = {
         Args: { p_token: string };
         Returns: string;
       };
+      ensure_profile: {
+        Args: {
+          p_email?: string | null;
+          p_full_name?: string | null;
+          p_avatar_url?: string | null;
+          p_provider?: string | null;
+        };
+        Returns: string;
+      };
       invitation_preview: {
         Args: { p_token: string };
         Returns: {

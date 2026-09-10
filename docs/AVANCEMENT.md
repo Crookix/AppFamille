@@ -50,6 +50,41 @@ déployer.
 
 ---
 
+## Authentification : Clerk est câblé
+
+Depuis la migration `0013`, le schéma ne dépend plus de Supabase Auth.
+L'identité d'un utilisateur y est un **texte opaque** lu dans le jeton
+(`auth.jwt() ->> 'sub'`), et non plus un `uuid` emprunté à `auth.users`.
+
+Conséquence : **les deux fournisseurs fonctionnent**, et c'est la configuration
+qui tranche. Si `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` et `CLERK_SECRET_KEY` sont
+présentes, Clerk prend la main ; sinon le lien magique Supabase continue comme
+avant. Retirer une variable suffit à revenir en arrière.
+
+Vérifié sur la base réelle : une identité au format Clerk crée son profil et
+son foyer, et se heurte au foyer voisin sur les dix tables et le stockage.
+34 vérifications, 34 conformes.
+
+### Ce qu'il reste à faire, côté tableaux de bord
+
+1. **Clerk** — la page « Connect with Supabase »
+   (dashboard.clerk.com/setup/supabase) configure l'instance pour Supabase.
+   Elle ajoute notamment le claim `role: authenticated` aux jetons de session,
+   sans lequel Supabase les refuse.
+
+2. **Supabase** — Authentication › Third-Party Auth › ajouter Clerk, avec le
+   domaine de l'instance. Il se lit dans la clé publiable ; pour l'instance
+   actuelle : `sure-seasnail-9391.clerk.accounts.dev`.
+
+3. **Variables** — dans `.env.local` et dans Vercel :
+   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` et `CLERK_SECRET_KEY`.
+
+Tant que ces trois points ne sont pas faits, l'application reste sur le lien
+magique Supabase. Elle ne prétend rien : elle fonctionne, simplement avec
+l'autre fournisseur.
+
+---
+
 ## Ce qui vous attend
 
 Trois choses ne peuvent pas être faites depuis l'environnement de

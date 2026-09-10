@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getActiveHousehold, requireUser } from '@/lib/auth';
+import { ensureProfile, getActiveHousehold, requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { OnboardingFlow } from '@/components/onboarding/onboarding-flow';
 
@@ -8,6 +8,11 @@ export const metadata: Metadata = { title: 'Bienvenue' };
 
 export default async function BienvenuePage() {
   const user = await requireUser();
+
+  // Avec Clerk, aucun déclencheur ne crée le profil : c'est ici, au premier
+  // écran qui suit la connexion, qu'il prend naissance. L'appel est
+  // idempotent et ne réécrit jamais un prénom déjà choisi.
+  await ensureProfile(user);
 
   // Déjà membre d'un foyer : ce parcours n'a plus lieu d'être.
   const active = await getActiveHousehold();

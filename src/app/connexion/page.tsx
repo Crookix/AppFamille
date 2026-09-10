@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { isSupabaseConfigured } from '@/lib/auth';
+import { isClerkConfigured } from '@/lib/clerk';
 import { SignInForm } from '@/components/auth/sign-in-form';
+import { ClerkSignIn } from '@/components/auth/clerk-sign-in';
 import { SetupNotice } from '@/components/auth/setup-notice';
 
 export const metadata: Metadata = { title: 'Connexion' };
@@ -13,6 +15,10 @@ export default async function ConnexionPage({
   const params = await searchParams;
   const configured = isSupabaseConfigured();
   const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID);
+  // Clerk, quand il est branché, remplace le formulaire de lien magique.
+  // Les deux ne s'affichent jamais ensemble : deux façons de se connecter
+  // côte à côte, c'est une hésitation, pas un choix.
+  const viaClerk = isClerkConfigured();
 
   return (
     <main
@@ -31,7 +37,11 @@ export default async function ConnexionPage({
         </p>
       </div>
 
-      {configured ? (
+      {!configured ? (
+        <SetupNotice />
+      ) : viaClerk ? (
+        <ClerkSignIn redirectTo={params.suite ?? '/'} />
+      ) : (
         <SignInForm
           redirectTo={params.suite ?? '/'}
           googleEnabled={googleEnabled}
@@ -43,8 +53,6 @@ export default async function ConnexionPage({
                 : null
           }
         />
-      ) : (
-        <SetupNotice />
       )}
     </main>
   );

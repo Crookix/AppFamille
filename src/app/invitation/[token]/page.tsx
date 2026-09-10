@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CalendarClock, CircleSlash, Home, ShieldX } from 'lucide-react';
-import { getUser, isSupabaseConfigured } from '@/lib/auth';
+import { ensureProfile, getUser, isSupabaseConfigured } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AcceptInvitation } from '@/components/onboarding/accept-invitation';
 
@@ -53,6 +53,10 @@ export default async function InvitationPage({
   }
 
   const user = await getUser();
+  // L'invité peut arriver ici sans être jamais passé par « Bienvenue » :
+  // son profil doit exister avant qu'accept_invitation n'aille y chercher
+  // son prénom.
+  if (user) await ensureProfile(user);
 
   // L'aperçu n'est lisible que connecté : il faut un compte pour rejoindre
   // un foyer, et cela évite d'exposer le nom d'un foyer à un lien deviné.

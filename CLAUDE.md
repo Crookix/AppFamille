@@ -20,7 +20,6 @@ vérifications dans [`docs/TESTS.md`](docs/TESTS.md), l'intégration Google dans
 | `npm run build` | Compilation de production (échoue sur la moindre erreur TypeScript) |
 | `npm start` | Sert la compilation de production |
 | `npm run typecheck` | `tsc --noEmit` — plus rapide que `build` pour une boucle de travail |
-| `npm run lint` | ESLint via Next |
 | `npm test` | Tests unitaires Vitest (logique pure : récurrence, gardes, ingrédients, Google) |
 | `npm run test:watch` | Les mêmes, en continu |
 | `npm run test:e2e` | Parcours navigateur Playwright — demande une application qui tourne |
@@ -60,7 +59,7 @@ src/
     api/google/       connexion, retour d'autorisation, synchronisation, révocation
     auth/callback/    retour d'authentification Supabase
     bienvenue/        création ou choix du foyer
-    connexion/        e-mail + mot de passe, lien magique, Google
+    connexion/        lien magique Supabase, ou Clerk s'il est configuré
     invitation/[token]/  aperçu et acceptation d'une invitation
   components/         composants d'interface, groupés par domaine
   lib/
@@ -68,7 +67,8 @@ src/
     data/             lectures composées, appelées par les Server Components
     google/           OAuth, client API, correspondance et synchronisation
     supabase/         quatre clients : navigateur, serveur, middleware, admin
-    auth.ts           utilisateur connecté, foyer actif
+    auth.ts           utilisateur connecté (Clerk ou Supabase), foyer actif
+    clerk.ts          détection de Clerk, domaine de l'instance
     recurrence.ts     RRULE, expansion des occurrences
     childcare.ts      heures de garde et bilans mensuels
     ingredients.ts    normalisation et agrégation des ingrédients
@@ -86,6 +86,12 @@ tests/unit/           tests Vitest
 | `supabase/server.ts` | Server Components et Server Actions | clé publiable, session de l'utilisateur, RLS active |
 | `supabase/middleware.ts` | rafraîchissement de session | ne fait que ça |
 | `supabase/admin.ts` | `service_role`, **contourne la RLS** | serveur uniquement, et seulement là où c'est indispensable |
+
+Côté navigateur, ne pas appeler `createClient()` directement dans un composant
+qui lit des données : passer par `useSupabase()`. Avec Clerk, le jeton ne vient
+plus des cookies, et un client mal outillé partirait en anonyme — la RLS ne
+renverrait rien et l'écran s'afficherait vide, sans erreur. C'est le genre de
+panne qu'on met une heure à diagnostiquer.
 
 `admin.ts` est réservé à trois usages : la synchronisation Google (qui agit pour
 le compte d'un utilisateur absent), le chargement du foyer de démonstration, et
@@ -188,6 +194,10 @@ négocient pas.
 1. **Chaque table porte `household_id` et une politique RLS fondée sur
    `is_household_member()`.** Les données d'un foyer ne sortent jamais de ce
    foyer.
+   L'identité de l'appelant est un **texte** lu dans le jeton
+   (`auth.jwt() ->> 'sub'`), jamais `auth.uid()` : avec un identifiant Clerk,
+   `auth.uid()` ne renvoie pas NULL, il lève `22P02` et fait tomber la
+   politique entière. Voir la migration `0013`.
 2. **Aucun secret ne franchit la frontière du navigateur.** Seules les variables
    `NEXT_PUBLIC_*` sont publiques. `SUPABASE_SERVICE_ROLE_KEY`,
    `TOKEN_ENCRYPTION_KEY`, `GOOGLE_CLIENT_SECRET` et les jetons Google restent
@@ -223,3 +233,9 @@ une relecture attentive.
   dans la liste de courses.
 - **Un fichier de route Next ne peut exporter que ses gestionnaires HTTP.** Les
   constantes partagées vont dans `src/lib/`.
+- **`auth.uid()` n'est pas neutre face à un identifiant non-UUID.** Il lève
+  `22P02`, ce qui fait échouer la politique au lieu de simplement refuser
+  l'accès. Toute nouvelle politique lit `auth.jwt() ->> 'sub'`.
+- **Monter `ClerkProvider` sans clé publiable fait tomber toute
+  l'application.** L'absence de Clerk est un état normal : `AuthProvider` rend
+  ses enfants tels quels dans ce cas.

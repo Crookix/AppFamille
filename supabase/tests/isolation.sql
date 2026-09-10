@@ -32,7 +32,7 @@
 
 begin;
 
-create temporary table _t (cle text primary key, valeur uuid) on commit drop;
+create temporary table _t (cle text primary key, valeur text) on commit drop;
 create temporary table _r (
   ordre serial,
   domaine text,
@@ -54,14 +54,14 @@ grant usage on sequence _r_ordre_seq to authenticated;
 
 do $$
 declare
-  v_camille uuid := gen_random_uuid();
-  v_alex    uuid := gen_random_uuid();
-  v_intrus  uuid := gen_random_uuid();
+  v_camille text := gen_random_uuid()::text;
+  v_alex    text := gen_random_uuid()::text;
+  v_intrus  text := gen_random_uuid()::text;
 begin
   insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
                           email_confirmed_at, created_at, updated_at,
                           raw_app_meta_data, raw_user_meta_data)
-  select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+  select u.id::uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          u.email, extensions.crypt('VerifTribu!2026', extensions.gen_salt('bf')), now(), now(), now(),
          '{"provider":"email","providers":["email"]}'::jsonb,
          jsonb_build_object('full_name', u.nom)
@@ -77,7 +77,7 @@ end $$;
 -- Foyer A, monté par Camille via le RPC applicatif (donc soumis à ses règles).
 do $$
 declare
-  v_camille uuid := (select valeur from _t where cle='camille');
+  v_camille text := (select valeur from _t where cle='camille');
   v_foyer_a uuid;
 begin
   perform set_config('request.jwt.claims',
@@ -100,22 +100,22 @@ begin
   values (v_foyer_a, v_foyer_a::text || '/billet-prive.pdf', 'billet-prive.pdf', v_camille);
 
   reset role;
-  insert into _t values ('foyer_a', v_foyer_a);
+  insert into _t values ('foyer_a', v_foyer_a::text);
 end $$;
 
 -- Un objet de stockage réel dans l'espace du foyer A.
 insert into storage.objects (bucket_id, name, owner, owner_id, metadata)
 select 'attachments',
-       (select valeur from _t where cle='foyer_a')::text || '/billet-prive.pdf',
+       (select valeur from _t where cle='foyer_a') || '/billet-prive.pdf',
+       (select valeur from _t where cle='camille')::uuid,
        (select valeur from _t where cle='camille'),
-       (select valeur from _t where cle='camille')::text,
        '{"mimetype":"application/pdf","size":1024}'::jsonb;
 
 -- Foyer B, monté par Alex. L'intrus y est un adulte SANS droits d'admin.
 do $$
 declare
-  v_alex   uuid := (select valeur from _t where cle='alex');
-  v_intrus uuid := (select valeur from _t where cle='intrus');
+  v_alex   text := (select valeur from _t where cle='alex');
+  v_intrus text := (select valeur from _t where cle='intrus');
   v_foyer_b uuid;
 begin
   perform set_config('request.jwt.claims',
@@ -127,12 +127,12 @@ begin
   insert into public.household_members (household_id, user_id, role, display_name)
   values (v_foyer_b, v_intrus, 'adulte', 'Intrus');
 
-  insert into _t values ('foyer_b', v_foyer_b);
+  insert into _t values ('foyer_b', v_foyer_b::text);
 end $$;
 
 -- Invitations du foyer A dans les quatre états possibles.
 insert into public.invitations (household_id, role, token_hash, created_at, expires_at, created_by, revoked_at, accepted_at, accepted_by)
-select (select valeur from _t where cle='foyer_a'), 'adulte',
+select (select valeur from _t where cle='foyer_a')::uuid, 'adulte',
        encode(extensions.digest(i.jeton, 'sha256'), 'hex'),
        i.cree, i.expire, (select valeur from _t where cle='camille'),
        i.revoque, i.accepte,
@@ -150,9 +150,9 @@ from (values
 
 do $$
 declare
-  a uuid := (select valeur from _t where cle='foyer_a');
-  b uuid := (select valeur from _t where cle='foyer_b');
-  v_alex uuid := (select valeur from _t where cle='alex');
+  a uuid := (select valeur from _t where cle='foyer_a')::uuid;
+  b uuid := (select valeur from _t where cle='foyer_b')::uuid;
+  v_alex text := (select valeur from _t where cle='alex');
   n int;
 begin
   perform set_config('request.jwt.claims',
@@ -213,9 +213,9 @@ end $$;
 
 do $$
 declare
-  a uuid := (select valeur from _t where cle='foyer_a');
-  b uuid := (select valeur from _t where cle='foyer_b');
-  v_alex uuid := (select valeur from _t where cle='alex');
+  a uuid := (select valeur from _t where cle='foyer_a')::uuid;
+  b uuid := (select valeur from _t where cle='foyer_b')::uuid;
+  v_alex text := (select valeur from _t where cle='alex');
   n int;
 begin
   perform set_config('request.jwt.claims',
@@ -314,7 +314,7 @@ begin
 
   begin
     insert into storage.objects (bucket_id, name, owner, owner_id, metadata)
-    values ('attachments', a::text || '/intrusion.pdf', v_alex, v_alex::text, '{}'::jsonb);
+    values ('attachments', a::text || '/intrusion.pdf', v_alex::uuid, v_alex, '{}'::jsonb);
     insert into _r (domaine, tentative, observe, verdict)
       values ('Pièces jointes', 'Déposer un fichier dans l''espace du foyer A', 'déposé', 'FAILLE');
   exception when others then
@@ -351,9 +351,9 @@ end $$;
 
 do $$
 declare
-  b uuid := (select valeur from _t where cle='foyer_b');
-  v_alex uuid := (select valeur from _t where cle='alex');
-  v_intrus uuid := (select valeur from _t where cle='intrus');
+  b uuid := (select valeur from _t where cle='foyer_b')::uuid;
+  v_alex text := (select valeur from _t where cle='alex');
+  v_intrus text := (select valeur from _t where cle='intrus');
   n int;
 begin
   perform set_config('request.jwt.claims',
@@ -412,8 +412,8 @@ end $$;
 
 do $$
 declare
-  v_intrus uuid := (select valeur from _t where cle='intrus');
-  a uuid := (select valeur from _t where cle='foyer_a');
+  v_intrus text := (select valeur from _t where cle='intrus');
+  a uuid := (select valeur from _t where cle='foyer_a')::uuid;
   v_res uuid;
   v_state text;
   n int;

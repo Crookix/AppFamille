@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Nunito } from 'next/font/google';
 import { ToastProvider } from '@/components/ui/toast';
+import { AuthProvider } from '@/components/providers/auth-provider';
 import { ServiceWorker } from '@/components/pwa/service-worker';
+import '@clerk/ui/themes/shadcn.css';
 import './globals.css';
 
 const nunito = Nunito({
@@ -68,7 +70,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Aller au contenu
         </a>
-        <ToastProvider>{children}</ToastProvider>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
         <ServiceWorker />
       </body>
     </html>

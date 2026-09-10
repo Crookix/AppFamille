@@ -53,8 +53,8 @@ Les données d'un foyer ne sortent pas de ce foyer. Ce n'est pas une intention,
 c'est vérifié : `supabase/tests/isolation.sql` tente, depuis un compte
 extérieur, de lire, modifier, supprimer et insérer dans un autre foyer, de
 télécharger ses pièces jointes, de s'y ajouter comme membre, de lire les jetons
-Google, et d'accepter des invitations expirées ou déjà utilisées. Dernière
-exécution : **36 vérifications, 36 conformes**.
+Google, et d'accepter des invitations expirées ou déjà utilisées. Dernière exécution : **34 vérifications, 34 conformes**, avec deux
+fournisseurs d'authentification en présence.
 
 Aucun secret n'atteint le navigateur : la clé `service_role`, la clé de
 chiffrement et les jetons Google vivent dans des modules marqués `server-only`,

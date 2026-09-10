@@ -42,7 +42,14 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
   se promouvoir, modifier la fiche d'un autre membre, exclure l'administrateur ;
 - accepter une invitation expirée, révoquée, déjà utilisée, ou inventée.
 
-**Résultat de la dernière exécution : 36 vérifications, 36 conformes.**
+**Résultat de la dernière exécution : 34 vérifications, 34 conformes.**
+
+Depuis la migration `0013`, le script fait intervenir **deux fournisseurs
+d'authentification à la fois** : Camille et Alex arrivent par Supabase Auth,
+Chloé par une identité au format Clerk (`user_2abc…`) qui n'existe dans aucune
+table `auth.users`. Elle crée son profil et son foyer, puis se heurte au foyer
+d'à côté sur les dix tables et le stockage. C'est la vérification qui compte
+le plus : elle prouve que le découplage n'a pas ouvert de porte.
 
 Les lignes marquées « TÉMOIN » comptent autant que les autres. Sans elles, une
 session inerte renverrait zéro partout et l'on conclurait à tort à
@@ -215,7 +222,7 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 
 | Domaine | Vérifié comment | État |
 | --- | --- | --- |
-| Étanchéité entre foyers | Base Supabase réelle, RLS active | **36/36** |
+| Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **34/34** |
 | Invitations : expiration, révocation, rejeu, jeton inventé | Base réelle | **conforme** |
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
