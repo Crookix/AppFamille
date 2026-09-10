@@ -15,6 +15,7 @@ import { Badge, EmptyState } from '@/components/ui/primitives';
 import { Sheet } from '@/components/ui/sheet';
 import { Avatar } from '@/components/ui/avatar';
 import { useHousehold } from '@/components/providers/household-provider';
+import { useHouseholdRealtime } from '@/components/providers/use-realtime';
 import { EventCard } from '@/components/calendar/event-card';
 import { EventDetailSheet } from '@/components/events/event-detail-sheet';
 import { EventSheet } from '@/components/events/event-sheet';
@@ -58,6 +59,9 @@ export function CalendarView({
   const { household, members, children } = useHousehold();
   const tz = household.timezone;
   const today = todayIn(tz);
+
+  // Un événement ajouté ou déplacé par l'autre parent apparaît sans recharger.
+  useHouseholdRealtime(household.id, ['events', 'event_participants']);
 
   const [selected, setSelected] = React.useState<SerializedOccurrence | null>(null);
   const [filtersOpen, setFiltersOpen] = React.useState(false);

@@ -16,6 +16,7 @@ import { Card, EmptyState } from '@/components/ui/primitives';
 import { Sheet } from '@/components/ui/sheet';
 import { useToast } from '@/components/ui/toast';
 import { useHousehold } from '@/components/providers/household-provider';
+import { useHouseholdRealtime } from '@/components/providers/use-realtime';
 import { MealSheet, SLOT_LABELS } from '@/components/meals/meal-sheet';
 import { RecipeSheet } from '@/components/meals/recipe-sheet';
 import { ShoppingPreviewSheet } from '@/components/meals/shopping-preview-sheet';
@@ -42,6 +43,9 @@ export function MealPlanner({
   const router = useRouter();
   const toast = useToast();
   const { household } = useHousehold();
+
+  // Le planning des repas se remplit souvent à deux, chacun de son côté.
+  useHouseholdRealtime(household.id, ['meals']);
   const today = todayIn(household.timezone);
 
   const [editing, setEditing] = React.useState<{ day: string; slot: MealSlot } | null>(null);

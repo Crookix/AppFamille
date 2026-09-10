@@ -12,8 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "db:push": "node scripts/db-push.mjs",
-    "db:seed": "node scripts/seed-demo.mjs"
+    "db:push": "node scripts/db-push.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
