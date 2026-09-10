@@ -260,6 +260,15 @@ une relecture attentive.
   configured with the accessToken option » **à l'exécution seulement** — la
   compilation passe. Quand un fournisseur tiers tient la session, utiliser
   `createClient` de `@supabase/supabase-js`, sans cookies.
+- **Les organisations Clerk bloquent la session tant qu'elles ne sont pas
+  réglées.** Instance avec les organisations activées : après connexion, Clerk
+  impose un écran « Configurer votre organisation ». Tant qu'il n'est pas
+  franchi, la session reste en attente et `auth()` ne renvoie rien au serveur —
+  l'application ne voit donc personne, et aucun profil n'est créé. Le symptôme
+  trompe : la personne est bien « connectée » selon Clerk, mais l'application se
+  comporte comme si elle ne l'était pas. Tribu n'utilise pas les organisations :
+  **les désactiver dans le tableau de bord Clerk.** Et attention, on ne
+  reproduit pas le problème depuis un compte qui a déjà franchi l'étape.
 - **Un écran qui dépend d'un script distant doit dire quand il ne vient pas.**
   Le formulaire de Clerk est monté côté navigateur : le HTML servi ne contient
   que l'en-tête. Si le script est bloqué — Safari iPhone et les ressources d'un
