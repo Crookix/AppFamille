@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { ACTIVE_HOUSEHOLD_COOKIE, getUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { forgetPendingInvitation } from '@/lib/invitations.server';
 import { fail, humanizeDbError, ok, requireActiveHousehold, requireMembership } from './_helpers';
 import type { Database } from '@/lib/database.types';
 
@@ -60,6 +61,10 @@ export async function createHouseholdAction(input: {
     maxAge: 60 * 60 * 24 * 365,
   });
 
+  // On NE touche PAS à l'invitation éventuellement en attente. Créer son
+  // propre foyer n'annule pas celle qu'on a reçue : elle vaut encore sept
+  // jours, on peut appartenir à plusieurs foyers, et le lien n'est peut-être
+  // plus dans les messages. La jeter ici serait une perte silencieuse.
   revalidatePath('/', 'layout');
   return ok({ householdId: data as string });
 }
@@ -287,6 +292,9 @@ export async function acceptInvitationAction(token: string) {
     path: '/',
     maxAge: 60 * 60 * 24 * 365,
   });
+
+  // L'invitation a servi : on cesse de la reproposer sur l'écran de bienvenue.
+  await forgetPendingInvitation();
 
   revalidatePath('/', 'layout');
   return ok({ householdId: data as string });
