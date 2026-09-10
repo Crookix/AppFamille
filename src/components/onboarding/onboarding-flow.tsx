@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, Copy, Plus, Trash2, UserPlus } from 'lucide-react';
+import { ArrowRight, Check, Copy, FlaskConical, Plus, Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ErrorNote, Field, Input, Select } from '@/components/ui/primitives';
 import { Avatar, ColorPicker } from '@/components/ui/avatar';
@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/toast';
 import { MEMBER_COLORS, nextFreeColor } from '@/lib/utils';
 import { createHouseholdAction, createInvitationAction } from '@/lib/actions/household';
 import { createChildAction } from '@/lib/actions/children';
+import { loadDemoHouseholdAction } from '@/lib/actions/demo';
 
 type DraftChild = {
   key: string;
@@ -34,7 +35,13 @@ const TIMEZONES = [
  * les enfants (facultatif), inviter l'autre adulte (facultatif). Chaque étape
  * peut être passée — on peut se servir de l'application dès la première.
  */
-export function OnboardingFlow({ suggestedName }: { suggestedName: string }) {
+export function OnboardingFlow({
+  suggestedName,
+  demoEnabled,
+}: {
+  suggestedName: string;
+  demoEnabled: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
 
@@ -55,6 +62,7 @@ export function OnboardingFlow({ suggestedName }: { suggestedName: string }) {
   // Étape 3
   const [inviteLink, setInviteLink] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  const [loadingDemo, setLoadingDemo] = React.useState(false);
 
   // Fuseau du navigateur, s'il fait partie de la liste proposée.
   React.useEffect(() => {
@@ -157,6 +165,29 @@ export function OnboardingFlow({ suggestedName }: { suggestedName: string }) {
   }
 
   function finish() {
+    router.push('/');
+    router.refresh();
+  }
+
+  /**
+   * Charge le foyer d'exemple.
+   *
+   * Proposé ici parce que c'est le moment où l'on veut voir à quoi ressemble
+   * l'application avant d'y saisir sa propre vie.
+   */
+  async function loadDemo() {
+    setLoadingDemo(true);
+    setError(null);
+
+    const result = await loadDemoHouseholdAction();
+    setLoadingDemo(false);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    toast.success('Foyer de démonstration chargé.');
     router.push('/');
     router.refresh();
   }
@@ -365,6 +396,20 @@ export function OnboardingFlow({ suggestedName }: { suggestedName: string }) {
         <p className="mt-4 text-center text-xs text-muted">
           Votre foyer est créé. Les étapes suivantes sont facultatives.
         </p>
+      ) : null}
+
+      {step === 1 && demoEnabled ? (
+        <div className="mt-6 text-center">
+          <p className="mb-2 text-sm text-muted">Envie de voir avant de vous lancer ?</p>
+          <Button variant="ghost" onClick={loadDemo} loading={loadingDemo}>
+            {loadingDemo ? null : <FlaskConical className="h-4 w-4" aria-hidden />}
+            Explorer un foyer de démonstration
+          </Button>
+          <p className="mt-1.5 text-xs text-muted">
+            Deux adultes, deux enfants, une nounou et une semaine d'exemples.
+            Supprimable à tout moment.
+          </p>
+        </div>
       ) : null}
     </div>
   );

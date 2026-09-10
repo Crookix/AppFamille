@@ -48,7 +48,19 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={nunito.variable}>
+    <html lang="fr" className={nunito.variable} suppressHydrationWarning>
+      <head>
+        {/*
+          Applique le thème mémorisé AVANT le premier rendu. Sans ce script,
+          l'écran s'afficherait une fraction de seconde en clair avant de
+          basculer en sombre.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('tribu-theme');if(t&&t!=='auto')document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+          }}
+        />
+      </head>
       <body>
         <a
           href="#contenu"

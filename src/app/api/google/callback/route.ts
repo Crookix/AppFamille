@@ -8,11 +8,11 @@ import {
   exchangeCode,
   GOOGLE_CALENDAR_SCOPES,
   isGoogleConfigured,
+  STATE_COOKIE,
   statesMatch,
 } from '@/lib/google/oauth';
 import { GoogleCalendarClient } from '@/lib/google/client';
 import { canWrite } from '@/lib/google/mapping';
-import { STATE_COOKIE } from '@/app/api/google/connect/route';
 
 /**
  * Retour d'autorisation Google Agenda.

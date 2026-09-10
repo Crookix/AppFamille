@@ -28,7 +28,10 @@ export default async function BienvenuePage() {
 
   return (
     <main id="contenu" className="min-h-dvh px-5 py-10">
-      <OnboardingFlow suggestedName={suggested} />
+      <OnboardingFlow
+        suggestedName={suggested}
+        demoEnabled={process.env.NEXT_PUBLIC_ENABLE_DEMO === '1'}
+      />
     </main>
   );
 }

@@ -6,9 +6,8 @@ import {
   createStateToken,
   hashState,
   isGoogleConfigured,
+  STATE_COOKIE,
 } from '@/lib/google/oauth';
-
-export const STATE_COOKIE = 'tribu_google_state';
 
 /**
  * Démarre l'autorisation Google Agenda.

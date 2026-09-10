@@ -47,6 +47,14 @@ export function googleRedirectUri(): string {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Cookie portant le condensat du jeton d'état.
+ *
+ * Il vit ici et non dans le fichier de route : une route Next.js ne peut
+ * exporter que ses gestionnaires HTTP.
+ */
+export const STATE_COOKIE = 'tribu_google_state';
+
+/**
  * Jeton d'état anti-CSRF.
  *
  * Sans lui, un tiers pourrait faire aboutir SON autorisation Google dans le
