@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/* --------------------------------------------------------------------------
+   Tribu — identité visuelle
+   Chaleureuse, douce, lisible sur téléphone : fond blanc cassé tirant vers
+   l'abricot, cartes très arrondies, typographie ronde, couleurs sourdes.
+   -------------------------------------------------------------------------- */
+
+@theme {
+  --font-sans: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+
+  /* Sable — fonds et surfaces */
+  --color-sand-50: #fffcf8;
+  --color-sand-100: #fdf5ec;
+  --color-sand-200: #f6e9da;
+  --color-sand-300: #ecd8c2;
+
+  /* Encre — textes */
+  --color-ink-900: #34291f;
+  --color-ink-700: #5a4a3c;
+  --color-ink-500: #8a7867;
+  --color-ink-300: #bfae9c;
+
+  /* Terracotta — couleur principale */
+  --color-brand-50: #fdf1ed;
+  --color-brand-100: #fbdfd6;
+  --color-brand-200: #f6bda9;
+  --color-brand-400: #e88d6b;
+  --color-brand-500: #de6f47;
+  --color-brand-600: #c85a33;
+  --color-brand-700: #a4472a;
+
+  /* Sauge — couleur secondaire */
+  --color-sage-100: #e5f0e9;
+  --color-sage-300: #a8cdb6;
+  --color-sage-500: #6da887;
+  --color-sage-700: #467a5d;
+
+  /* Miel — accent */
+  --color-honey-100: #fdf0d5;
+  --color-honey-300: #f6d38a;
+  --color-honey-500: #e9b04a;
+  --color-honey-700: #b9822a;
+
+  /* Rouge doux — retards, suppressions */
+  --color-alert-100: #fbe0dd;
+  --color-alert-500: #d1584c;
+  --color-alert-700: #a03d33;
+
+  --radius-xl2: 1.25rem;
+  --radius-xl3: 1.75rem;
+}
+
+/* --------------------------------------------------------------------------
+   Jetons sémantiques : clair par défaut, redéfinis en sombre.
+   -------------------------------------------------------------------------- */
+:root {
+  --bg: var(--color-sand-100);
+  --bg-elevated: #ffffff;
+  --bg-subtle: var(--color-sand-200);
+  --fg: var(--color-ink-900);
+  --fg-muted: var(--color-ink-500);
+  --line: var(--color-sand-300);
+  --ring: var(--color-brand-500);
+  --shadow-card: 0 1px 2px rgb(52 41 31 / 0.04), 0 8px 24px -12px rgb(52 41 31 / 0.16);
+  color-scheme: light;
+}
+
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --bg: #1b1613;
+    --bg-elevated: #241d19;
+    --bg-subtle: #2e2621;
+    --fg: #f6ece1;
+    --fg-muted: #b09b88;
+    --line: #3b302a;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1b1613;
+  --bg-elevated: #241d19;
+  --bg-subtle: #2e2621;
+  --fg: #f6ece1;
+  --fg-muted: #b09b88;
+  --line: #3b302a;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    /* Encoche et barre de gestes iOS */
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior-y: none;
+  }
+
+  /* Cible tactile confortable partout. */
+  button,
+  [role="button"],
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  ::selection {
+    background: var(--color-brand-200);
+    color: var(--color-ink-900);
+  }
+}
+
+@layer utilities {
+  .surface {
+    background-color: var(--bg-elevated);
+    box-shadow: var(--shadow-card);
+  }
+
+  .text-muted {
+    color: var(--fg-muted);
+  }
+
+  .safe-bottom {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  }
+
+  /* Masque la scrollbar sur les carrousels horizontaux (jours, filtres). */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-in-up {
+    animation: tribu-in-up 0.18s ease-out both;
+  }
+}
+
+@keyframes tribu-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
