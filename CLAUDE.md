@@ -142,6 +142,23 @@ erreur opaque, et il couvre les rares chemins qui empruntent le client admin.
 Toutes les actions renvoient le même `ActionResult`, ce qui permet un affichage
 d'erreur homogène côté interface.
 
+### Performance : compter les allers-retours, pas les requêtes
+
+Les fonctions Vercel tournent à **Paris** (`cdg1`, fixé dans `vercel.json`),
+au plus près de la base (`eu-west-3`). Elles étaient à Washington au départ :
+chaque requête traversait l'Atlantique, deux fois. Si la base est un jour
+déplacée, déplacer la région avec elle.
+
+Ce qui coûte cher n'est pas le nombre de requêtes mais le nombre de **vagues
+successives** : dix requêtes groupées dans un `Promise.all` coûtent un
+aller-retour, deux requêtes enchaînées en coûtent deux. Grouper dès que les
+requêtes ne dépendent pas l'une de l'autre.
+
+`getUser()` ne fait **aucun** appel réseau : `auth()` lit le jeton déjà présent
+dans la requête. C'est `getUserWithProfile()` qui interroge l'API de Clerk pour
+le nom et l'adresse — à n'appeler que là où ces champs servent vraiment, soit
+la création du profil et l'écran de bienvenue.
+
 ### Lectures
 
 Les Server Components lisent directement, via `supabase/server.ts`. Les lectures

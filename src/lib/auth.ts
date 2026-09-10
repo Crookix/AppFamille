@@ -41,20 +41,14 @@ export const getUser = cache(async (): Promise<AppUser | null> => {
   if (!isSupabaseConfigured()) return null;
 
   if (isClerkConfigured()) {
+    // `auth()` lit le jeton déjà présent dans la requête : aucun appel réseau.
+    // `currentUser()`, lui, interroge l'API de Clerk — un aller-retour complet.
+    // Comme l'immense majorité des écrans n'a besoin que de l'identifiant, on
+    // ne le paie plus ici : c'est `getUserWithProfile()` qui s'en charge, aux
+    // deux seuls endroits qui lisent vraiment le nom et l'adresse.
     const { userId } = await auth();
     if (!userId) return null;
-
-    // `currentUser()` interroge l'API Clerk ; `auth()` se contente de lire le
-    // jeton. On ne paie l'aller-retour que si l'on a besoin du nom ou de
-    // l'adresse, c'est-à-dire une fois par rendu grâce à `cache()`.
-    const profile = await currentUser();
-    const email = profile?.primaryEmailAddress?.emailAddress ?? null;
-    const fullName =
-      [profile?.firstName, profile?.lastName].filter(Boolean).join(' ').trim() ||
-      profile?.username ||
-      null;
-
-    return { id: userId, email, fullName, avatarUrl: profile?.imageUrl ?? null };
+    return { id: userId, email: null, fullName: null, avatarUrl: null };
   }
 
   const supabase = await createClient();
@@ -76,6 +70,34 @@ export const getUser = cache(async (): Promise<AppUser | null> => {
 });
 
 /**
+ * L'utilisateur AVEC son nom et son adresse.
+ *
+ * Coûte un aller-retour vers l'API de Clerk, contrairement à `getUser()`. À
+ * n'appeler que là où ces champs servent réellement : la création du profil et
+ * l'écran de bienvenue.
+ */
+export const getUserWithProfile = cache(async (): Promise<AppUser | null> => {
+  const user = await getUser();
+  if (!user) return user;
+  if (!isClerkConfigured()) return user;
+
+  const profile = await currentUser();
+  if (!profile) return user;
+
+  const fullName =
+    [profile.firstName, profile.lastName].filter(Boolean).join(' ').trim() ||
+    profile.username ||
+    null;
+
+  return {
+    ...user,
+    email: profile.primaryEmailAddress?.emailAddress ?? null,
+    fullName,
+    avatarUrl: profile.imageUrl ?? null,
+  };
+});
+
+/**
  * Garantit que le profil applicatif existe.
  *
  * Avec Supabase Auth, un déclencheur sur `auth.users` s'en chargeait. Un
@@ -84,11 +106,15 @@ export const getUser = cache(async (): Promise<AppUser | null> => {
  * ne réécrit jamais un prénom déjà choisi dans Tribu.
  */
 export async function ensureProfile(user: AppUser): Promise<void> {
+  // C'est le seul appel qui a besoin du nom et de l'adresse : on les récupère
+  // ici, et nulle part ailleurs.
+  const complet = (await getUserWithProfile()) ?? user;
+
   const supabase = await createClient();
   await supabase.rpc('ensure_profile', {
-    p_email: user.email,
-    p_full_name: user.fullName,
-    p_avatar_url: user.avatarUrl,
+    p_email: complet.email,
+    p_full_name: complet.fullName,
+    p_avatar_url: complet.avatarUrl,
     p_provider: isClerkConfigured() ? 'clerk' : 'supabase',
   });
 }

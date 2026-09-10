@@ -27,11 +27,11 @@ export default async function BienvenuePage() {
     .eq('id', user.id)
     .maybeSingle();
 
+  // `ensureProfile` vient de renseigner cette ligne à partir de Clerk : elle
+  // fait foi. Inutile de retomber sur `user`, dont `getUser()` ne remplit plus
+  // le nom ni l'adresse — c'est justement l'appel réseau qu'on a supprimé.
   const suggested =
-    profile?.full_name?.trim() ||
-    profile?.email?.split('@')[0] ||
-    user.email?.split('@')[0] ||
-    '';
+    profile?.full_name?.trim() || profile?.email?.split('@')[0] || '';
 
   // Une invitation retenue au passage sur `/invitation/…` ? On la repropose
   // ici, sinon la personne créerait un second foyer en croyant rejoindre le
