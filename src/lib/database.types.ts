@@ -165,6 +165,31 @@ export type GoogleAccountRow = {
   updated_at: string;
 };
 
+/**
+ * Jetons OAuth chiffrés.
+ *
+ * La table n'a aucune policy RLS : elle est inaccessible depuis le navigateur,
+ * et seul le rôle `service_role` peut la lire côté serveur.
+ */
+export type GoogleCredentialRow = {
+  google_account_id: string;
+  access_token_enc: string | null;
+  refresh_token_enc: string | null;
+  token_expires_at: string | null;
+  updated_at: string;
+};
+
+export type GoogleDeletionQueueRow = {
+  id: string;
+  household_id: string;
+  google_calendar_ref: string;
+  google_event_id: string;
+  origin: EventOrigin;
+  requested_at: string;
+  processed_at: string | null;
+  error_message: string | null;
+};
+
 export type GoogleCalendarRow = {
   id: string;
   google_account_id: string;
@@ -550,6 +575,11 @@ export type Database = {
       children: Table<ChildRow, 'household_id' | 'first_name'>;
       child_activities: Table<ChildActivityRow, 'household_id' | 'child_id' | 'label'>;
       google_accounts: Table<GoogleAccountRow, 'user_id' | 'google_sub'>;
+      google_credentials: Table<GoogleCredentialRow, 'google_account_id'>;
+      google_deletion_queue: Table<
+        GoogleDeletionQueueRow,
+        'household_id' | 'google_calendar_ref' | 'google_event_id' | 'origin'
+      >;
       google_calendars: Table<
         GoogleCalendarRow,
         'google_account_id' | 'household_id' | 'google_calendar_id'

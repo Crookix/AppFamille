@@ -1,0 +1,55 @@
+import type { Metadata } from 'next';
+import { requireHousehold } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { isEncryptionConfigured } from '@/lib/google/crypto';
+import { isGoogleConfigured } from '@/lib/google/oauth';
+import { GoogleSettings } from '@/components/google/google-settings';
+
+export const metadata: Metadata = { title: 'Google Agenda' };
+
+export default async function GooglePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erreur?: string; connecte?: string }>;
+}) {
+  const params = await searchParams;
+  const { household, member } = await requireHousehold();
+  const supabase = await createClient();
+
+  const { data: account } = await supabase
+    .from('google_accounts')
+    .select('*')
+    .eq('user_id', member.user_id)
+    .maybeSingle();
+
+  const [calendarsResult, runsResult] = await Promise.all([
+    account
+      ? supabase
+          .from('google_calendars')
+          .select('*')
+          .eq('google_account_id', account.id)
+          .eq('household_id', household.id)
+          .order('is_primary', { ascending: false })
+          .order('summary')
+      : Promise.resolve({ data: [] as never[] }),
+    supabase
+      .from('google_sync_runs')
+      .select('*')
+      .eq('household_id', household.id)
+      .order('started_at', { ascending: false })
+      .limit(10),
+  ]);
+
+  return (
+    <GoogleSettings
+      configured={isGoogleConfigured()}
+      encryptionConfigured={isEncryptionConfigured()}
+      serviceKeyPresent={Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)}
+      account={account ?? null}
+      calendars={calendarsResult.data ?? []}
+      runs={runsResult.data ?? []}
+      initialError={params.erreur ?? null}
+      justConnected={params.connecte === '1'}
+    />
+  );
+}
