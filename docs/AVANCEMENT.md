@@ -109,6 +109,39 @@ l'autre fournisseur.
 
 ---
 
+## Performance : ce qui a été fait, et pourquoi
+
+L'application « ramait ». La base n'y était pour rien : les requêtes les plus
+lentes relevées dans `pg_stat_statements` sont celles de l'outil Supabase
+lui-même. Celles de l'application n'apparaissent même pas au classement.
+
+Le coût était ailleurs — dans le **nombre d'allers-retours réseau**, et dans
+leur distance.
+
+**La géographie d'abord.** Les fonctions Vercel tournaient à Washington
+(`iad1`), la base est à Paris (`eu-west-3`). Chaque requête traversait
+l'Atlantique, et vous payiez en plus le trajet France → Washington à l'aller
+comme au retour. `vercel.json` fixe désormais la région à `cdg1` : Paris.
+Si la base déménage un jour, déplacer la région avec elle.
+
+**Un appel réseau supprimé sur chaque page.** `getUser()` appelait
+`currentUser()` de Clerk, qui interroge l'API de Clerk. Or `auth()` lit le
+jeton déjà présent dans la requête, sans réseau, et l'identifiant suffit
+partout sauf à deux endroits. Le nom et l'adresse passent maintenant par
+`getUserWithProfile()`, appelée uniquement là où ces champs servent.
+
+**Deux vagues supprimées sur le calendrier.** Les exceptions de récurrence
+étaient chargées après les séries ; elles partent désormais dans la même
+vague, avec un filtrage en mémoire qui préserve exactement la sémantique
+précédente. Et les pièces jointes attendaient les occurrences pour savoir quoi
+demander : on interroge le foyer entier — quelques dizaines de lignes — et on
+croise en mémoire.
+
+Bilan pour l'affichage du calendrier : **cinq vagues successives ramenées à
+trois**, chacune deux fois plus courte.
+
+---
+
 ## Ce qui vous attend
 
 Trois choses ne peuvent pas être faites depuis l'environnement de

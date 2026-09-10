@@ -66,24 +66,34 @@ export default async function CalendrierPage({
     : todayIn(tz);
 
   const { from, to } = windowFor(mode, anchor, tz);
-  const items = await loadOccurrences(household.id, from, to);
-  const occurrences = serializeOccurrences(items);
 
-  // Quels événements portent une pièce jointe ? Un trombone dans la liste
-  // évite d'ouvrir chaque fiche pour retrouver un billet de train.
-  const eventIds = [...new Set(occurrences.map((o) => o.event.id))];
-  let attachmentEventIds: string[] = [];
-
-  if (eventIds.length > 0) {
-    const supabase = await createClient();
-    const { data } = await supabase
+  // Les deux chargements partent ensemble. Les pièces jointes dépendaient
+  // auparavant des occurrences — on attendait donc leur retour avant même de
+  // demander la liste. En interrogeant le foyer entier plutôt que les seuls
+  // événements affichés, la dépendance disparaît et avec elle un aller-retour :
+  // les pièces jointes d'une famille se comptent en dizaines, pas en milliers.
+  const supabase = await createClient();
+  const [items, attachmentsResult] = await Promise.all([
+    loadOccurrences(household.id, from, to),
+    supabase
       .from('attachments')
       .select('event_id')
-      .in('event_id', eventIds);
-    attachmentEventIds = [
-      ...new Set((data ?? []).map((a) => a.event_id).filter((id): id is string => Boolean(id))),
-    ];
-  }
+      .eq('household_id', household.id)
+      .not('event_id', 'is', null),
+  ]);
+
+  const occurrences = serializeOccurrences(items);
+
+  // Quels événements affichés portent une pièce jointe ? Un trombone dans la
+  // liste évite d'ouvrir chaque fiche pour retrouver un billet de train.
+  const visibles = new Set(occurrences.map((o) => o.event.id));
+  const attachmentEventIds = [
+    ...new Set(
+      (attachmentsResult.data ?? [])
+        .map((a) => a.event_id)
+        .filter((id): id is string => Boolean(id) && visibles.has(id!)),
+    ),
+  ];
 
   return (
     <CalendarView

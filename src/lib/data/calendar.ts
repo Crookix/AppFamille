@@ -26,7 +26,11 @@ export async function loadOccurrences(
 ): Promise<EventWithPeople[]> {
   const supabase = await createClient();
 
-  const [plainResult, recurringResult] = await Promise.all([
+  // Trois requêtes en une seule vague. Ce qui coûte cher n'est pas le nombre
+  // de requêtes mais le nombre d'allers-retours : les exceptions étaient
+  // auparavant chargées dans un second temps, ce qui ajoutait une traversée
+  // complète du réseau pour rien.
+  const [plainResult, recurringResult, exceptionsResult] = await Promise.all([
     // Événements simples et exceptions qui chevauchent la fenêtre.
     supabase
       .from('events')
@@ -42,23 +46,24 @@ export async function loadOccurrences(
       .eq('household_id', householdId)
       .not('recurrence_rule', 'is', null)
       .lt('starts_at', to.toISOString()),
+    // Toutes les exceptions du foyer. On ne peut pas les filtrer sur les
+    // séries retenues sans connaître ces séries — d'où le filtrage en mémoire
+    // juste après, qui préserve exactement la sémantique précédente.
+    supabase
+      .from('events')
+      .select('*')
+      .eq('household_id', householdId)
+      .not('recurring_parent_id', 'is', null),
   ]);
 
   const plain = plainResult.data ?? [];
   const recurring = recurringResult.data ?? [];
 
   // Les exceptions des séries retenues, où qu'elles se trouvent dans le temps.
-  const parentIds = recurring.map((e) => e.id);
-  let exceptions: EventRow[] = [];
-
-  if (parentIds.length > 0) {
-    const { data } = await supabase
-      .from('events')
-      .select('*')
-      .eq('household_id', householdId)
-      .in('recurring_parent_id', parentIds);
-    exceptions = data ?? [];
-  }
+  const parentIds = new Set(recurring.map((e) => e.id));
+  const exceptions = (exceptionsResult.data ?? []).filter(
+    (e) => e.recurring_parent_id && parentIds.has(e.recurring_parent_id),
+  );
 
   // `plain` contient déjà certaines exceptions : on déduplique par identifiant.
   const byId = new Map<string, EventRow>();
