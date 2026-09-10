@@ -17,6 +17,21 @@ import type { ShopAisle } from '@/lib/database.types';
 const LEADING_ARTICLES = /^(?:de\s+la\s+|de\s+l['’]|du\s+|des\s+|de\s+|d['’]|le\s+|la\s+|les\s+|l['’])/;
 
 /**
+ * Développe les ligatures avant toute autre normalisation.
+ *
+ * La décomposition Unicode NFD sépare une lettre de son accent, mais ne touche
+ * pas aux ligatures : « œ » reste « œ ». Sans ce passage, « Œufs » et « oeufs »
+ * resteraient deux produits distincts dans la liste de courses.
+ */
+function expandLigatures(text: string): string {
+  return text
+    .replace(/œ/g, 'oe')
+    .replace(/Œ/g, 'OE')
+    .replace(/æ/g, 'ae')
+    .replace(/Æ/g, 'AE');
+}
+
+/**
  * Clé de regroupement d'un libellé : minuscules, sans accent, sans article,
  * sans ponctuation, au singulier approximatif.
  *
@@ -25,7 +40,7 @@ const LEADING_ARTICLES = /^(?:de\s+la\s+|de\s+l['’]|du\s+|des\s+|de\s+|d['’]
  * d'être STABLE, pour que « tomate » et « tomates » tombent toujours ensemble.
  */
 export function normalizeLabel(label: string): string {
-  let text = label
+  let text = expandLigatures(label)
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()

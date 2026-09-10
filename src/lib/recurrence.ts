@@ -1,4 +1,4 @@
-import { RRule, rrulestr } from 'rrule';
+import { RRule } from 'rrule';
 import type { EventRow } from '@/lib/database.types';
 import { DEFAULT_TZ, fromWallClock, toWallClock } from '@/lib/datetime';
 
@@ -49,23 +49,34 @@ export function expandRule(
   rangeStart: Date,
   rangeEnd: Date,
   timezone: string = DEFAULT_TZ,
+  /**
+   * Recul appliqué au début de la fenêtre, en millisecondes. Un événement qui
+   * commence avant la fenêtre peut la chevaucher : on passe ici sa durée pour
+   * ne pas le manquer. Aucun débord n'est ajouté à la fin — une occurrence qui
+   * commence après la fenêtre ne peut pas la chevaucher.
+   */
+  padBackMs = 0,
 ): Date[] {
   const wallStart = toWallClock(seriesStart, timezone);
 
   let rrule: RRule;
   try {
     const options = RRule.parseString(rule.replace(/^RRULE:/i, ''));
-    rrule = new RRule({ ...options, dtstart: wallStart });
+
+    // `UNTIL` est un instant réel, alors que le déroulé se fait en heures
+    // murales. Sans cette conversion, une série se terminerait avec le
+    // décalage du fuseau d'écart — soit une occurrence de trop ou de moins.
+    const until = options.until ? toWallClock(options.until, timezone) : undefined;
+
+    rrule = new RRule({ ...options, dtstart: wallStart, ...(until ? { until } : {}) });
   } catch {
     // Une règle illisible ne doit pas faire disparaître l'événement :
     // on retombe sur l'occurrence unique de départ.
     return [seriesStart];
   }
 
-  // La fenêtre est élargie d'un jour de chaque côté avant d'être exprimée en
-  // heures murales, pour ne pas perdre une occurrence à cause du décalage.
-  const from = toWallClock(new Date(rangeStart.getTime() - 86_400_000), timezone);
-  const to = toWallClock(new Date(rangeEnd.getTime() + 86_400_000), timezone);
+  const from = toWallClock(new Date(rangeStart.getTime() - padBackMs), timezone);
+  const to = toWallClock(rangeEnd, timezone);
 
   const wallOccurrences = rrule.between(from, to, true).slice(0, MAX_OCCURRENCES);
   return wallOccurrences.map((wall) => fromWallClock(wall, timezone));
@@ -131,6 +142,7 @@ export function expandEvents(
       rangeStart,
       rangeEnd,
       event.timezone,
+      durationMs,
     );
 
     for (const occurrenceStart of starts) {
@@ -188,9 +200,17 @@ export type RecurrencePreset =
   | { type: 'mensuelle' }
   | { type: 'personnalisee'; rule: string };
 
-const RRULE_WEEKDAYS = [RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR, RRule.SA, RRule.SU];
+const BYDAY_CODES = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 
-/** Construit une RRULE à partir d'un choix d'interface. */
+/**
+ * Construit une RRULE à partir d'un choix d'interface.
+ *
+ * La chaîne est composée directement plutôt que via `new RRule(...).toString()` :
+ * cette dernière déduit d'office un `BYDAY` de la date de départ, si bien
+ * qu'une règle « toutes les semaines » se retrouverait figée sur le jour de la
+ * semaine en cours au moment de la création. Le jour doit venir de la date de
+ * l'événement, pas de l'instant où on l'a saisi.
+ */
 export function buildRecurrenceRule(
   preset: RecurrencePreset,
   until?: Date | null,
@@ -198,27 +218,57 @@ export function buildRecurrenceRule(
   if (preset.type === 'aucune') return null;
   if (preset.type === 'personnalisee') return preset.rule || null;
 
-  const base: Partial<RRule['options']> & { freq: number } = (() => {
+  const parts: string[] = (() => {
     switch (preset.type) {
       case 'quotidienne':
-        return { freq: RRule.DAILY };
+        return ['FREQ=DAILY'];
       case 'hebdomadaire':
-        return { freq: RRule.WEEKLY };
+        return ['FREQ=WEEKLY'];
       case 'toutes_deux_semaines':
-        return { freq: RRule.WEEKLY, interval: 2 };
+        return ['FREQ=WEEKLY', 'INTERVAL=2'];
       case 'mensuelle':
-        return { freq: RRule.MONTHLY };
-      case 'jours':
-        return {
-          freq: RRule.WEEKLY,
-          byweekday: preset.weekdays.map((d) => RRULE_WEEKDAYS[d]),
-        };
+        return ['FREQ=MONTHLY'];
+      case 'jours': {
+        const days = [...new Set(preset.weekdays)]
+          .filter((d) => d >= 0 && d < 7)
+          .sort((a, b) => a - b)
+          .map((d) => BYDAY_CODES[d]);
+        return days.length > 0 ? ['FREQ=WEEKLY', `BYDAY=${days.join(',')}`] : ['FREQ=WEEKLY'];
+      }
     }
   })();
 
-  const rule = new RRule({ ...base, ...(until ? { until } : {}) });
-  // On ne conserve que la ligne RRULE : le DTSTART vient de l'événement.
-  return rule.toString().replace(/^DTSTART[^\n]*\n?/i, '').replace(/^RRULE:/i, '');
+  if (until) {
+    parts.push(`UNTIL=${until.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`);
+  }
+
+  return parts.join(';');
+}
+
+/**
+ * Lit une RRULE sans lui inventer de date de départ.
+ *
+ * `rrulestr` complète les champs manquants à partir d'un DTSTART implicite fixé
+ * à l'instant courant : « FREQ=WEEKLY » y devient « chaque jeudi » un jeudi.
+ * `RRule.parseString` se contente de ce qui est écrit.
+ */
+function parseRuleOptions(rule: string) {
+  return RRule.parseString(rule.replace(/^RRULE:/i, ''));
+}
+
+/** Normalise `byweekday` en indices 0 (lundi) à 6 (dimanche). */
+function weekdayIndexes(byweekday: unknown): number[] {
+  if (byweekday === null || byweekday === undefined) return [];
+  const list = Array.isArray(byweekday) ? byweekday : [byweekday];
+  return list
+    .map((day) => {
+      if (typeof day === 'number') return day;
+      if (day && typeof day === 'object' && 'weekday' in day) {
+        return (day as { weekday: number }).weekday;
+      }
+      return null;
+    })
+    .filter((d): d is number => d !== null);
 }
 
 const FR_WEEKDAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
@@ -227,20 +277,20 @@ const FR_WEEKDAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'
 export function describeRecurrence(rule: string | null | undefined): string | null {
   if (!rule) return null;
 
-  let parsed: RRule;
+  let options: ReturnType<typeof parseRuleOptions>;
   try {
-    parsed = rrulestr(rule.startsWith('RRULE:') ? rule : `RRULE:${rule}`) as RRule;
+    options = parseRuleOptions(rule);
   } catch {
     return 'Répétition personnalisée';
   }
 
-  const { freq, interval = 1, byweekday, until, count } = parsed.options;
+  const { freq, interval = 1, byweekday, until, count } = options;
 
   let text: string;
   if (freq === RRule.DAILY) {
     text = interval === 1 ? 'Tous les jours' : `Tous les ${interval} jours`;
   } else if (freq === RRule.WEEKLY) {
-    const days = (byweekday ?? []) as number[];
+    const days = weekdayIndexes(byweekday);
     if (days.length > 0) {
       const names = days.map((d) => FR_WEEKDAYS[d]).join(', ');
       text = interval === 1 ? `Chaque ${names}` : `Toutes les ${interval} semaines, le ${names}`;
@@ -267,9 +317,8 @@ export function describeRecurrence(rule: string | null | undefined): string | nu
 export function recurrenceToPreset(rule: string | null | undefined): RecurrencePreset {
   if (!rule) return { type: 'aucune' };
   try {
-    const parsed = rrulestr(rule.startsWith('RRULE:') ? rule : `RRULE:${rule}`) as RRule;
-    const { freq, interval = 1, byweekday } = parsed.options;
-    const days = (byweekday ?? []) as number[];
+    const { freq, interval = 1, byweekday } = parseRuleOptions(rule);
+    const days = weekdayIndexes(byweekday);
 
     if (freq === RRule.DAILY && interval === 1) return { type: 'quotidienne' };
     if (freq === RRule.WEEKLY && interval === 1 && days.length === 0) {
