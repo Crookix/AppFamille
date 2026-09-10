@@ -6,6 +6,7 @@ import {
   expandRule,
   occurrenceKey,
   recurrenceToPreset,
+  type RecurrencePreset,
 } from '@/lib/recurrence';
 import { formatTime } from '@/lib/datetime';
 import type { EventRow } from '@/lib/database.types';
@@ -241,13 +242,13 @@ describe('séries et exceptions', () => {
 
 describe('construction et lecture des règles', () => {
   it("fait l'aller-retour entre choix d'interface et RRULE", () => {
-    const cas = [
+    const cas: RecurrencePreset[] = [
       { type: 'quotidienne' },
       { type: 'hebdomadaire' },
       { type: 'toutes_deux_semaines' },
       { type: 'mensuelle' },
       { type: 'jours', weekdays: [0, 2, 4] },
-    ] as const;
+    ];
 
     for (const preset of cas) {
       const rule = buildRecurrenceRule(preset);

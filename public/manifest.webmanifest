@@ -1,0 +1,25 @@
+{
+  "name": "Tribu — l'organisation du foyer",
+  "short_name": "Tribu",
+  "description": "Le calendrier, les tâches, les courses, les repas et les gardes de la famille, au même endroit.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fdf5ec",
+  "theme_color": "#fdf5ec",
+  "categories": ["lifestyle", "productivity"],
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Calendrier", "url": "/calendrier" },
+    { "name": "Courses", "url": "/listes?onglet=courses" },
+    { "name": "Tâches", "url": "/listes?onglet=taches" }
+  ]
+}

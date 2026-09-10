@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Tribu">
+  <rect width="512" height="512" rx="112" fill="#de6f47"/>
+  <path d="M256 108 106 236v168a20 20 0 0 0 20 20h100V300h60v124h100a20 20 0 0 0 20-20V236z"
+        fill="#fdf5ec"/>
+  <circle cx="196" cy="196" r="26" fill="#6da887"/>
+  <circle cx="316" cy="196" r="26" fill="#e9b04a"/>
+</svg>
