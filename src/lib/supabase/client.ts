@@ -1,24 +1,20 @@
 'use client';
 
 import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createTokenClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
-import type { Database as Db } from '@/lib/database.types';
 
 /**
- * Client Supabase du navigateur.
+ * Client Supabase du navigateur, adossé aux cookies de session Supabase.
  *
  * Un singleton : plusieurs instances ouvriraient plusieurs connexions temps
  * réel et se disputeraient le rafraîchissement du jeton.
- *
- * Quand Clerk est configuré, le jeton ne vient plus des cookies Supabase mais
- * de la session Clerk. Les composants qui écoutent le temps réel passent donc
- * par `useSupabase()` (voir `use-supabase.ts`), qui fournit le bon jeton.
  */
 let browserClient: ReturnType<typeof createBrowserClient<Database>> | undefined;
 
 export function createClient() {
   if (!browserClient) {
-    browserClient = createBrowserClient<Db>(
+    browserClient = createBrowserClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
@@ -27,15 +23,19 @@ export function createClient() {
 }
 
 /**
- * Client du navigateur adossé à un jeton fourni de l'extérieur.
+ * Client du navigateur adossé à un jeton fourni de l'extérieur (Clerk).
  *
- * Sert lorsque Clerk tient la session : `getToken` est la fonction que Clerk
- * expose côté client, et Supabase l'appelle à chaque requête.
+ * Comme côté serveur, ce n'est PAS `createBrowserClient` : celui-ci gère les
+ * cookies via `onAuthStateChange`, auquel l'option `accessToken` interdit
+ * l'accès. Il faut le client simple de `supabase-js`.
  */
 export function createClientWithToken(getToken: () => Promise<string | null>) {
-  return createBrowserClient<Db>(
+  return createTokenClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { accessToken: getToken },
+    {
+      accessToken: getToken,
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
   );
 }

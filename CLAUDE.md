@@ -236,6 +236,13 @@ une relecture attentive.
 - **`auth.uid()` n'est pas neutre face à un identifiant non-UUID.** Il lève
   `22P02`, ce qui fait échouer la politique au lieu de simplement refuser
   l'accès. Toute nouvelle politique lit `auth.jwt() ->> 'sub'`.
+- **`createServerClient` / `createBrowserClient` de `@supabase/ssr` sont
+  incompatibles avec l'option `accessToken`.** Ces clients s'abonnent en
+  interne à `onAuthStateChange` pour tenir les cookies à jour, or `accessToken`
+  interdit tout accès à `supabase.auth`. Les combiner lève « Supabase Client is
+  configured with the accessToken option » **à l'exécution seulement** — la
+  compilation passe. Quand un fournisseur tiers tient la session, utiliser
+  `createClient` de `@supabase/supabase-js`, sans cookies.
 - **Ne pas surcharger `appearance.elements` de Clerk.** Les noms d'éléments
   changent d'une version à l'autre, et une clé devenue obsolète n'échoue pas :
   elle est ignorée, et l'écran se dégrade en silence. Passer par

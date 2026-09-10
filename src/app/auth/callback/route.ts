@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isClerkConfigured } from '@/lib/clerk';
 
 /**
  * Retour d'authentification : lien magique et OAuth aboutissent tous deux ici.
@@ -11,6 +12,14 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
+
+  // Avec Clerk, cette route n'a plus de raison d'être : la session ne vient
+  // plus de Supabase. Un vieux lien magique resté dans une boîte mail ne doit
+  // pas y échouer bruyamment — le client muni d'un jeton tiers refuse tout
+  // accès à `supabase.auth` — mais ramener poliment vers la connexion.
+  if (isClerkConfigured()) {
+    return NextResponse.redirect(new URL('/connexion', origin));
+  }
   const code = searchParams.get('code');
   const tokenHash = searchParams.get('token_hash');
   const type = searchParams.get('type');
