@@ -179,3 +179,37 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Impression — sert à l'export PDF des bilans de garde.
+   Le navigateur produit un PDF fidèle sans qu'on ait à embarquer une
+   bibliothèque de mise en page.
+   -------------------------------------------------------------------------- */
+@media print {
+  nav,
+  [data-print-hidden],
+  button {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .surface {
+    box-shadow: none !important;
+    border: 1px solid #d8d8d8;
+    break-inside: avoid;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+  }
+}

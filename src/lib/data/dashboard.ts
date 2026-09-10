@@ -83,7 +83,7 @@ export async function loadDashboard(
 
     supabase
       .from('childcare_sessions')
-      .select('*, nanny:nannies(*)')
+      .select('*')
       .eq('household_id', householdId)
       .in('status', ['prevue', 'a_confirmer'])
       .gte('scheduled_end', new Date().toISOString())
@@ -131,7 +131,19 @@ export async function loadDashboard(
     openItemCount = count ?? openItems.length;
   }
 
-  const childcare = childcareResult.data?.[0] ?? null;
+  // La nounou est chargée à part : une jointure imbriquée PostgREST n'est pas
+  // typable de façon fiable avec des types écrits à la main.
+  const session = childcareResult.data?.[0] ?? null;
+  let childcare: DashboardData['nextChildcare'] = null;
+
+  if (session) {
+    const { data: nanny } = await supabase
+      .from('nannies')
+      .select('*')
+      .eq('id', session.nanny_id)
+      .maybeSingle();
+    childcare = { ...session, nanny: nanny ?? null };
+  }
 
   return {
     today,
@@ -144,7 +156,7 @@ export async function loadDashboard(
     openItems,
     openItemCount,
     defaultList,
-    nextChildcare: childcare as DashboardData['nextChildcare'],
+    nextChildcare: childcare,
     childcareToConfirm: toConfirmResult.count ?? 0,
   };
 }
