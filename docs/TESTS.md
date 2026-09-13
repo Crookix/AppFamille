@@ -42,7 +42,7 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
   se promouvoir, modifier la fiche d'un autre membre, exclure l'administrateur ;
 - accepter une invitation expirée, révoquée, déjà utilisée, ou inventée.
 
-**Résultat de la dernière exécution : 34 vérifications, 34 conformes.**
+**Résultat de la dernière exécution : 36 vérifications, 36 conformes.**
 
 Depuis la migration `0013`, le script fait intervenir **deux fournisseurs
 d'authentification à la fois** : Camille et Alex arrivent par Supabase Auth,
@@ -101,7 +101,7 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
 
 ## 3. Logique métier — **SIMULÉ**
 
-82 tests unitaires Vitest, sur de la logique pure. Aucun réseau, aucune base :
+85 tests unitaires Vitest, sur de la logique pure. Aucun réseau, aucune base :
 c'est le propre de ces tests, et c'est aussi leur limite.
 
 | Fichier | Tests | Ce qu'il couvre |
@@ -110,6 +110,7 @@ c'est le propre de ces tests, et c'est aussi leur limite.
 | `tests/unit/ingredients.test.ts` | 25 | Analyse « 2 kg de pommes », normalisation, ligatures, conversions d'unités, agrégation, rayons |
 | `tests/unit/childcare.test.ts` | 20 | Heures prévues et réalisées, ajustements, tarifs datés, bilan mensuel |
 | `tests/unit/google-mapping.test.ts` | 20 | Conversion Google ↔ Tribu, empreintes de comparaison, droit d'écriture par agenda |
+| `tests/unit/exports.test.ts` | 3 | Nom de fichier d'export : ligatures, accents, séparateurs |
 
 `npm test`
 
@@ -222,12 +223,12 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 
 | Domaine | Vérifié comment | État |
 | --- | --- | --- |
-| Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **34/34** |
+| Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **36/36** |
 | Invitations : expiration, révocation, rejeu, jeton inventé | Base réelle | **conforme** |
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
-| Récurrences, ingrédients, gardes, conversion Google | Tests unitaires | **82/82** |
+| Récurrences, ingrédients, gardes, conversion Google, exports | Tests unitaires | **85/85** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur | Playwright | **écrits (28), non joués — réseau bloqué** |
 | Google Agenda de bout en bout | — | **non joué — aucun identifiant OAuth** |

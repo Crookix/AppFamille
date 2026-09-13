@@ -1,4 +1,5 @@
 import { formatDuration } from '@/lib/utils';
+import { expandLigatures } from '@/lib/ingredients';
 import { sessionTotals, type SessionForTotals } from '@/lib/childcare';
 import { formatDayLong, formatTime } from '@/lib/datetime';
 
@@ -113,9 +114,14 @@ export function downloadFile(content: string, fileName: string, mimeType: string
   URL.revokeObjectURL(url);
 }
 
-/** Nom de fichier sûr, sans accents ni espaces. */
+/**
+ * Nom de fichier sûr, sans accents ni espaces.
+ *
+ * Les ligatures passent d'abord : NFD ne les décompose pas, et « Lœtitia »
+ * deviendrait « l-titia ».
+ */
 export function safeSlug(text: string): string {
-  return text
+  return expandLigatures(text)
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()

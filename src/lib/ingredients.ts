@@ -23,7 +23,7 @@ const LEADING_ARTICLES = /^(?:de\s+la\s+|de\s+l['’]|du\s+|des\s+|de\s+|d['’]
  * pas aux ligatures : « œ » reste « œ ». Sans ce passage, « Œufs » et « oeufs »
  * resteraient deux produits distincts dans la liste de courses.
  */
-function expandLigatures(text: string): string {
+export function expandLigatures(text: string): string {
   return text
     .replace(/œ/g, 'oe')
     .replace(/Œ/g, 'OE')
