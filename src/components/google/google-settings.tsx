@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge, Card, ErrorNote, Field, Select } from '@/components/ui/primitives';
 import { Sheet } from '@/components/ui/sheet';
 import { useToast } from '@/components/ui/toast';
-import { createClient } from '@/lib/supabase/client';
+import { updateGoogleCalendarAction } from '@/lib/actions/google';
 import { useHousehold } from '@/components/providers/household-provider';
 import { cn } from '@/lib/utils';
 import { formatDayLong, formatTime } from '@/lib/datetime';
@@ -69,7 +69,6 @@ export function GoogleSettings({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
   const { household } = useHousehold();
 
   const [syncing, setSyncing] = React.useState(false);
@@ -94,25 +93,17 @@ export function GoogleSettings({
     setPendingCalendar(calendarId);
     setError(null);
 
-    // Un seul calendrier peut recevoir les créations : la base l'impose par
-    // un index unique, on lève donc l'ancien avant de poser le nouveau.
-    if (patch.is_write_target) {
-      await supabase
-        .from('google_calendars')
-        .update({ is_write_target: false })
-        .eq('google_account_id', account!.id)
-        .eq('is_write_target', true);
-    }
-
-    const { error: updateError } = await supabase
-      .from('google_calendars')
-      .update(patch)
-      .eq('id', calendarId);
+    const result = await updateGoogleCalendarAction({
+      calendarId,
+      isSelected: patch.is_selected,
+      shareMode: patch.share_mode,
+      isWriteTarget: patch.is_write_target,
+    });
 
     setPendingCalendar(null);
 
-    if (updateError) {
-      setError(updateError.message);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     router.refresh();

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CheckCircle, EmptyState, Select } from '@/components/ui/primitives';
 import { ConfirmSheet } from '@/components/ui/sheet';
 import { useToast } from '@/components/ui/toast';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import { QuickShoppingSheet } from '@/components/shopping/quick-shopping-sheet';
 import {
@@ -37,7 +37,7 @@ export function ShoppingList({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const { household, members } = useHousehold();
 
   const [items, setItems] = React.useState(initialItems);

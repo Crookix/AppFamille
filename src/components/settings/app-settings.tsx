@@ -20,7 +20,6 @@ import { Card, ErrorNote, Field, Input } from '@/components/ui/primitives';
 import { ConfirmSheet, Sheet } from '@/components/ui/sheet';
 import { Avatar, ColorPicker } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/toast';
-import { createClient } from '@/lib/supabase/client';
 import { useSignOut } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import { switchHouseholdAction, updateMyMemberAction } from '@/lib/actions/household';
@@ -38,7 +37,6 @@ export function AppSettings({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
   const deconnecter = useSignOut();
   const { household, me, otherHouseholds } = useHousehold();
 

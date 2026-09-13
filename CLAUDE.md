@@ -87,16 +87,19 @@ tests/unit/           tests Vitest
 | `supabase/middleware.ts` | rafraîchissement de session | ne fait que ça |
 | `supabase/admin.ts` | `service_role`, **contourne la RLS** | serveur uniquement, et seulement là où c'est indispensable |
 
-Côté navigateur, ne pas appeler `createClient()` directement dans un composant
-qui lit des données : passer par `useSupabase()`. Avec Clerk, le jeton ne vient
-plus des cookies, et un client mal outillé partirait en anonyme — la RLS ne
-renverrait rien et l'écran s'afficherait vide, sans erreur. C'est le genre de
+Côté navigateur, `useSupabase()` est le seul point d'entrée — jamais
+`createClient()` directement. La seule exception est l'écran de connexion, qui
+ne touche que `supabase.auth`, avant toute session. Avec Clerk, le jeton ne
+vient plus des cookies, et un client mal outillé partirait en anonyme — la RLS
+ne renverrait rien et l'écran s'afficherait vide, sans erreur. C'est le genre de
 panne qu'on met une heure à diagnostiquer.
 
-`admin.ts` est réservé à trois usages : la synchronisation Google (qui agit pour
-le compte d'un utilisateur absent), le chargement du foyer de démonstration, et
-l'écriture des jetons Google. **Toute nouvelle utilisation doit être justifiée
-par un commentaire et précédée d'un contrôle d'appartenance explicite.**
+`admin.ts` est réservé aux routes Google (`connect`, `callback`, `sync`,
+`disconnect`), qui agissent pour le compte d'un utilisateur absent et écrivent
+les jetons. Le foyer de démonstration, lui, n'en a pas besoin : il est créé avec
+les droits ordinaires de la personne connectée, RLS comprise. **Toute nouvelle
+utilisation doit être justifiée par un commentaire et précédée d'un contrôle
+d'appartenance explicite.**
 
 ---
 
@@ -288,6 +291,13 @@ une relecture attentive.
 - **Monter `ClerkProvider` sans clé publiable fait tomber toute
   l'application.** L'absence de Clerk est un état normal : `AuthProvider` rend
   ses enfants tels quels dans ce cas.
+- **Le client navigateur des cookies ignore le jeton Clerk.** Onze composants
+  appelaient `createClient()` directement plutôt que `useSupabase()`. Sans
+  Clerk, rien ne se voyait ; avec lui, leurs requêtes partaient en anonyme :
+  canaux temps réel muets, listes vides, réglages qui ne s'enregistraient pas.
+  Aucune erreur nulle part — un `update` bloqué par la RLS ne lève rien, il ne
+  touche simplement aucune ligne. La règle était écrite, le garde-fou existait,
+  il n'était appelé qu'à un seul endroit.
 - **« Redeploy » sur Vercel rejoue le déploiement existant, pas le dernier
   commit.** Quand un webhook GitHub est manqué, le bouton reconstruit
   l'ancienne version sans rien signaler. Vérifier le SHA du déploiement avant

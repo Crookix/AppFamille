@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, EmptyState } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/toast';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import {
   deleteNotificationAction,
@@ -87,7 +87,7 @@ export function NotificationCenter({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const { household, me } = useHousehold();
 
   const [items, setItems] = React.useState(notifications);

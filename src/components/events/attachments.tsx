@@ -2,23 +2,31 @@
 
 import * as React from 'react';
 import { Download, FileText, Image as ImageIcon, Paperclip, Trash2, Upload } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { Button } from '@/components/ui/button';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
 import { ConfirmSheet } from '@/components/ui/sheet';
 import { useToast } from '@/components/ui/toast';
 import { useHousehold } from '@/components/providers/household-provider';
-import type { AttachmentRow } from '@/lib/database.types';
+import type { AttachmentRow, Database } from '@/lib/database.types';
+import { expandLigatures } from '@/lib/ingredients';
 import {
+  createAttachmentAction,
   deleteAttachmentAction,
   getAttachmentUrlAction,
 } from '@/lib/actions/attachments';
 
 const MAX_SIZE = 25 * 1024 * 1024; // aligné sur la limite du bucket
 
-/** Nettoie un nom de fichier pour en faire un segment de chemin sûr. */
+/**
+ * Nettoie un nom de fichier pour en faire un segment de chemin sûr.
+ *
+ * Les ligatures d'abord, pour la même raison qu'ailleurs : NFD les laisse
+ * intactes, et « Œufs.pdf » deviendrait « -ufs.pdf ».
+ */
 function safeFileName(name: string) {
-  return name
+  return expandLigatures(name)
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9._-]/g, '-')
@@ -53,9 +61,9 @@ export function AttachmentsField({
   initial?: AttachmentRow[];
   onPendingChange?: (files: File[]) => void;
 }) {
-  const supabase = createClient();
+  const supabase = useSupabase();
   const toast = useToast();
-  const { household, me } = useHousehold();
+  const { household } = useHousehold();
 
   const [attachments, setAttachments] = React.useState<AttachmentRow[]>(initial);
   const [pending, setPending] = React.useState<PendingUpload[]>([]);
@@ -113,21 +121,15 @@ export function AttachmentsField({
       return null;
     }
 
-    const { data, error: insertError } = await supabase
-      .from('attachments')
-      .insert({
-        household_id: household.id,
-        event_id: targetEventId,
-        storage_path: path,
-        file_name: file.name.slice(0, 200),
-        mime_type: file.type || null,
-        size_bytes: file.size,
-        uploaded_by: me.user_id,
-      })
-      .select('*')
-      .single();
+    const result = await createAttachmentAction({
+      eventId: targetEventId,
+      storagePath: path,
+      fileName: file.name.slice(0, 200),
+      mimeType: file.type || null,
+      sizeBytes: file.size,
+    });
 
-    if (insertError || !data) {
+    if (!result.ok) {
       // La ligne n'a pas pu être écrite : on retire le fichier pour ne pas
       // laisser d'orphelin dans le stockage.
       await supabase.storage.from('attachments').remove([path]);
@@ -135,7 +137,7 @@ export function AttachmentsField({
       return null;
     }
 
-    return data;
+    return result.data;
   }
 
   async function download(attachment: AttachmentRow) {
@@ -289,14 +291,13 @@ function FileIcon({ mime }: { mime: string | null }) {
  * Appelé par le formulaire une fois l'identifiant de l'événement connu.
  */
 export async function uploadPendingAttachments(
+  supabase: SupabaseClient<Database>,
   files: File[],
   householdId: string,
   eventId: string,
-  userId: string,
 ): Promise<{ uploaded: number; failed: string[] }> {
   if (files.length === 0) return { uploaded: 0, failed: [] };
 
-  const supabase = createClient();
   const failed: string[] = [];
   let uploaded = 0;
 
@@ -312,17 +313,15 @@ export async function uploadPendingAttachments(
       continue;
     }
 
-    const { error: insertError } = await supabase.from('attachments').insert({
-      household_id: householdId,
-      event_id: eventId,
-      storage_path: path,
-      file_name: file.name.slice(0, 200),
-      mime_type: file.type || null,
-      size_bytes: file.size,
-      uploaded_by: userId,
+    const result = await createAttachmentAction({
+      eventId,
+      storagePath: path,
+      fileName: file.name.slice(0, 200),
+      mimeType: file.type || null,
+      sizeBytes: file.size,
     });
 
-    if (insertError) {
+    if (!result.ok) {
       await supabase.storage.from('attachments').remove([path]);
       failed.push(file.name);
       continue;

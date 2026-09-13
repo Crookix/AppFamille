@@ -17,6 +17,7 @@ import {
   type CategoryKey,
 } from '@/components/events/pickers';
 import { AttachmentsField, uploadPendingAttachments } from '@/components/events/attachments';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { createEventAction, updateEventAction, type EditScope } from '@/lib/actions/events';
 import { fromLocalInputValue, toLocalInputValue } from '@/lib/datetime';
 import type { AttachmentRow, EventRow, TripDetailRow } from '@/lib/database.types';
@@ -88,6 +89,7 @@ export function EventSheet({
 }: EventSheetProps) {
   const router = useRouter();
   const toast = useToast();
+  const supabase = useSupabase();
   const { household, me } = useHousehold();
 
   const isEditing = Boolean(event);
@@ -309,10 +311,10 @@ export function EventSheet({
     // l'événement possède un identifiant.
     if (pendingFiles.length > 0 && result.data?.id) {
       const upload = await uploadPendingAttachments(
+        supabase,
         pendingFiles,
         household.id,
         result.data.id,
-        me.user_id,
       );
       if (upload.failed.length > 0) {
         toast.error(

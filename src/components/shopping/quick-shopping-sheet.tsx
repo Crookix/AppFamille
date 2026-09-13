@@ -7,7 +7,7 @@ import { Sheet } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ErrorNote, Field, Input, Select } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/toast';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import { addShoppingItemAction } from '@/lib/actions/shopping';
 import { AISLE_LABELS, AISLE_ORDER, guessAisle } from '@/lib/ingredients';
@@ -31,7 +31,7 @@ export function QuickShoppingSheet({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const { household } = useHousehold();
 
   const [label, setLabel] = React.useState('');

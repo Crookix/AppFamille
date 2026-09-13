@@ -8,7 +8,7 @@ import { Badge, Card, CheckCircle, EmptyState } from '@/components/ui/primitives
 import { Sheet } from '@/components/ui/sheet';
 import { useToast } from '@/components/ui/toast';
 import { Avatar } from '@/components/ui/avatar';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import { TaskSheet } from '@/components/tasks/task-sheet';
 import { deleteTaskAction, toggleTaskAction, updateTaskAction } from '@/lib/actions/tasks';
@@ -36,7 +36,7 @@ export function TaskList({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const { household, members, children, me } = useHousehold();
   const today = todayIn(household.timezone);
 

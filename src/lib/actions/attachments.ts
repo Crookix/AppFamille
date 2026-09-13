@@ -1,10 +1,75 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { fail, ok, requireActiveHousehold } from './_helpers';
+import { z } from 'zod';
+import { fail, humanizeDbError, ok, requireActiveHousehold } from './_helpers';
 
 /** Durée de vie d'une URL signée : le temps d'ouvrir le fichier, pas plus. */
 const SIGNED_URL_SECONDS = 60;
+
+const attachmentSchema = z.object({
+  eventId: z.string().uuid('Événement inconnu.'),
+  storagePath: z.string().min(1).max(500),
+  fileName: z.string().min(1).max(200),
+  mimeType: z.string().max(200).nullable().optional(),
+  sizeBytes: z.number().int().min(0),
+});
+
+/**
+ * Enregistre la ligne d'une pièce jointe déjà déposée dans le stockage.
+ *
+ * Le fichier lui-même part du navigateur vers le bucket — ses octets n'ont
+ * rien à faire dans une requête vers le serveur — mais la ligne qui le
+ * référence s'écrit ici, comme toute écriture.
+ *
+ * Ni le foyer ni l'auteur ne viennent du navigateur : ils sont relus de la
+ * session. Le chemin, lui, est vérifié — il doit commencer par l'identifiant
+ * du foyer actif, faute de quoi une pièce jointe d'un foyer pourrait être
+ * rattachée à un autre. La contrainte `attachments_path_scoped` dit la même
+ * chose en base ; ce contrôle-ci en donne la raison en français.
+ */
+export async function createAttachmentAction(input: z.input<typeof attachmentSchema>) {
+  const parsed = attachmentSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+
+  const active = await requireActiveHousehold();
+  if (!active.ok) return active;
+
+  const { supabase, household, member } = active.data;
+  const { eventId, storagePath, fileName, mimeType, sizeBytes } = parsed.data;
+
+  if (!storagePath.startsWith(`${household.id}/`)) {
+    return fail("Ce fichier n'est pas rangé dans votre foyer.");
+  }
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('id')
+    .eq('id', eventId)
+    .eq('household_id', household.id)
+    .maybeSingle();
+
+  if (!event) return fail('Événement introuvable.');
+
+  const { data, error } = await supabase
+    .from('attachments')
+    .insert({
+      household_id: household.id,
+      event_id: eventId,
+      storage_path: storagePath,
+      file_name: fileName,
+      mime_type: mimeType ?? null,
+      size_bytes: sizeBytes,
+      uploaded_by: member.user_id,
+    })
+    .select('*')
+    .single();
+
+  if (error || !data) return fail(humanizeDbError(error));
+
+  revalidatePath('/calendrier');
+  return ok(data);
+}
 
 /**
  * Délivre une URL temporaire pour consulter une pièce jointe.

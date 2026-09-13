@@ -8,7 +8,7 @@ import { Sheet } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ErrorNote, Field, Input, Select, Textarea, Spinner } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/toast';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import { RecurrencePicker } from '@/components/events/pickers';
 import { Avatar } from '@/components/ui/avatar';
@@ -38,7 +38,7 @@ export function ChildcareSheet({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const { household, children } = useHousehold();
 
   const [nannies, setNannies] = React.useState<NannyRow[]>([]);

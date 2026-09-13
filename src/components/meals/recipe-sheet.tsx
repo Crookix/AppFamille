@@ -7,7 +7,7 @@ import { Sheet } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ErrorNote, Field, Input, Select, Textarea } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/toast';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/components/providers/use-supabase';
 import { deleteRecipeAction, saveRecipeAction } from '@/lib/actions/meals';
 import { AISLE_LABELS, AISLE_ORDER, guessAisle } from '@/lib/ingredients';
 import { cn } from '@/lib/utils';
@@ -49,7 +49,7 @@ export function RecipeSheet({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const [name, setName] = React.useState('');
   const [servings, setServings] = React.useState('4');
