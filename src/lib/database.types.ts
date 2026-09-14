@@ -65,6 +65,9 @@ export type MealSlot = 'petit_dejeuner' | 'dejeuner' | 'diner';
 export type ChildcareStatus = 'prevue' | 'a_confirmer' | 'confirmee' | 'annulee';
 export type PaymentStatus = 'a_payer' | 'paye';
 
+export type RecoKind = 'film' | 'serie' | 'theatre' | 'cadeau' | 'autre';
+export type RecoStatus = 'idee' | 'en_cours' | 'fait';
+
 export type NotificationKind =
   | 'tache_attribuee'
   | 'tache_terminee'
@@ -391,6 +394,36 @@ export type FrequentItemRow = {
   last_used_at: string;
 };
 
+export type RecommendationRow = {
+  id: string;
+  household_id: string;
+  kind: RecoKind;
+  status: RecoStatus;
+  title: string;
+  author: string | null;
+  note: string | null;
+  url: string | null;
+  rating: number | null;
+  recipient_label: string | null;
+  recipient_child_id: string | null;
+  occasion: string | null;
+  price: number | null;
+  suggested_by: string | null;
+  done_at: string | null;
+  done_by: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RecommendationWantRow = {
+  id: string;
+  household_id: string;
+  recommendation_id: string;
+  member_id: string;
+  created_at: string;
+};
+
 export type RecipeRow = {
   id: string;
   household_id: string;
@@ -609,6 +642,11 @@ export type Database = {
       >;
       frequent_items: Table<FrequentItemRow, 'household_id' | 'label' | 'label_key'>;
       recipes: Table<RecipeRow, 'household_id' | 'name'>;
+      recommendations: Table<RecommendationRow, 'household_id' | 'kind' | 'title'>;
+      recommendation_wants: Table<
+        RecommendationWantRow,
+        'household_id' | 'recommendation_id' | 'member_id'
+      >;
       recipe_ingredients: Table<
         RecipeIngredientRow,
         'household_id' | 'recipe_id' | 'label' | 'label_key'
@@ -700,6 +738,8 @@ export type Database = {
       task_status: TaskStatus;
       task_priority: TaskPriority;
       shop_aisle: ShopAisle;
+      reco_kind: RecoKind;
+      reco_status: RecoStatus;
       meal_slot: MealSlot;
       childcare_status: ChildcareStatus;
       payment_status: PaymentStatus;

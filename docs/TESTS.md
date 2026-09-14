@@ -30,19 +30,35 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
 
 **Ce qui a été tenté**, par un membre d'un autre foyer :
 
-- lire les événements, enfants, tâches, nounous, pièces jointes, membres,
-  invitations, et le foyer lui-même ;
+- lire les événements, enfants, tâches, nounous, recommandations, envies de
+  recommandation, pièces jointes, membres, invitations, et le foyer lui-même ;
 - lire la table des jetons Google, en entier ;
 - lire les objets de stockage rangés sous l'identifiant du foyer visé ;
 - modifier et supprimer chacune de ces lignes ;
 - insérer des lignes portant l'identifiant du foyer visé ;
 - s'ajouter comme administrateur de ce foyer ;
 - déposer un fichier dans son espace de stockage ;
+- accrocher une « envie » de recommandation à la fiche d'un autre foyer, sous
+  son propre identifiant de foyer ;
 - et, en tant qu'adulte non-administrateur de son **propre** foyer :
-  se promouvoir, modifier la fiche d'un autre membre, exclure l'administrateur ;
+  se promouvoir, modifier la fiche d'un autre membre, exclure l'administrateur,
+  déclarer une envie de recommandation **au nom d'un autre membre** ;
 - accepter une invitation expirée, révoquée, déjà utilisée, ou inventée.
 
-**Résultat de la dernière exécution : 36 vérifications, 36 conformes.**
+**Résultat : 42 vérifications, 42 conformes.**
+
+Deux exécutions distinctes, et la distinction compte :
+
+- **36 vérifications contre la base Supabase réelle**, avant l'arrivée de la
+  reco. C'est la mesure de référence.
+- **42 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
+  points qui portent sur `recommendations` et `recommendation_wants`. Les
+  quatorze migrations y sont rejouées depuis une base vide, sur un
+  échafaudage reconstituant ce que Supabase fournit d'office (rôles `anon`,
+  `authenticated`, `service_role`, schémas `auth` et `storage`, `auth.jwt()`,
+  publication `supabase_realtime`). Les politiques testées sont les vraies,
+  mais **la base du projet n'a pas été rejouée depuis** : à refaire avec les
+  identifiants réels avant mise en production.
 
 Depuis la migration `0013`, le script fait intervenir **deux fournisseurs
 d'authentification à la fois** : Camille et Alex arrivent par Supabase Auth,
@@ -73,7 +89,7 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
 
 ## 2. Schéma, politiques et conseillers Supabase — **RÉEL**
 
-- **Les 35 tables** de `public` portent la RLS active — vérifié par requête sur
+- **Les 37 tables** de `public` portent la RLS active — vérifié par requête sur
   `pg_class`, pas par relecture des migrations. Deux d'entre elles,
   `google_credentials` et `_tribu_migrations`, ont la RLS active **et aucune
   politique** : elles sont donc invisibles à `anon` comme à `authenticated`.
@@ -96,12 +112,18 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
   paires de politiques permissives redondantes. L'étanchéité a été **revérifiée
   après** cette fusion — c'est la raison pour laquelle les 36 vérifications
   ci-dessus datent d'après `0011`, et non d'avant.
+- La migration `0014` (reco) a été passée au crible des mêmes règles, sur la
+  base locale : RLS active et politiques présentes sur les deux nouvelles
+  tables, aucune clé étrangère sans index couvrant, aucune politique
+  permissive en double, et **aucune politique ne lit `auth.uid()`** — le piège
+  `22P02` décrit en `0013`. Les conseillers Supabase eux-mêmes restent à
+  relancer sur le projet réel après application.
 
 ---
 
 ## 3. Logique métier — **SIMULÉ**
 
-85 tests unitaires Vitest, sur de la logique pure. Aucun réseau, aucune base :
+110 tests unitaires Vitest, sur de la logique pure. Aucun réseau, aucune base :
 c'est le propre de ces tests, et c'est aussi leur limite.
 
 | Fichier | Tests | Ce qu'il couvre |
@@ -111,6 +133,7 @@ c'est le propre de ces tests, et c'est aussi leur limite.
 | `tests/unit/childcare.test.ts` | 20 | Heures prévues et réalisées, ajustements, tarifs datés, bilan mensuel |
 | `tests/unit/google-mapping.test.ts` | 20 | Conversion Google ↔ MyFamily, empreintes de comparaison, droit d'écriture par agenda |
 | `tests/unit/exports.test.ts` | 3 | Nom de fichier d'export : ligatures, accents, séparateurs |
+| `tests/unit/recommendations.test.ts` | 25 | Vocabulaire par genre, complétion et filtrage des liens, prix à la française, recherche sans accent ni ligature, ordre d'affichage |
 
 `npm test`
 
@@ -132,7 +155,7 @@ Quatre bogues réels ont été trouvés **par** ces tests, pas malgré eux :
 ## 4. Compilation et types — **RÉEL**
 
 - `npx tsc --noEmit` : sans erreur.
-- `npx next build` : sans erreur, **23 routes** compilées.
+- `npx next build` : sans erreur, **24 routes** compilées.
 - Aucun `any` implicite, aucune assertion de type contournant le schéma de la
   base.
 
@@ -146,13 +169,14 @@ donc vérifiée **à la compilation**, pas seulement par relecture.
 
 ## 5. Parcours en navigateur — **NON JOUÉ**
 
-Sept fichiers Playwright, 28 tests, couvrant la création d'un foyer et
+Huit fichiers Playwright, 34 tests, couvrant la création d'un foyer et
 l'invitation, le calendrier et les récurrences, les tâches et les courses, les
-repas et la génération de la liste, les gardes et le bilan mensuel,
-l'étanchéité vue depuis l'interface, et l'honnêteté de l'écran Google.
+repas et la génération de la liste, les gardes et le bilan mensuel, les
+recommandations et leurs envies, l'étanchéité vue depuis l'interface, et
+l'honnêteté de l'écran Google.
 
 Ils se chargent et se listent correctement (`npx playwright test --list` →
-28 tests dans 7 fichiers), mais **ils n'ont pas été exécutés**.
+34 tests dans 8 fichiers), mais **ils n'ont pas été exécutés**.
 
 **Pourquoi.** La politique réseau de l'environnement de développement refuse
 les connexions vers `*.supabase.co`. Vérifié, et pas supposé :
@@ -224,11 +248,12 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Domaine | Vérifié comment | État |
 | --- | --- | --- |
 | Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **36/36** |
+| Étanchéité des recommandations et des envies | PostgreSQL 16 local, 14 migrations rejouées | **42/42** — à refaire sur la base du projet |
 | Invitations : expiration, révocation, rejeu, jeton inventé | Base réelle | **conforme** |
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
-| Récurrences, ingrédients, gardes, conversion Google, exports | Tests unitaires | **85/85** |
+| Récurrences, ingrédients, gardes, conversion Google, exports, recommandations | Tests unitaires | **110/110** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
-| Parcours en navigateur | Playwright | **écrits (28), non joués — réseau bloqué** |
+| Parcours en navigateur | Playwright | **écrits (34), non joués — réseau bloqué** |
 | Google Agenda de bout en bout | — | **non joué — aucun identifiant OAuth** |

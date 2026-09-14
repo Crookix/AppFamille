@@ -1,14 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { CalendarPlus, Baby, ListPlus, Plus, ShoppingBasket } from 'lucide-react';
+import { CalendarPlus, Baby, ListPlus, Plus, ShoppingBasket, Sparkles } from 'lucide-react';
 import { Sheet } from '@/components/ui/sheet';
 import { EventSheet } from '@/components/events/event-sheet';
 import { TaskSheet } from '@/components/tasks/task-sheet';
 import { QuickShoppingSheet } from '@/components/shopping/quick-shopping-sheet';
 import { ChildcareSheet } from '@/components/childcare/childcare-sheet';
+import { RecoSheet } from '@/components/reco/reco-sheet';
 
-type Target = 'evenement' | 'tache' | 'course' | 'garde';
+type Target = 'evenement' | 'tache' | 'course' | 'garde' | 'reco';
 
 const CHOICES: { key: Target; label: string; hint: string; icon: React.ElementType; tone: string }[] = [
   {
@@ -39,12 +40,19 @@ const CHOICES: { key: Target; label: string; hint: string; icon: React.ElementTy
     icon: Baby,
     tone: 'bg-[var(--bg-subtle)] text-[var(--fg)]',
   },
+  {
+    key: 'reco',
+    label: 'Une reco',
+    hint: 'Film, série, théâtre, idée cadeau',
+    icon: Sparkles,
+    tone: 'bg-brand-50 text-brand-600 dark:bg-white/5',
+  },
 ];
 
 /**
  * Bouton d'ajout rapide, présent sur tous les écrans.
  *
- * Il ouvre d'abord un choix à quatre entrées plutôt que de deviner ce que l'on
+ * Il ouvre d'abord un choix à cinq entrées plutôt que de deviner ce que l'on
  * veut créer selon la page : le geste reste le même partout, ce qui compte
  * davantage qu'une économie d'un appui.
  */
@@ -99,6 +107,7 @@ export function QuickAdd() {
       <TaskSheet open={target === 'tache'} onClose={() => setTarget(null)} />
       <QuickShoppingSheet open={target === 'course'} onClose={() => setTarget(null)} />
       <ChildcareSheet open={target === 'garde'} onClose={() => setTarget(null)} />
+      <RecoSheet open={target === 'reco'} onClose={() => setTarget(null)} />
     </>
   );
 }

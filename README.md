@@ -1,7 +1,8 @@
 # MyFamily
 
 L'organisation du foyer au même endroit : le calendrier de la famille, les
-tâches, les courses, les repas et les heures de garde. Sur téléphone comme sur
+tâches, les courses, les repas, les heures de garde et les recommandations que
+l'on se fait — films, séries, théâtre, idées cadeaux. Sur téléphone comme sur
 ordinateur, à deux adultes ou plus, dans un foyer qui ne voit que ses propres
 données.
 
@@ -39,6 +40,9 @@ sont listées dans [`docs/AVANCEMENT.md`](docs/AVANCEMENT.md).
   courses à partir des repas planifiés.
 - **Gardes** — nounous, tarifs datés, heures prévues et réalisées, bilan
   mensuel imprimable et exportable.
+- **Reco** — ce que la famille se recommande : films, séries, théâtre, idées
+  cadeaux. Chacun dit pourquoi, et peut déclarer son envie ; les mots suivent le
+  genre (« Vu » pour un film, « Offert » pour un cadeau).
 - **Google Agenda** — synchronisation bidirectionnelle, incrémentale, avec
   détection de conflit. Distincte de la connexion avec Google.
 - **PWA** — installable sur téléphone, avec un écran hors connexion.

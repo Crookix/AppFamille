@@ -79,6 +79,7 @@ do $$
 declare
   v_camille text := (select valeur from _t where cle='camille');
   v_foyer_a uuid;
+  v_reco_a  uuid;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_camille::text, 'role','authenticated')::text, true);
@@ -95,12 +96,23 @@ begin
           now() + interval '1 day', now() + interval '1 day 1 hour');
 
   insert into public.tasks (household_id, title) values (v_foyer_a, 'Tâche privée');
+
+  insert into public.recommendations
+    (household_id, kind, title, note, suggested_by, created_by)
+  values (v_foyer_a, 'film', 'Film que le foyer A garde pour lui',
+          'Pourquoi on le recommande — contenu privé',
+          public.current_member_id(v_foyer_a), v_camille)
+  returning id into v_reco_a;
+
+  insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+  values (v_foyer_a, v_reco_a, public.current_member_id(v_foyer_a));
+
   insert into public.nannies (household_id, name) values (v_foyer_a, 'Sofia');
   insert into public.attachments (household_id, storage_path, file_name, uploaded_by)
   values (v_foyer_a, v_foyer_a::text || '/billet-prive.pdf', 'billet-prive.pdf', v_camille);
 
   reset role;
-  insert into _t values ('foyer_a', v_foyer_a::text);
+  insert into _t values ('foyer_a', v_foyer_a::text), ('reco_a', v_reco_a::text);
 end $$;
 
 -- Un objet de stockage réel dans l'espace du foyer A.
@@ -117,17 +129,24 @@ declare
   v_alex   text := (select valeur from _t where cle='alex');
   v_intrus text := (select valeur from _t where cle='intrus');
   v_foyer_b uuid;
+  v_reco_b  uuid;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_alex::text, 'role','authenticated')::text, true);
   set local role authenticated;
   select public.create_household('Foyer B (vérif)', 'Alex', 'Europe/Paris') into v_foyer_b;
+
+  insert into public.recommendations (household_id, kind, title, suggested_by, created_by)
+  values (v_foyer_b, 'serie', 'Série du foyer B',
+          public.current_member_id(v_foyer_b), v_alex)
+  returning id into v_reco_b;
+
   reset role;
 
   insert into public.household_members (household_id, user_id, role, display_name)
   values (v_foyer_b, v_intrus, 'adulte', 'Intrus');
 
-  insert into _t values ('foyer_b', v_foyer_b::text);
+  insert into _t values ('foyer_b', v_foyer_b::text), ('reco_b', v_reco_b::text);
 end $$;
 
 -- Invitations du foyer A dans les quatre états possibles.
@@ -174,6 +193,14 @@ begin
   select count(*) into n from public.nannies where household_id = a;
   insert into _r (domaine, tentative, observe, verdict)
     values ('Lecture', 'Nounous du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.recommendations where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Recos du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.recommendation_wants where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Envies de reco du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
 
   select count(*) into n from public.attachments where household_id = a;
   insert into _r (domaine, tentative, observe, verdict)
@@ -260,6 +287,29 @@ begin
   exception when others then
     insert into _r (domaine, tentative, observe, verdict)
       values ('Écriture', 'Modifier une tâche du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    update public.recommendations set title='PIRATE' where household_id = a;
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Modifier une reco du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Modifier une reco du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- Une envie porte un `household_id` : sans le contrôle d'appartenance, on
+  -- pourrait accrocher la sienne à la fiche d'un foyer voisin.
+  begin
+    insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+    values (a, (select valeur from _t where cle='reco_a')::uuid,
+            (select id from public.household_members where household_id = b and user_id = v_alex));
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Déclarer une envie sur une reco du foyer A', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Déclarer une envie sur une reco du foyer A', 'refusé ('||sqlstate||')', 'OK');
   end;
 
   begin
@@ -390,6 +440,31 @@ begin
   exception when others then
     insert into _r (domaine, tentative, observe, verdict)
       values ('Élévation', 'Adulte non-admin : exclure l''administrateur', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- Les envies ne s'ajoutent que pour soi : la politique compare `member_id`
+  -- à `current_member_id()`, sinon n'importe qui voterait à la place des autres.
+  begin
+    insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+    values (b, (select valeur from _t where cle='reco_b')::uuid,
+            (select id from public.household_members where household_id = b and user_id = v_alex));
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'Adulte : déclarer une envie au nom d''un autre', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'Adulte : déclarer une envie au nom d''un autre', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+    values (b, (select valeur from _t where cle='reco_b')::uuid,
+            (select id from public.household_members where household_id = b and user_id = v_intrus));
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'TÉMOIN — déclarer sa propre envie', n || ' ligne(s)', case when n=1 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'TÉMOIN — déclarer sa propre envie', 'refusé ('||sqlstate||')', 'FAILLE');
   end;
 
   begin

@@ -1,13 +1,14 @@
 # Avancement et points bloquants
 
-Mis à jour le 10 septembre 2026.
+Mis à jour le 14 septembre 2026.
 
 ---
 
 ## Où en est le produit
 
-Les huit étapes prévues sont écrites, compilées et intégrées. Ce qui suit dit
-pour chacune ce qui existe **et** ce qui reste à confirmer.
+Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvième
+— la reco — s'y est ajoutée depuis. Ce qui suit dit pour chacune ce qui existe
+**et** ce qui reste à confirmer.
 
 | Étape | État | Reste à faire |
 | --- | --- | --- |
@@ -21,11 +22,18 @@ pour chacune ce qui existe **et** ce qui reste à confirmer.
 | 6 — Google Agenda | Écrite | **Demande une configuration externe** — voir plus bas |
 | 7 — Notifications, PWA, mode démo | Terminée | Confirmer sur un vrai téléphone |
 | 8 — Vérifications | Terminée | Jouer les parcours Playwright |
+| 9 — Reco (films, séries, théâtre, cadeaux) | Écrite | **Appliquer la migration `0014`** sur le projet, puis confirmer en navigateur |
 
-Douze migrations sont appliquées sur le projet Supabase. La base compte
-35 tables, toutes protégées par la RLS. 82 tests unitaires passent, la
-compilation produit 23 routes sans erreur, et la vérification d'étanchéité
-donne 36 conformités sur 36. Le détail est dans [`TESTS.md`](TESTS.md).
+Le dépôt compte quatorze migrations. **La dernière, `0014` (la reco), n'a été
+appliquée sur aucune base réelle** : c'est le geste qui manque pour que l'écran
+fonctionne en ligne. Une fois `npm run db:push` passé, la base porte 37 tables,
+toutes protégées par la RLS.
+
+110 tests unitaires passent, la compilation produit 24 routes sans erreur, et
+la vérification d'étanchéité donne 42 conformités sur 42 — dont 36 jouées
+contre la base Supabase réelle et les 42 contre un PostgreSQL local rejouant
+les quatorze migrations. Le détail, et la raison de cette distinction, sont
+dans [`TESTS.md`](TESTS.md).
 
 ---
 

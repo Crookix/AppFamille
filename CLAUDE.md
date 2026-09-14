@@ -1,8 +1,8 @@
 # MyFamily — repères pour travailler sur ce dépôt
 
 MyFamily est une application de gestion du foyer : le calendrier familial, les
-tâches, les courses, les repas et les heures de garde au même endroit, sur
-téléphone comme sur ordinateur.
+tâches, les courses, les repas, les heures de garde et les recommandations de
+la famille au même endroit, sur téléphone comme sur ordinateur.
 
 L'application s'appelait **Tribu** jusqu'en septembre 2026. Le nom visible a
 changé partout, mais **quatre identifiants techniques gardent l'ancien** parce
@@ -63,7 +63,7 @@ fonctionne sauf la synchronisation d'agenda, qui s'annonce comme non configurée
 ```
 src/
   app/
-    (app)/            écrans connectés (accueil, calendrier, listes, repas, plus)
+    (app)/            écrans connectés (accueil, calendrier, listes, repas, reco, plus)
     api/google/       connexion, retour d'autorisation, synchronisation, révocation
     auth/callback/    retour d'authentification Supabase
     bienvenue/        création ou choix du foyer
@@ -79,6 +79,7 @@ src/
     clerk.ts          détection de Clerk, domaine de l'instance
     recurrence.ts     RRULE, expansion des occurrences
     childcare.ts      heures de garde et bilans mensuels
+    recommendations.ts vocabulaire par genre, liens, prix, tri des recos
     ingredients.ts    normalisation et agrégation des ingrédients
 supabase/
   migrations/         schéma et RLS, numérotés, jamais modifiés après coup
