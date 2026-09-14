@@ -129,6 +129,31 @@ que la RLS ferme là où c'est en réalité le GRANT qui manque.
   paires de politiques permissives redondantes. L'étanchéité a été **revérifiée
   après** cette fusion — c'est la raison pour laquelle les 36 vérifications
   ci-dessus datent d'après `0011`, et non d'avant.
+- Relancés après la migration `0014`, ils ont relevé **deux défauts dans les
+  politiques qu'elle venait de créer**, corrigés par `0015` :
+  - les vingt-et-une politiques de `0014` ne nommaient aucun rôle et
+    s'appliquaient donc à `public`, `anon` compris, là où les vingt-et-une
+    politiques écrites depuis `0001` sont toutes portées `to authenticated`.
+    Ce n'était pas une fuite — un visiteur anonyme n'a pas de `sub` dans son
+    jeton, tous les prédicats sont faux — mais c'est le genre d'écart qui fait
+    mal relire une politique ;
+  - `acces nounou: la nounou lit le sien` lisait `auth.jwt()` directement,
+    donc réévalué à chaque ligne examinée. Enveloppé dans `(select …)`, il est
+    calculé une fois par requête.
+
+  Les **134 politiques** de la base sont désormais portées `to authenticated`,
+  sans exception, et les 28 vérifications d'étanchéité ont été **rejouées
+  après** `0015`.
+- Deux familles de signalements restent, assumées comme les précédentes : les
+  trois nouvelles fonctions `SECURITY DEFINER` (`is_linked_nanny`,
+  `is_nanny_of_household`, `accept_nanny_access`) — les deux premières
+  s'évaluent **dans** les politiques et ne renvoient qu'un booléen sur le
+  rattachement de l'appelante elle-même ; la troisième est le point d'entrée
+  voulu, et exige de connaître un jeton valable. Et les politiques permissives
+  multiples sur les six tables partagées : la nounou et le foyer y ont chacun
+  leur politique de lecture, au lieu d'un `or` qui les mélangerait. C'est une
+  évaluation booléenne de plus par ligne, contre une politique qu'on peut lire
+  et auditer publiquement par public.
 
 ---
 
