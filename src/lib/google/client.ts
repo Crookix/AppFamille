@@ -213,7 +213,7 @@ export class GoogleCalendarClient {
         pageToken,
         // Les séries sont importées telles quelles, avec leur RRULE, et leurs
         // occurrences modifiées arrivent comme événements distincts. C'est
-        // exactement le modèle de Tribu, d'où `singleEvents=false`.
+        // exactement le modèle de MyFamily, d'où `singleEvents=false`.
         singleEvents: 'false',
         showDeleted: 'true',
       };

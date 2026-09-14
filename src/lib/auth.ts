@@ -103,7 +103,7 @@ export const getUserWithProfile = cache(async (): Promise<AppUser | null> => {
  * Avec Supabase Auth, un déclencheur sur `auth.users` s'en chargeait. Un
  * utilisateur Clerk n'apparaît jamais dans `auth.users` : son profil doit donc
  * être créé à la volée, à la première visite. La fonction est idempotente et
- * ne réécrit jamais un prénom déjà choisi dans Tribu.
+ * ne réécrit jamais un prénom déjà choisi dans MyFamily.
  */
 export async function ensureProfile(user: AppUser): Promise<void> {
   // C'est le seul appel qui a besoin du nom et de l'adresse : on les récupère

@@ -49,7 +49,7 @@ export type PendingUpload = { id: string; file: File };
  * Les fichiers sont rangés sous `<foyer>/<événement>/…` dans un bucket privé :
  * c'est ce premier segment que contrôlent les policies de stockage. Ils
  * restent inaccessibles même si l'événement est synchronisé avec Google, car
- * seul Tribu délivre les liens de consultation.
+ * seul MyFamily délivre les liens de consultation.
  */
 export function AttachmentsField({
   eventId,

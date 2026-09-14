@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* --------------------------------------------------------------------------
-   Tribu — identité visuelle
+   MyFamily — identité visuelle
    Chaleureuse, douce, lisible sur téléphone : fond blanc cassé tirant vers
    l'abricot, cartes très arrondies, typographie ronde, couleurs sourdes.
    -------------------------------------------------------------------------- */
@@ -155,11 +155,11 @@
   }
 
   .animate-in-up {
-    animation: tribu-in-up 0.18s ease-out both;
+    animation: myfamily-in-up 0.18s ease-out both;
   }
 }
 
-@keyframes tribu-in-up {
+@keyframes myfamily-in-up {
   from {
     opacity: 0;
     transform: translateY(6px);

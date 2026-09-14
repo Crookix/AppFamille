@@ -3,19 +3,19 @@ import type { EventCategory, EventRow, GoogleShareMode } from '@/lib/database.ty
 import { dayKey } from '@/lib/datetime';
 
 /**
- * Correspondance entre un événement Tribu et un événement Google Calendar.
+ * Correspondance entre un événement MyFamily et un événement Google Calendar.
  *
  * Ces fonctions sont pures et sans accès réseau : ce sont elles que les tests
  * vérifient, car c'est là que se logent les doublons, les boucles et les
  * décalages d'horaire.
  *
- * Le modèle Tribu a été calqué dès le départ sur celui de Google
+ * Le modèle MyFamily a été calqué dès le départ sur celui de Google
  * (`recurringEventId` + `originalStartTime` ↔ `recurring_parent_id` +
  * `original_starts_at`), si bien qu'il s'agit d'une correspondance et non
  * d'une traduction.
  */
 
-/** Clé privée posée sur les événements que Tribu crée dans Google. */
+/** Clé privée posée sur les événements que MyFamily crée dans Google. */
 export const TRIBU_PROPERTY = 'tribuEventId';
 
 export type GoogleDateTime = {
@@ -49,7 +49,7 @@ export type GoogleEvent = {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Google → Tribu                                                             */
+/* Google → MyFamily                                                          */
 /* -------------------------------------------------------------------------- */
 
 export type ImportedEvent = {
@@ -70,7 +70,7 @@ export type ImportedEvent = {
 };
 
 /**
- * Convertit un événement Google en champs Tribu.
+ * Convertit un événement Google en champs MyFamily.
  *
  * `shareMode` décide de ce que le foyer voit : en mode « disponibilité », le
  * titre et la description sont écartés — pas masqués à l'affichage, mais bien
@@ -133,7 +133,7 @@ export function googleToLocal(
     isCancelled,
     isBusyOnly: busyOnly,
     // Google ne porte pas la notion de catégorie familiale : tout ce qui est
-    // importé arrive en « perso », modifiable ensuite dans Tribu.
+    // importé arrive en « perso », modifiable ensuite dans MyFamily.
     category: 'perso',
   };
 }
@@ -170,14 +170,14 @@ function formatOffset(minutes: number): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Tribu → Google                                                             */
+/* MyFamily → Google                                                          */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Construit le corps d'un événement Google à partir d'un événement Tribu.
+ * Construit le corps d'un événement Google à partir d'un événement MyFamily.
  *
  * Les pièces jointes ne sont JAMAIS transmises : elles restent dans le
- * stockage privé de Tribu, accessibles aux seules personnes autorisées dans
+ * stockage privé de MyFamily, accessibles aux seules personnes autorisées dans
  * l'application, même quand l'événement est synchronisé.
  */
 export function localToGoogle(event: EventRow): GoogleEvent {
@@ -258,7 +258,7 @@ export function remoteFingerprint(event: GoogleEvent): string {
     .slice(0, 32);
 }
 
-/** Cet événement Google a-t-il été créé par Tribu ? */
+/** Cet événement Google a-t-il été créé par MyFamily ? */
 export function isTribuOrigin(event: GoogleEvent): string | null {
   return event.extendedProperties?.private?.[TRIBU_PROPERTY] ?? null;
 }

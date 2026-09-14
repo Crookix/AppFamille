@@ -229,7 +229,7 @@ export function GoogleSettings({
             </p>
             <p className="text-sm text-muted">
               {account?.email ??
-                "Autorisez l'accès pour afficher vos calendriers dans Tribu."}
+                "Autorisez l'accès pour afficher vos calendriers dans MyFamily."}
             </p>
 
             {account?.last_error ? (
@@ -244,7 +244,7 @@ export function GoogleSettings({
         <p className="mt-3 flex items-start gap-2 rounded-2xl bg-[var(--bg-subtle)] px-3.5 py-2.5 text-xs text-muted">
           <ShieldQuestion className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
           <span>
-            Se connecter à Tribu avec Google et autoriser l'accès à Google Agenda sont
+            Se connecter à MyFamily avec Google et autoriser l'accès à Google Agenda sont
             deux choses distinctes. Vous pouvez retirer l'accès à l'agenda à tout
             moment sans perdre votre compte.
           </span>
@@ -386,7 +386,7 @@ export function GoogleSettings({
                             />
                             <span>
                               <span className="font-semibold">
-                                Envoyer les événements Tribu vers ce calendrier
+                                Envoyer les événements MyFamily vers ce calendrier
                               </span>
                               <span className="block text-xs text-muted">
                                 Un seul calendrier peut recevoir les créations.
@@ -396,7 +396,7 @@ export function GoogleSettings({
                         ) : (
                           <p className="flex items-start gap-1.5 text-xs text-muted">
                             <Link2Off className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                            Ce calendrier est en lecture seule : Tribu n'y écrira jamais.
+                            Ce calendrier est en lecture seule : MyFamily n'y écrira jamais.
                           </p>
                         )}
                       </div>
@@ -410,7 +410,7 @@ export function GoogleSettings({
           {writable.length === 0 && calendars.length > 0 ? (
             <p className="mt-2 px-1 text-xs text-muted">
               Aucun de vos calendriers n'autorise l'écriture : la synchronisation sera
-              à sens unique, de Google vers Tribu.
+              à sens unique, de Google vers MyFamily.
             </p>
           ) : null}
         </section>
@@ -497,7 +497,7 @@ export function GoogleSettings({
             <span>
               Supprimer aussi les événements importés de Google.
               <span className="block text-xs">
-                Les événements créés dans Tribu ne sont jamais supprimés.
+                Les événements créés dans MyFamily ne sont jamais supprimés.
               </span>
             </span>
           </label>

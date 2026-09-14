@@ -21,16 +21,16 @@ import {
  * Trois principes gouvernent tout ce fichier :
  *
  * 1. **Anti-doublon.** Une paire (calendrier Google, identifiant Google) ne
- *    peut correspondre qu'à un seul événement Tribu, garanti par un index
+ *    peut correspondre qu'à un seul événement MyFamily, garanti par un index
  *    unique. Aucune reconnaissance « par ressemblance » n'est tentée.
  *
  * 2. **Anti-boucle.** Un événement importé porte `origin = 'google'` et n'est
- *    JAMAIS réexporté. Un événement Tribu n'est réexporté que si sa révision a
+ *    JAMAIS réexporté. Un événement MyFamily n'est réexporté que si sa révision a
  *    bougé depuis le dernier envoi. L'etag renvoyé par Google sert d'accusé :
  *    s'il n'a pas changé, ce qui revient est notre propre écho.
  *
  * 3. **Rien ne disparaît en silence.** Une suppression côté Google n'efface un
- *    événement Tribu que s'il venait de Google. Un événement créé dans Tribu
+ *    événement MyFamily que s'il venait de Google. Un événement créé dans MyFamily
  *    et effacé chez Google perd sa correspondance mais garde ses données, ses
  *    participants et ses pièces jointes.
  */
@@ -88,7 +88,7 @@ async function applyRemoteEvent(
       counters.deleted += 1;
     } else if (local) {
       // Événement du foyer : on coupe le lien, mais on ne touche pas aux
-      // données familiales. La suppression restera à confirmer dans Tribu.
+      // données familiales. La suppression restera à confirmer dans MyFamily.
       await admin
         .from('google_event_links')
         .update({ deleted_remotely: true, last_synced_at: new Date().toISOString() })
@@ -219,7 +219,7 @@ async function exportLocalEvents(
   const windowStart = new Date();
   windowStart.setDate(windowStart.getDate() - 30);
 
-  // Seuls les événements NÉS dans Tribu partent vers Google. Un événement
+  // Seuls les événements NÉS dans MyFamily partent vers Google. Un événement
   // importé n'est jamais renvoyé : c'est la garde la plus simple contre les
   // boucles, et elle ne peut pas se tromper.
   const { data: candidates } = await admin
@@ -305,7 +305,7 @@ async function exportLocalEvents(
   return { exported, conflicts };
 }
 
-/** Répercute vers Google les suppressions faites dans Tribu. */
+/** Répercute vers Google les suppressions faites dans MyFamily. */
 async function processDeletions(
   admin: SupabaseClient<Database>,
   client: GoogleCalendarClient,
@@ -321,7 +321,7 @@ async function processDeletions(
   let deleted = 0;
 
   for (const item of pending ?? []) {
-    // On ne supprime chez Google que ce que Tribu y avait créé.
+    // On ne supprime chez Google que ce que MyFamily y avait créé.
     if (item.origin !== 'tribu') {
       await admin
         .from('google_deletion_queue')
@@ -420,7 +420,7 @@ export async function syncCalendar(
     const instances = page.events.filter((e) => Boolean(e.recurringEventId));
 
     for (const remote of [...series, ...instances]) {
-      // Événement que Tribu a créé et qui nous revient : traité comme les
+      // Événement que MyFamily a créé et qui nous revient : traité comme les
       // autres, l'etag décidera s'il s'agit d'un écho ou d'une vraie
       // modification faite depuis Google.
       isTribuOrigin(remote);

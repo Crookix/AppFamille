@@ -1,7 +1,7 @@
 /**
  * Clerk, branché sans être imposé.
  *
- * Tribu sait s'authentifier de deux façons : par le lien magique de Supabase
+ * MyFamily sait s'authentifier de deux façons : par le lien magique de Supabase
  * Auth, ou par Clerk. Le choix ne se fait pas dans le code mais dans la
  * configuration : si les clés Clerk sont présentes, Clerk prend la main ;
  * sinon l'application continue exactement comme avant.

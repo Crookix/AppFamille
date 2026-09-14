@@ -1,8 +1,16 @@
-# Tribu — repères pour travailler sur ce dépôt
+# MyFamily — repères pour travailler sur ce dépôt
 
-Tribu est une application de gestion du foyer : le calendrier familial, les
+MyFamily est une application de gestion du foyer : le calendrier familial, les
 tâches, les courses, les repas et les heures de garde au même endroit, sur
 téléphone comme sur ordinateur.
+
+L'application s'appelait **Tribu** jusqu'en septembre 2026. Le nom visible a
+changé partout, mais **quatre identifiants techniques gardent l'ancien** parce
+que les renommer casserait des données en place : la valeur `'tribu'` du type
+`event_origin`, les cookies `tribu_foyer`, `tribu_invitation` et
+`tribu_google_state`, la clé de thème `tribu-theme` dans le navigateur, et la
+table de journal `_tribu_migrations`. Les rencontrer n'est pas un oubli de
+renommage.
 
 Ce fichier dit **comment on travaille ici** : les commandes, les conventions,
 et les quelques règles qu'on ne contourne pas. Le détail des fonctionnalités
@@ -269,7 +277,7 @@ une relecture attentive.
   franchi, la session reste en attente et `auth()` ne renvoie rien au serveur —
   l'application ne voit donc personne, et aucun profil n'est créé. Le symptôme
   trompe : la personne est bien « connectée » selon Clerk, mais l'application se
-  comporte comme si elle ne l'était pas. Tribu n'utilise pas les organisations :
+  comporte comme si elle ne l'était pas. MyFamily n'utilise pas les organisations :
   **les désactiver dans le tableau de bord Clerk.** Et attention, on ne
   reproduit pas le problème depuis un compte qui a déjà franchi l'étape.
 - **Un écran qui dépend d'un script distant doit dire quand il ne vient pas.**

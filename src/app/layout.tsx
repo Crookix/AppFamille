@@ -14,16 +14,16 @@ const nunito = Nunito({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Tribu — l’organisation du foyer',
-    template: '%s · Tribu',
+    default: 'MyFamily — l’organisation du foyer',
+    template: '%s · MyFamily',
   },
   description:
     'Le calendrier, les tâches, les courses, les repas et les gardes de la famille, au même endroit.',
   manifest: '/manifest.webmanifest',
-  applicationName: 'Tribu',
+  applicationName: 'MyFamily',
   appleWebApp: {
     capable: true,
-    title: 'Tribu',
+    title: 'MyFamily',
     statusBarStyle: 'default',
   },
   formatDetection: { telephone: false },

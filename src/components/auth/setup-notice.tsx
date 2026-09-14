@@ -15,7 +15,7 @@ export function SetupNotice() {
       </div>
 
       <p className="text-sm text-muted">
-        Tribu n'est relié à aucune base de données. Trois étapes suffisent :
+        MyFamily n'est relié à aucune base de données. Trois étapes suffisent :
       </p>
 
       <ol className="mt-3 space-y-2.5 text-sm">

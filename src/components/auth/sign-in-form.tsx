@@ -111,7 +111,7 @@ export function SignInForm({
         <h2 className="text-base font-bold">Regardez votre boîte mail</h2>
         <p className="mt-1.5 text-sm text-muted">
           Un lien de connexion vient d'être envoyé à <strong>{email.trim()}</strong>.
-          Ouvrez-le sur cet appareil pour entrer dans Tribu.
+          Ouvrez-le sur cet appareil pour entrer dans MyFamily.
         </p>
         <Button
           variant="ghost"

@@ -12,7 +12,7 @@ import {
 /**
  * Démarre l'autorisation Google Agenda.
  *
- * Cette étape est distincte de la connexion à Tribu avec Google : on peut être
+ * Cette étape est distincte de la connexion à MyFamily avec Google : on peut être
  * connecté depuis des mois sans avoir jamais donné accès à son agenda.
  */
 export async function GET(request: NextRequest) {

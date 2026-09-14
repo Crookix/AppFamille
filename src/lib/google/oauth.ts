@@ -6,7 +6,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
  * Autorisation Google Agenda.
  *
  * Volontairement distincte de la connexion au compte Google : on peut se
- * connecter à Tribu avec Google sans jamais donner accès à son agenda, et
+ * connecter à MyFamily avec Google sans jamais donner accès à son agenda, et
  * inversement révoquer l'accès à l'agenda sans perdre son compte. C'est la
  * distinction que demande le cahier des charges, et elle est ici structurelle,
  * pas cosmétique.
@@ -58,7 +58,7 @@ export const STATE_COOKIE = 'tribu_google_state';
  * Jeton d'état anti-CSRF.
  *
  * Sans lui, un tiers pourrait faire aboutir SON autorisation Google dans le
- * compte Tribu de la victime. Le jeton est déposé en cookie httpOnly et
+ * compte MyFamily de la victime. Le jeton est déposé en cookie httpOnly et
  * comparé au retour, en temps constant.
  */
 export function createStateToken(): string {

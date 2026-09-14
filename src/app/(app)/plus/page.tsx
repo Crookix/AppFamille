@@ -98,7 +98,7 @@ export default async function PlusPage() {
       </Card>
 
       <p className="mt-6 text-center text-xs text-muted">
-        Tribu · foyer « {household.name} »
+        MyFamily · foyer « {household.name} »
       </p>
     </div>
   );

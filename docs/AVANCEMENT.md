@@ -33,9 +33,12 @@ donne 36 conformités sur 36. Le détail est dans [`TESTS.md`](TESTS.md).
 
 Le projet Vercel existe : **`tribu`**, sur l'équipe « Adri's projects », relié à
 `Crookix/AppFamille`. Chaque push sur la branche de production redéploie
-automatiquement.
+automatiquement. Le projet garde son nom d'origine ; seule l'application a été
+renommée.
 
-- Adresse publique : <https://tribu-umber.vercel.app>
+- Adresse visée : <https://myfamily.mykrew.app> — **à rattacher au projet dans
+  Settings › Domains**, ce qui n'est pas encore fait à la date de ce document.
+- Adresse actuelle : <https://tribu-umber.vercel.app>
 - Tableau de bord : <https://vercel.com/adris-projects-cf9c71fa/tribu>
 
 Le premier déploiement est en ligne et se comporte comme prévu : faute de
@@ -156,7 +159,7 @@ sécurité repose sur la RLS, pas sur leur secret :
 ```
 NEXT_PUBLIC_SUPABASE_URL       = https://<votre-projet>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY  = sb_publishable_…
-NEXT_PUBLIC_SITE_URL           = https://tribu-umber.vercel.app
+NEXT_PUBLIC_SITE_URL           = https://myfamily.mykrew.app
 NEXT_PUBLIC_ENABLE_DEMO        = 1
 SUPABASE_SERVICE_ROLE_KEY      = …            (secret)
 TOKEN_ENCRYPTION_KEY           = …            (secret)
@@ -237,6 +240,24 @@ un parcours dédié (`tests/e2e/07-google.spec.ts`).
 ## Décisions prises en cours de route
 
 Elles sont notées ici parce qu'elles engagent la suite.
+
+**Tribu est devenue MyFamily, sans toucher aux données.** Le nom visible a été
+remplacé dans l'interface, le manifeste, les métadonnées et la documentation.
+Cinq identifiants techniques gardent volontairement l'ancien nom, parce qu'en
+changer aurait un coût sans contrepartie : la valeur `'tribu'` du type
+`event_origin` (il faudrait une migration et une réécriture de toutes les
+lignes), les cookies `tribu_foyer`, `tribu_invitation` et `tribu_google_state`
+(tout le monde serait déconnecté et les invitations en cours perdues), la clé
+`tribu-theme` du navigateur (chacun retrouverait le thème automatique), la
+propriété `tribuEventId` posée sur les événements Google (les correspondances
+existantes seraient orphelines) et la table `_tribu_migrations` (le journal des
+migrations appliquées). Le cache du service worker, lui, a été versionné en
+`myfamily-v1` : c'est justement ce qui force les appareils à recharger la
+coquille au nouveau nom.
+
+Les migrations SQL n'ont pas été retouchées non plus : une migration appliquée
+ne se modifie pas, et leurs commentaires disent l'état du projet au moment où
+elles ont été écrites.
 
 **Un projet Supabase entièrement séparé.** Le cahier des charges demandait un
 projet indépendant des autres applications ; c'est le cas, sur un compte
