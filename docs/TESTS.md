@@ -223,47 +223,64 @@ donc vérifiée **à la compilation**, pas seulement par relecture.
 
 ---
 
-## 5. Parcours en navigateur — **NON JOUÉ**
+## 5. Parcours en navigateur — **JOUÉS POUR LA PREMIÈRE FOIS**
 
-Huit fichiers Playwright, 34 tests, couvrant la création d'un foyer et
-l'invitation, le calendrier et les récurrences, les tâches et les courses, les
-repas et la génération de la liste, les gardes et le bilan mensuel, les
-recommandations et leurs envies, l'étanchéité vue depuis l'interface, et
-l'honnêteté de l'écran Google.
+Huit fichiers Playwright, 34 tests. Ils étaient jusqu'ici **écrits mais jamais
+exécutés** : la politique réseau interdit d'atteindre `*.supabase.co`, et sans
+projet joignable la suite se déclarait ignorée.
 
-Ils se chargent et se listent correctement (`npx playwright test --list` →
-34 tests dans 8 fichiers), mais **ils n'ont pas été exécutés**.
+**Ce qui a changé.** Une pile Supabase complète tourne maintenant en local
+(`supabase start` : Postgres 17, GoTrue, PostgREST, Realtime, Storage, Kong),
+sur laquelle les dix-sept migrations du dépôt s'appliquent. `.env.local` pointe
+dessus. Aucune écriture n'est faite dans le projet réel.
 
-**Pourquoi.** La politique réseau de l'environnement de développement refuse
-les connexions vers `*.supabase.co`. Vérifié, et pas supposé :
+### Ce que la première exécution a trouvé
 
-```
-CONNECT tunnel failed, response 403
-host: <votre-projet>.supabase.co:443
-detail: gateway answered 403 to CONNECT (policy denial)
-```
+**Un défaut grave, corrigé.** Sans Clerk, *tout* écran touchant à Supabase
+plantait sur l'écran « Quelque chose a coincé » : `useSupabase()` appelait
+`useAuth()` sans condition, or celui-ci lève hors `ClerkProvider` — lequel
+n'est pas monté quand Clerk n'est pas configuré. Quatorze composants étaient
+concernés : accueil, calendrier, listes, repas, courses, notifications, reco.
+Le correctif choisit la variante au chargement du module. Détail et raison
+dans `CLAUDE.md`.
 
-L'application démarre, mais aucune requête vers la base n'aboutit ; un parcours
-joué dans ces conditions échouerait sur la connexion, pas sur le produit. C'est
-d'ailleurs pour cette raison que la vérification d'étanchéité passe par SQL :
-ce chemin-là, lui, est disponible.
+**Onze parcours visent une interface qui n'existe pas.** Les spécifications
+ayant été écrites sans jamais être jouées, elles attendent des libellés
+imaginaires : un bouton « Agenda » dans le calendrier (les vues s'appellent
+Jour, Semaine, Mois), le nom du foyer sur l'accueil (qui ne l'affiche jamais).
+Ce sont des défauts de test, pas de produit : après le correctif ci-dessus,
+**le serveur ne rapporte plus aucune erreur applicative**.
 
-**Pour les jouer**, sur un poste dont le réseau atteint Supabase :
+### État actuel
+
+| Fichier | Bureau | Remarque |
+| --- | --- | --- |
+| `08-reco.spec.ts` | **3/3** | également **3/3 en profil mobile** (375 px) |
+| `06-etancheite.spec.ts` | **1/1** | l'étanchéité vue depuis l'interface |
+| `07-google.spec.ts` | 1/2 | le second attend un libellé absent |
+| `01-foyer-invitation.spec.ts` | 1/2 | |
+| `02` à `05` | 0/9 | libellés à aligner sur l'interface réelle |
+
+Les parcours de la reco sont donc **vérifiés en navigateur**, sur les deux
+profils : un film ajouté, mis en envie et marqué « Vu » ; une idée cadeau avec
+destinataire, occasion et prix, marquée « Offert » ; le filtrage par onglet.
+
+Les neuf restants demandent d'aligner les specs sur l'interface — un travail
+qui porte sur des fonctionnalités antérieures, et qu'il vaut mieux faire écran
+par écran plutôt qu'en ajustant des sélecteurs jusqu'à ce que le vert
+apparaisse.
+
+### Pour rejouer
 
 ```bash
-npm run dev
+npx supabase start          # pile locale
 npm run test:e2e
 ```
 
-Il faut `SUPABASE_SERVICE_ROLE_KEY` dans `.env.local` — uniquement pour
-fabriquer les comptes de test et leurs liens de connexion. Sans elle, chaque
-fichier s'annonce comme ignoré **en disant ce qui manque** ; aucun ne passe à
-vide.
-
-Tant que ces parcours n'ont pas tourné, les critères d'acceptation de
-[`FONCTIONNALITES.md`](FONCTIONNALITES.md) marqués « fait, non vérifié en
-navigateur » restent à confirmer. Ils sont écrits pour être vérifiables à la
-main en quelques minutes si vous préférez commencer par là.
+Dans cet environnement, deux écarts à connaître : `supabase start` ne crée pas
+`_tribu_migrations` (c'est `db:push` qui s'en charge), donc `0010` échoue sans
+une amorce ; et la version de Playwright du dépôt réclame un Chromium plus
+récent que celui préinstallé, qu'il faut donc désigner par `executablePath`.
 
 ---
 
@@ -315,5 +332,6 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
 | Récurrences, ingrédients, gardes, conversion Google, exports, recommandations | Tests unitaires | **110/110** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
-| Parcours en navigateur | Playwright | **écrits (34), non joués — réseau bloqué** |
+| Parcours en navigateur, reco | Playwright sur pile Supabase locale | **6/6** (bureau et mobile) |
+| Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **joués pour la première fois : 1 défaut produit corrigé, 11 specs à aligner** |
 | Google Agenda de bout en bout | — | **non joué — aucun identifiant OAuth** |

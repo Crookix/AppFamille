@@ -302,6 +302,23 @@ une relecture attentive.
 - **Monter `ClerkProvider` sans clé publiable fait tomber toute
   l'application.** L'absence de Clerk est un état normal : `AuthProvider` rend
   ses enfants tels quels dans ce cas.
+- **`useAuth()` de Clerk ne survit pas à l'absence de `ClerkProvider` : il
+  lève.** Le corollaire du point précédent, et il a coûté cher. `useSupabase()`
+  appelait `useAuth()` sans condition « par respect de la règle des hooks », en
+  supposant qu'il renverrait un objet inerte hors provider. Faux : en v7 il
+  lève `useAssertWrappedByClerkProvider`. Comme `AuthProvider` ne monte pas
+  `ClerkProvider` quand Clerk n'est pas configuré, **tout écran touchant à
+  Supabase plantait dès que Clerk était absent** — c'est-à-dire dans la
+  configuration que `.env.example` présente comme normale. La règle des hooks
+  demande un ordre d'appel stable **entre deux rendus**, pas un appel
+  inconditionnel dans le fichier : `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` étant
+  remplacée à la compilation, on choisit la variante une fois au chargement du
+  module (`src/components/providers/use-supabase.ts`).
+- **Des tests écrits ne sont pas des tests joués.** Les sept fichiers Playwright
+  du dépôt n'avaient jamais été exécutés ; à la première exécution réelle, la
+  plupart visaient des libellés que l'interface n'a jamais eus (un bouton
+  « Agenda » au calendrier, le nom du foyer sur l'accueil). Un parcours qui n'a
+  pas tourné au moins une fois ne prouve rien.
 - **Le client navigateur des cookies ignore le jeton Clerk.** Onze composants
   appelaient `createClient()` directement plutôt que `useSupabase()`. Sans
   Clerk, rien ne se voyait ; avec lui, leurs requêtes partaient en anonyme :

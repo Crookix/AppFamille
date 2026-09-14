@@ -21,8 +21,8 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 5 — Nounous, heures, bilans | Terminée | Confirmer en navigateur |
 | 6 — Google Agenda | Écrite | **Demande une configuration externe** — voir plus bas |
 | 7 — Notifications, PWA, mode démo | Terminée | Confirmer sur un vrai téléphone |
-| 8 — Vérifications | Terminée | Jouer les parcours Playwright |
-| 9 — Reco (films, séries, théâtre, cadeaux) | Terminée | Confirmer en navigateur |
+| 8 — Vérifications | Terminée | Aligner 11 parcours Playwright sur l'interface réelle |
+| 9 — Reco (films, séries, théâtre, cadeaux) | Terminée | — *confirmée en navigateur, bureau et mobile* |
 
 Le dépôt compte dix-sept migrations, `0001` à `0017`, **toutes appliquées sur
 le projet `tribu-foyer`**, qui porte 40 tables et 141 politiques, toutes avec
