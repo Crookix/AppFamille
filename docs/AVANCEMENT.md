@@ -22,18 +22,56 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 6 — Google Agenda | Écrite | **Demande une configuration externe** — voir plus bas |
 | 7 — Notifications, PWA, mode démo | Terminée | Confirmer sur un vrai téléphone |
 | 8 — Vérifications | Terminée | Jouer les parcours Playwright |
-| 9 — Reco (films, séries, théâtre, cadeaux) | Écrite | **Appliquer la migration `0014`** sur le projet, puis confirmer en navigateur |
+| 9 — Reco (films, séries, théâtre, cadeaux) | Écrite | **Appliquer la migration `0016`** sur le projet, puis confirmer en navigateur |
 
-Le dépôt compte quatorze migrations. **La dernière, `0014` (la reco), n'a été
-appliquée sur aucune base réelle** : c'est le geste qui manque pour que l'écran
-fonctionne en ligne. Une fois `npm run db:push` passé, la base porte 37 tables,
-toutes protégées par la RLS.
+Le dépôt compte quatorze migrations, numérotées `0001`–`0013` puis `0016`.
+**La dernière, `0016` (la reco), n'a été appliquée sur aucune base réelle** :
+c'est le geste qui manque pour que l'écran fonctionne en ligne. Le projet
+`tribu-foyer` compte aujourd'hui 38 tables, toutes protégées par la RLS ;
+`npm run db:push` en ajoutera deux — `recommendations` et
+`recommendation_wants`.
+
+Le saut de numéro n'est pas une erreur, et il signale un écart à régler —
+voir « Écart entre le dépôt et la base » ci-dessous.
 
 110 tests unitaires passent, la compilation produit 24 routes sans erreur, et
 la vérification d'étanchéité donne 42 conformités sur 42 — dont 36 jouées
 contre la base Supabase réelle et les 42 contre un PostgreSQL local rejouant
-les quatorze migrations. Le détail, et la raison de cette distinction, sont
+les migrations du dépôt. Le détail, et la raison de cette distinction, sont
 dans [`TESTS.md`](TESTS.md).
+
+---
+
+## Écart entre le dépôt et la base — **à régler**
+
+Constaté le 14 septembre 2026 en interrogeant le projet `tribu-foyer` :
+le journal `_tribu_migrations` contient deux migrations **qui ne sont dans
+aucune branche du dépôt** :
+
+| Migration | Appliquée le |
+| --- | --- |
+| `0014_espace_nounou.sql` | 14 septembre 2026, 09:38 UTC |
+| `0015_politiques_nounou_alignees.sql` | 14 septembre 2026, 09:39 UTC |
+
+Elles ont créé trois tables — `nanny_accesses`, `nanny_availability`,
+`childcare_declarations` — toutes avec la RLS active. La base de production
+est donc **en avance sur le dépôt**, ce qui met en défaut la règle « le dépôt
+décrit le schéma » : une base reconstruite depuis `main` n'aurait pas ces
+tables.
+
+Ce qu'il faut faire, dans cet ordre :
+
+1. **Committer les deux fichiers manquants** sous leurs noms exacts, sinon
+   `db:push` les rejouera un jour sur une base qui les a déjà, ou les oubliera
+   sur une base neuve.
+2. Vérifier `public.delete_user_data` : `nanny_accesses` porte un `user_id` en
+   texte, **que la fonction d'effacement ne traite pas**. Un identifiant de
+   compte survivrait donc à la suppression de ce compte. À confirmer par qui
+   connaît cette fonctionnalité.
+3. Relancer `supabase/tests/isolation.sql` en y ajoutant les trois tables.
+
+La migration `0016` de la reco a été numérotée pour passer **après** ces deux
+migrations, afin que l'ordre du dépôt soit celui qu'a connu la production.
 
 ---
 

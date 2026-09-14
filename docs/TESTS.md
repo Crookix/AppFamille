@@ -53,7 +53,7 @@ Deux exécutions distinctes, et la distinction compte :
   reco. C'est la mesure de référence.
 - **42 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
   points qui portent sur `recommendations` et `recommendation_wants`. Les
-  quatorze migrations y sont rejouées depuis une base vide, sur un
+  migrations du dépôt y sont rejouées depuis une base vide, sur un
   échafaudage reconstituant ce que Supabase fournit d'office (rôles `anon`,
   `authenticated`, `service_role`, schémas `auth` et `storage`, `auth.jwt()`,
   publication `supabase_realtime`). Les politiques testées sont les vraies,
@@ -112,7 +112,7 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
   paires de politiques permissives redondantes. L'étanchéité a été **revérifiée
   après** cette fusion — c'est la raison pour laquelle les 36 vérifications
   ci-dessus datent d'après `0011`, et non d'avant.
-- La migration `0014` (reco) a été passée au crible des mêmes règles, sur la
+- La migration `0016` (reco) a été passée au crible des mêmes règles, sur la
   base locale : RLS active et politiques présentes sur les deux nouvelles
   tables, aucune clé étrangère sans index couvrant, aucune politique
   permissive en double, et **aucune politique ne lit `auth.uid()`** — le piège
