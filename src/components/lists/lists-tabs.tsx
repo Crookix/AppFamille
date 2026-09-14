@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ListChecks, ListTodo, ShoppingBasket } from 'lucide-react';
+import { ShoppingBasket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/ui/primitives';
 import { TaskList } from '@/components/tasks/task-list';
@@ -51,37 +51,42 @@ export function ListsTabs({
       <div
         role="tablist"
         aria-label="Tâches, courses ou check-lists"
-        // Trois onglets ne tiennent pas côte à côte à 375 px : « Check-lists »
-        // se cassait sur deux lignes. Même traitement que le sélecteur de vues
-        // du calendrier — on laisse défiler plutôt que de comprimer.
-        className="no-scrollbar mb-4 flex gap-1 overflow-x-auto rounded-full bg-[var(--bg-subtle)] p-1"
+        // Les trois onglets tiennent côte à côte à 375 px, et c'est la seule
+        // disposition acceptable : un onglet qu'il faut faire défiler pour
+        // découvrir n'existe pas pour qui ignore qu'il est là — la question
+        // « je ne vois pas les check-lists, elles sont où ? » est venue de là.
+        //
+        // La place a été prise sur les icônes. Elles n'apprenaient rien à côté
+        // d'un libellé lisible, et coûtaient vingt-quatre pixels chacune ; le
+        // sélecteur de vues du calendrier s'en passe déjà. Le compte perd sa
+        // pastille pour la même raison, et reste lisible.
+        className="mb-4 flex gap-1 rounded-full bg-[var(--bg-subtle)] p-1 md:max-w-md"
       >
         {(
           [
-            { key: 'taches', label: 'Tâches', icon: ListChecks, count: openTasks },
-            { key: 'courses', label: 'Courses', icon: ShoppingBasket, count: openItems },
-            { key: 'checklists', label: 'Check-lists', icon: ListTodo, count: enCours },
+            { key: 'taches', label: 'Tâches', count: openTasks },
+            { key: 'courses', label: 'Courses', count: openItems },
+            { key: 'checklists', label: 'Check-lists', count: enCours },
           ] as const
-        ).map(({ key, label, icon: Icon, count }) => (
+        ).map(({ key, label, count }) => (
           <button
             key={key}
             role="tab"
             aria-selected={tab === key}
             onClick={() => switchTab(key)}
             className={cn(
-              'flex h-10 flex-1 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-3 text-sm font-semibold transition-colors',
+              'flex h-10 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[0.8rem] font-semibold transition-colors',
               tab === key
                 ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-sm'
                 : 'text-[var(--fg-muted)]',
             )}
           >
-            <Icon className="h-4 w-4" aria-hidden />
-            {label}
+            <span className="truncate">{label}</span>
             {count > 0 ? (
               <span
                 className={cn(
-                  'rounded-full px-1.5 text-[0.65rem] font-bold',
-                  tab === key ? 'bg-brand-100 text-brand-700' : 'bg-[var(--bg-elevated)]',
+                  'text-[0.7rem] font-bold tabular-nums',
+                  tab === key ? 'text-brand-600' : 'text-[var(--fg-muted)]',
                 )}
               >
                 {count}

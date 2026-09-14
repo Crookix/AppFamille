@@ -15,6 +15,52 @@ L'état de chaque lot est donné en tête de section :
 
 ---
 
+## Se déplacer dans l'application — *fait ; géométrie vérifiée en navigateur*
+
+### Ce que ça fait
+
+- La barre du bas porte **cinq destinations**, et rien d'autre : **Accueil**,
+  **Calendrier**, **Listes**, **Repas**, **Reco**. Ce sont les cinq endroits où
+  l'on va faire quelque chose, plusieurs fois par jour.
+- **« Plus » n'est pas une destination** : c'est le tiroir des réglages —
+  enfants, nounous, notifications, Google, foyer, paramètres. Sur téléphone il
+  se rejoint depuis n'importe quel écran par la **pastille d'identité** en haut
+  à droite. Sur grand écran, la colonne latérale le garde en clair : 256 px
+  n'ont aucune rareté à arbitrer.
+- L'entête de téléphone porte aussi le **nom du foyer**, visible partout et non
+  plus seulement sur « Plus » — qui appartient à deux foyers voit lequel il
+  regarde.
+- Une **puce** sur la pastille signale des notifications non lues.
+- Les **check-lists** sont le troisième onglet de « Listes », à côté de
+  « Tâches » et « Courses ». Les trois tiennent côte à côte à 375 px, sans
+  défilement : un onglet qu'il faut faire défiler pour découvrir n'existe pas
+  pour qui ignore qu'il est là.
+
+**Le principe.** La barre appartient aux destinations. Tant que « Plus » y
+occupait une place sur cinq, toute fonctionnalité nouvelle tombait dans le
+tiroir — c'est ce qui était arrivé à la reco.
+
+### Critères d'acceptation
+
+| # | On fait ceci | On doit obtenir cela |
+| --- | --- | --- |
+| 0.1 | Afficher n'importe quel écran à 375 px | Cinq onglets lisibles, aucun libellé coupé, aucun défilement horizontal |
+| 0.2 | Afficher « Listes » à 375 px | Les trois onglets visibles d'un coup, « Check-lists » compris |
+| 0.3 | Appuyer sur la pastille depuis le calendrier | On arrive sur « Plus » |
+| 0.4 | Avoir une notification non lue | Une puce sur la pastille ; elle s'éteint une fois la notification lue |
+| 0.5 | Afficher l'application sur ordinateur | La colonne latérale porte les cinq destinations **et** « Plus » ; l'entête de téléphone disparaît |
+| 0.6 | Chercher la reco | Elle est dans la barre, pas dans « Plus » |
+
+**Ce qui a été vérifié, et comment.** Les critères 0.1, 0.2, 0.5 et 0.6 ont été
+constatés dans un vrai navigateur, à 375 px, 360 px et 1024 px, en clair et en
+sombre — mais sur une page d'aperçu montée pour l'occasion, sans base de
+données, parce que la pile Supabase locale demande Docker et que celui-ci
+n'était pas disponible. La géométrie est donc prouvée ; les déplacements, non.
+Les critères 0.3 et 0.4 sont couverts par `tests/e2e/10-navigation.spec.ts`,
+**qui n'a jamais été exécuté** : voir [`TESTS.md`](TESTS.md).
+
+---
+
 ## 1. Comptes, foyer et invitations — *fait*
 
 Un adulte crée un foyer, y invite l'autre parent, et déclare les enfants.

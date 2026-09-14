@@ -358,6 +358,17 @@ une relecture attentive.
   Aucune erreur nulle part — un `update` bloqué par la RLS ne lève rien, il ne
   touche simplement aucune ligne. La règle était écrite, le garde-fou existait,
   il n'était appelé qu'à un seul endroit.
+- **Ce qui défile n'existe pas.** « Check-lists » était le troisième onglet
+  d'une rangée qu'il fallait faire défiler pour l'atteindre, et la reco la
+  première entrée du tiroir « Plus ». Les deux fonctionnalités venaient d'être
+  livrées ; la question posée a été « je ne vois pas les listes de bons plans et
+  check-list, elles sont où ? ». Laisser défiler était un compromis assumé au
+  moment de l'écrire — il était mauvais : personne ne fait défiler ce qu'il ne
+  sait pas chercher. Une rangée d'onglets doit tenir **en entier** à 375 px,
+  quitte à sacrifier les icônes, qui n'apprennent rien à côté d'un libellé
+  lisible. Et la barre de navigation n'appartient qu'aux **destinations** :
+  tant que « Plus » y occupait une place sur cinq, chaque fonctionnalité
+  nouvelle tombait dans le tiroir.
 - **« Redeploy » sur Vercel rejoue le déploiement existant, pas le dernier
   commit.** Quand un webhook GitHub est manqué, le bouton reconstruit
   l'ancienne version sans rien signaler. Vérifier le SHA du déploiement avant

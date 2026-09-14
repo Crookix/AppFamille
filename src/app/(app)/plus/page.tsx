@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Home,
   Settings,
-  Sparkles,
   Users,
 } from 'lucide-react';
 import { requireHousehold } from '@/lib/auth';
@@ -20,7 +19,7 @@ export default async function PlusPage() {
   const { household, member } = await requireHousehold();
   const supabase = await createClient();
 
-  const [childrenResult, nanniesResult, unreadResult, recoResult] = await Promise.all([
+  const [childrenResult, nanniesResult, unreadResult] = await Promise.all([
     supabase
       .from('children')
       .select('id', { count: 'exact', head: true })
@@ -36,26 +35,12 @@ export default async function PlusPage() {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', member.user_id)
       .is('read_at', null),
-    // Ce qui reste à voir ou à offrir : ce qui est fait n'est plus une envie.
-    supabase
-      .from('recommendations')
-      .select('id', { count: 'exact', head: true })
-      .eq('household_id', household.id)
-      .neq('status', 'fait'),
   ]);
 
-  const recoCount = recoResult.count ?? 0;
-
+  // La reco a rejoint la barre de navigation : la laisser ici aussi donnerait
+  // deux chemins vers le même écran, et brouillerait ce que « Plus » est
+  // devenu — le tiroir des réglages, et rien d'autre.
   const entries = [
-    {
-      href: '/reco',
-      label: 'Reco',
-      hint:
-        recoCount > 0
-          ? `${recoCount} envie(s) en attente`
-          : 'Films, séries, théâtre, idées cadeaux',
-      icon: Sparkles,
-    },
     {
       href: '/plus/enfants',
       label: 'Enfants',

@@ -1,6 +1,7 @@
 import { requireHousehold } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { HouseholdProvider } from '@/components/providers/household-provider';
+import { AppHeader } from '@/components/nav/app-header';
 import { BottomNav } from '@/components/nav/bottom-nav';
 import { QuickAdd } from '@/components/nav/quick-add';
 
@@ -14,7 +15,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { household, member, memberships } = await requireHousehold();
   const supabase = await createClient();
 
-  const [membersResult, childrenResult] = await Promise.all([
+  // Trois requêtes, une seule vague : elles ne dépendent pas les unes des
+  // autres. Le compteur de non-lues alimente la puce de l'entête.
+  const [membersResult, childrenResult, unreadResult] = await Promise.all([
     supabase
       .from('household_members')
       .select('*')
@@ -26,6 +29,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .eq('household_id', household.id)
       .eq('archived', false)
       .order('birth_date', { ascending: true, nullsFirst: false }),
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', member.user_id)
+      .is('read_at', null),
   ]);
 
   return (
@@ -42,6 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       }}
     >
       <div className="min-h-dvh md:pl-64">
+        <AppHeader unread={unreadResult.count ?? 0} />
         <main
           id="contenu"
           className="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 md:pb-12 md:pt-8"
@@ -49,7 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </main>
         <QuickAdd />
-        <BottomNav />
+        <BottomNav householdName={household.name} />
       </div>
     </HouseholdProvider>
   );

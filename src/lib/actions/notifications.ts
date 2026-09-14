@@ -18,6 +18,10 @@ export async function markNotificationReadAction(notificationId: string) {
 
   revalidatePath('/plus');
   revalidatePath('/plus/notifications');
+  // La puce de l'entête est calculée dans la coque des écrans connectés :
+  // sans revalidation de la disposition, elle resterait allumée alors que
+  // la notification vient d'être lue.
+  revalidatePath('/', 'layout');
   return ok();
 }
 
@@ -35,6 +39,10 @@ export async function markAllNotificationsReadAction() {
 
   revalidatePath('/plus');
   revalidatePath('/plus/notifications');
+  // La puce de l'entête est calculée dans la coque des écrans connectés :
+  // sans revalidation de la disposition, elle resterait allumée alors que
+  // la notification vient d'être lue.
+  revalidatePath('/', 'layout');
   return ok();
 }
 
@@ -51,6 +59,10 @@ export async function deleteNotificationAction(notificationId: string) {
   if (error) return fail(humanizeDbError(error));
 
   revalidatePath('/plus/notifications');
+  // La puce de l'entête est calculée dans la coque des écrans connectés :
+  // sans revalidation de la disposition, elle resterait allumée alors que
+  // la notification vient d'être lue.
+  revalidatePath('/', 'layout');
   return ok();
 }
 

@@ -228,7 +228,9 @@ donc vérifiée **à la compilation**, pas seulement par relecture.
 
 Huit fichiers Playwright, 34 tests. Ils étaient jusqu'ici **écrits mais jamais
 exécutés** : la politique réseau interdit d'atteindre `*.supabase.co`, et sans
-projet joignable la suite se déclarait ignorée.
+projet joignable la suite se déclarait ignorée. (Un neuvième fichier s'y est
+ajouté depuis, `10-navigation.spec.ts`, qui n'a pas encore été joué non plus —
+voir plus bas.)
 
 **Ce qui a changé.** Une pile Supabase complète tourne maintenant en local
 (`supabase start` : Postgres 17, GoTrue, PostgREST, Realtime, Storage, Kong),
@@ -307,7 +309,7 @@ l'écran, et les trouvaient… dans le libellé brut.
 
 ### État actuel, profil bureau
 
-**13 passent, 4 échouent, 2 sautés** — contre 0 avant ce travail.
+**13 passent, 4 échouent, 2 sautés, 3 jamais joués** — contre 0 avant ce travail.
 
 | Fichier | Passent | Reste |
 | --- | --- | --- |
@@ -320,8 +322,34 @@ l'écran, et les trouvaient… dans le libellé brut.
 | `02-calendrier.spec.ts` | 1/3 | l'événement créé n'apparaît pas dans les vues — à creuser |
 | `04-repas.spec.ts` | 0/1 | la recette ne s'enregistre pas — à creuser |
 | `05-nounous.spec.ts` | 0/2 | le parcours décrit un « Ajouter une garde » qui n'existe pas ; les gardes passent par l'ajout rapide |
+| `10-navigation.spec.ts` | **0/3 — jamais exécuté** | écrit avec la barre repensée, voir ci-dessous |
 
 Aucun de ces échecs ne provoque d'erreur applicative côté serveur.
+
+### La barre repensée : ce qui est prouvé, et ce qui ne l'est pas
+
+`10-navigation.spec.ts` a été écrit en même temps que la nouvelle barre de
+navigation, et **n'a jamais tourné** : la pile Supabase locale demande Docker,
+absent de l'environnement où le travail a été fait. Le dépôt a déjà payé cher
+de croire qu'une spec écrite prouve quelque chose — elle est donc comptée
+0/3 ici, et le restera jusqu'à une exécution réelle.
+
+Ce qui **a** été vérifié dans un vrai navigateur, c'est la géométrie, la seule
+chose en cause dans la question qui a déclenché le travail (« je ne vois pas les
+check-lists, elles sont où ? »). Une page d'aperçu montée pour l'occasion, sans
+base de données, a rendu la barre, l'entête et les onglets de « Listes » à
+375 px, 360 px et 1024 px, en clair et en sombre. Mesures relevées dans le
+document plutôt que jugées à l'œil :
+
+| Largeur | Onglet de la barre | Onglet de « Listes » | Débordement |
+| --- | --- | --- | --- |
+| 375 px | 75 px | 109 px | aucun |
+| 360 px | 72 px | 104 px | aucun |
+
+Aucun libellé tronqué, « Calendrier » compris, et l'état actif tient sous son
+libellé. Ce que cette page ne prouve pas : qu'un appui mène quelque part, ni
+que la puce de notification s'éteint une fois la notification lue. Ce sont
+précisément les critères 0.3 et 0.4, ceux que la spec non jouée couvre.
 
 ### Pour rejouer
 
