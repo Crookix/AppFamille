@@ -269,7 +269,7 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 
 ---
 
-## 8. Reco — films, séries, théâtre, idées cadeaux — *fait, non vérifié en navigateur*
+## 8. Reco — films, séries, théâtre, idées cadeaux — *fait, vérifié en navigateur*
 
 ### Ce que ça fait
 
@@ -308,7 +308,45 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 
 ---
 
-## 9. Étanchéité entre foyers — *fait, vérifié sur la base réelle*
+## 9. Check-lists — les listes qu'on refait à l'identique — *fait*
+
+### Ce que ça fait
+
+- Des listes **réutilisables** : la valise des enfants, le sac de piscine, ce
+  qu'on emporte chez la nounou. On coche, puis on **remet à zéro** pour la fois
+  suivante — le contenu reste, seules les coches partent.
+- À la création, le contenu s'écrit **ou se colle** : tirets, puces, numéros et
+  cases `[ ]` sont retirés, et les doublons écartés. On ne saisit pas une valise
+  ligne à ligne, on la reprend d'ailleurs.
+- L'avancement se lit sans ouvrir la liste (« 3 sur 6 », et une jauge), et une
+  liste entièrement cochée s'annonce **prête**.
+- La date de la dernière remise à zéro est affichée, avec qui l'a faite : sans
+  elle, on ne sait pas si les coches encore en place datent de ce matin ou du
+  voyage précédent.
+- Deux adultes qui préparent la même valise voient les coches de l'autre en
+  temps réel.
+
+**Ce que ce n'est pas.** Ni échéance, ni responsable, ni récurrence : ce sont
+les marques d'une tâche. Une tâche est un engagement ponctuel qui disparaît une
+fois faite ; une check-list est un modèle qui survit à son usage. Mélanger les
+deux rendrait les deux écrans illisibles.
+
+### Critères d'acceptation
+
+| # | On fait ceci | On doit obtenir cela |
+| --- | --- | --- |
+| 9.1 | Créer une check-list en collant « - Doudou / - Pyjama / 1. Brosse à dents » | Trois points, sans les tirets ni le numéro |
+| 9.2 | Coller deux fois la même ligne | Un seul point — la valise ne double pas |
+| 9.3 | Cocher deux points sur six | L'en-tête affiche « 2 sur 6 », la jauge suit |
+| 9.4 | Tout cocher | La liste s'annonce « Prête » |
+| 9.5 | Remettre à zéro | Tout est décoché, **le contenu est intact**, et la date du jour s'affiche |
+| 9.6 | Une liste que personne n'a cochée | Le bouton « Remettre à zéro » ne se propose pas |
+| 9.7 | Deux adultes sur la même liste, l'un coche | L'autre voit la case se cocher |
+| 9.8 | Une liste vide | Elle n'est pas annoncée « prête » — une valise sans contenu n'est pas une valise prête |
+
+---
+
+## 10. Étanchéité entre foyers — *fait, vérifié sur la base réelle*
 
 Ce n'est pas une fonctionnalité visible, mais c'est le critère le plus
 important du produit : **les données d'un foyer ne sortent pas de ce foyer.**
@@ -324,12 +362,12 @@ important du produit : **les données d'un foyer ne sortent pas de ce foyer.**
 | 8.7 | Un adulte non-administrateur tente de se promouvoir, de modifier la fiche d'un autre membre, ou d'exclure l'administrateur | Refusé les trois fois |
 | 8.8 | **Témoins** : les mêmes requêtes, faites par un membre légitime | Elles renvoient bien les données |
 
-Le point 9.8 n'est pas décoratif : sans lui, une session inerte renverrait zéro
+Le point 10.8 n'est pas décoratif : sans lui, une session inerte renverrait zéro
 partout et l'on conclurait à tort à l'étanchéité.
 
 Ces huit points sont exécutés par `supabase/tests/isolation.sql`, qui couvre
 aussi les recommandations et leurs envies depuis la section 8. Le script porte
-**62 vérifications**, l'espace nounou compris. Voir [`TESTS.md`](TESTS.md) pour
+**67 vérifications**, l'espace nounou et les check-lists compris. Voir [`TESTS.md`](TESTS.md) pour
 le détail de ce qui a été joué contre la base réelle et de ce qui l'a été
 contre un Postgres local.
 

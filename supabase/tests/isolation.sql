@@ -82,6 +82,7 @@ declare
   v_reco_a  uuid;
   v_nounou  uuid;
   v_garde   uuid;
+  v_liste_a uuid;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_camille::text, 'role','authenticated')::text, true);
@@ -109,6 +110,15 @@ begin
   insert into public.recommendation_wants (household_id, recommendation_id, member_id)
   values (v_foyer_a, v_reco_a, public.current_member_id(v_foyer_a));
 
+  insert into public.checklists (household_id, name, note, created_by)
+  values (v_foyer_a, 'La valise des enfants', 'Week-end chez les grands-parents',
+          v_camille)
+  returning id into v_liste_a;
+
+  insert into public.checklist_items (household_id, checklist_id, label, position)
+  values (v_foyer_a, v_liste_a, 'Doudou', 0),
+         (v_foyer_a, v_liste_a, 'Pyjama', 1);
+
   insert into public.nannies (household_id, name) values (v_foyer_a, 'Sofia')
   returning id into v_nounou;
 
@@ -132,7 +142,8 @@ begin
 
   reset role;
   insert into _t values ('foyer_a', v_foyer_a::text), ('reco_a', v_reco_a::text),
-                        ('nounou', v_nounou::text), ('garde', v_garde::text);
+                        ('nounou', v_nounou::text), ('garde', v_garde::text),
+                        ('liste_a', v_liste_a::text);
 end $$;
 
 -- Le lien d'accès de la nounou, posé hors rôle applicatif : c'est du montage,
@@ -229,6 +240,14 @@ begin
   select count(*) into n from public.recommendations where household_id = a;
   insert into _r (domaine, tentative, observe, verdict)
     values ('Lecture', 'Recos du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.checklists where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Check-lists du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.checklist_items where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Points de check-list du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
 
   select count(*) into n from public.nanny_accesses where household_id = a;
   insert into _r (domaine, tentative, observe, verdict)
@@ -354,6 +373,38 @@ begin
   exception when others then
     insert into _r (domaine, tentative, observe, verdict)
       values ('Écriture', 'Déclarer une envie sur une reco du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    update public.checklists set name='PIRATE' where household_id = a;
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Renommer une check-list du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Renommer une check-list du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- Décocher la valise du voisin serait sans gravité, mais c'est la même
+  -- politique qui protège tout le reste : elle doit tenir ici aussi.
+  begin
+    update public.checklist_items set is_checked = true where household_id = a;
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Cocher un point de check-list du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Cocher un point de check-list du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    insert into public.checklist_items (household_id, checklist_id, label)
+    values (a, (select valeur from _t where cle='liste_a')::uuid, 'Intrusion');
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Ajouter un point à une check-list du foyer A', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Ajouter un point à une check-list du foyer A', 'refusé ('||sqlstate||')', 'OK');
   end;
 
   -- L'espace nounou ouvre un accès à quelqu'un qui n'est pas membre du foyer :

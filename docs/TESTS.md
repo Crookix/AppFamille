@@ -45,15 +45,15 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
   déclarer une envie de recommandation **au nom d'un autre membre** ;
 - accepter une invitation expirée, révoquée, déjà utilisée, ou inventée.
 
-**Résultat : 62 vérifications, 62 conformes.**
+**Résultat : 67 vérifications, 67 conformes.**
 
 Deux exécutions, sur deux bases différentes :
 
 - **36 vérifications contre la base Supabase réelle**, avant l'arrivée de la
   reco. C'est la mesure de référence historique.
-- **62 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
-  points portant sur `recommendations` et `recommendation_wants`, puis des
-  vingt de l'espace nounou. Les migrations du dépôt y sont rejouées depuis une
+- **67 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
+  points portant sur `recommendations`, des vingt de l'espace nounou et des
+  cinq des check-lists. Les migrations du dépôt y sont rejouées depuis une
   base vide, sur un échafaudage
   reconstituant ce que Supabase fournit d'office (rôles `anon`,
   `authenticated`, `service_role`, schémas `auth` et `storage`, `auth.jwt()`,
@@ -179,7 +179,7 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
 
 ## 3. Logique métier — **SIMULÉ**
 
-110 tests unitaires Vitest, sur de la logique pure. Aucun réseau, aucune base :
+124 tests unitaires Vitest, sur de la logique pure. Aucun réseau, aucune base :
 c'est le propre de ces tests, et c'est aussi leur limite.
 
 | Fichier | Tests | Ce qu'il couvre |
@@ -189,6 +189,7 @@ c'est le propre de ces tests, et c'est aussi leur limite.
 | `tests/unit/childcare.test.ts` | 20 | Heures prévues et réalisées, ajustements, tarifs datés, bilan mensuel |
 | `tests/unit/google-mapping.test.ts` | 20 | Conversion Google ↔ MyFamily, empreintes de comparaison, droit d'écriture par agenda |
 | `tests/unit/exports.test.ts` | 3 | Nom de fichier d'export : ligatures, accents, séparateurs |
+| `tests/unit/checklists.test.ts` | 14 | Avancement, ordre stable sous le doigt, lecture d'une liste collée (puces, numéros, doublons) |
 | `tests/unit/recommendations.test.ts` | 25 | Vocabulaire par genre, complétion et filtrage des liens, prix à la française, recherche sans accent ni ligature, ordre d'affichage |
 
 `npm test`
@@ -306,11 +307,12 @@ l'écran, et les trouvaient… dans le libellé brut.
 
 ### État actuel, profil bureau
 
-**11 passent, 4 échouent, 2 sautés** — contre 0 avant ce travail.
+**13 passent, 4 échouent, 2 sautés** — contre 0 avant ce travail.
 
 | Fichier | Passent | Reste |
 | --- | --- | --- |
 | `08-reco.spec.ts` | **3/3** | — *également 3/3 en profil mobile (375 px)* |
+| `09-checklists.spec.ts` | **2/2** | — *également 2/2 en mobile* : coller, cocher, remettre à zéro |
 | `01-foyer-invitation.spec.ts` | **2/2** | — |
 | `07-google.spec.ts` | **2/2** | — |
 | `06-etancheite.spec.ts` | **1/1** | — |
@@ -372,7 +374,7 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Domaine | Vérifié comment | État |
 | --- | --- | --- |
 | Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **36/36** |
-| Étanchéité, reco et espace nounou compris | PostgreSQL 16 local, migrations rejouées ; schéma prouvé identique à la production par empreinte | **62/62** |
+| Étanchéité, reco, espace nounou et check-lists | PostgreSQL 16 local, migrations rejouées ; schéma prouvé identique à la production par empreinte | **67/67** |
 | Effacement d'un compte : couverture des 18 colonnes | Audit du catalogue + exécution sur base | **complète après `0017`** |
 | Migration `0016` appliquée en production | Empreinte du SQL enregistré = celle du fichier testé | **conforme** |
 | Fidélité des migrations `0014`/`0015` reconstituées | Empreinte MD5 du corps = celle du journal Supabase | **exacte** |
@@ -381,8 +383,8 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
-| Récurrences, ingrédients, gardes, conversion Google, exports, recommandations | Tests unitaires | **110/110** |
+| Récurrences, ingrédients, gardes, Google, exports, recos, check-lists | Tests unitaires | **124/124** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur, reco | Playwright sur pile Supabase locale | **6/6** (bureau et mobile) |
-| Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **11/17 — 1 défaut produit corrigé, 7 specs réparées, 1 écart cahier des charges / produit trouvé** |
+| Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **13/19 — 1 défaut produit corrigé, 7 specs réparées, 1 écart cahier des charges / produit trouvé** |
 | Google Agenda de bout en bout | — | **non joué — aucun identifiant OAuth** |

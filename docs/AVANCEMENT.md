@@ -23,12 +23,12 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 7 — Notifications, PWA, mode démo | Terminée | Confirmer sur un vrai téléphone |
 | 8 — Vérifications | Terminée | Aligner 11 parcours Playwright sur l'interface réelle |
 | 9 — Reco (films, séries, théâtre, cadeaux) | Terminée | — *confirmée en navigateur, bureau et mobile* |
+| 10 — Check-lists (valise, sac de piscine…) | Terminée | — *confirmée en navigateur, bureau et mobile* |
 
-Le dépôt compte dix-sept migrations, `0001` à `0017`, **toutes appliquées sur
-le projet `tribu-foyer`**, qui porte 40 tables et 141 politiques, toutes avec
-la RLS active.
+Le dépôt compte dix-huit migrations, `0001` à `0018`, **toutes appliquées sur
+le projet `tribu-foyer`**, qui porte 42 tables, toutes avec la RLS active.
 
-`0016` (la reco) a été appliquée le 14 septembre 2026 à 13:07 UTC. Le SQL
+`0016` (la reco) et `0018` (les check-lists) ont été appliquées le 14 septembre 2026. Le SQL
 enregistré par Supabase a la même empreinte MD5
 (`fcc9242646ed243397bcdc5445838c8e`) que le fichier rejoué en local avant
 application : ce qui a tourné en production est exactement ce qui avait été
@@ -39,8 +39,8 @@ Comme l'application est passée par le connecteur Supabase et non par
 `_tribu_migrations`. Sans cela, le prochain `db:push` aurait tenté de rejouer
 la migration et se serait arrêté en erreur.
 
-110 tests unitaires passent, la compilation produit 24 routes sans erreur, et
-la vérification d'étanchéité donne 62 conformités sur 62. Le détail est dans
+124 tests unitaires passent, la compilation produit 24 routes sans erreur, et
+la vérification d'étanchéité donne 67 conformités sur 67. Le détail est dans
 [`TESTS.md`](TESTS.md).
 
 ---

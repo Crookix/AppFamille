@@ -396,6 +396,32 @@ export type FrequentItemRow = {
   last_used_at: string;
 };
 
+export type ChecklistRow = {
+  id: string;
+  household_id: string;
+  name: string;
+  note: string | null;
+  position: number;
+  last_reset_at: string | null;
+  last_reset_by: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChecklistItemRow = {
+  id: string;
+  household_id: string;
+  checklist_id: string;
+  label: string;
+  position: number;
+  is_checked: boolean;
+  checked_at: string | null;
+  checked_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type RecommendationRow = {
   id: string;
   household_id: string;
@@ -645,6 +671,8 @@ export type Database = {
       frequent_items: Table<FrequentItemRow, 'household_id' | 'label' | 'label_key'>;
       recipes: Table<RecipeRow, 'household_id' | 'name'>;
       recommendations: Table<RecommendationRow, 'household_id' | 'kind' | 'title'>;
+      checklists: Table<ChecklistRow, 'household_id' | 'name'>;
+      checklist_items: Table<ChecklistItemRow, 'household_id' | 'checklist_id' | 'label'>;
       recommendation_wants: Table<
         RecommendationWantRow,
         'household_id' | 'recommendation_id' | 'member_id'

@@ -40,6 +40,8 @@ sont listées dans [`docs/AVANCEMENT.md`](docs/AVANCEMENT.md).
   courses à partir des repas planifiés.
 - **Gardes** — nounous, tarifs datés, heures prévues et réalisées, bilan
   mensuel imprimable et exportable.
+- **Check-lists** — les listes qu'on refait à l'identique : la valise des
+  enfants, le sac de piscine. On coche, on remet à zéro, le contenu reste.
 - **Reco** — ce que la famille se recommande : films, séries, théâtre, idées
   cadeaux. Chacun dit pourquoi, et peut déclarer son envie ; les mots suivent le
   genre (« Vu » pour un film, « Offert » pour un cadeau).

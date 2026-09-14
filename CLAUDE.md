@@ -1,8 +1,8 @@
 # MyFamily — repères pour travailler sur ce dépôt
 
 MyFamily est une application de gestion du foyer : le calendrier familial, les
-tâches, les courses, les repas, les heures de garde et les recommandations de
-la famille au même endroit, sur téléphone comme sur ordinateur.
+tâches, les courses, les repas, les heures de garde, les recommandations et les
+check-lists du foyer au même endroit, sur téléphone comme sur ordinateur.
 
 L'application s'appelait **Tribu** jusqu'en septembre 2026. Le nom visible a
 changé partout, mais **quatre identifiants techniques gardent l'ancien** parce
@@ -32,7 +32,7 @@ vérifications dans [`docs/TESTS.md`](docs/TESTS.md), l'intégration Google dans
 | `npm run test:watch` | Les mêmes, en continu |
 | `npm run test:e2e` | Parcours navigateur Playwright — demande une application qui tourne |
 | `npm run db:push` | Applique les migrations SQL manquantes sur la base Supabase |
-| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 62 vérifications |
+| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 67 vérifications |
 | `psql "$SUPABASE_DB_URL" -f supabase/tests/effacement.sql` | Ce que la suppression d'un compte laisserait derrière |
 
 `npm run db:push` lit `SUPABASE_DB_URL` dans `.env.local`, applique les fichiers
@@ -86,6 +86,7 @@ src/
     recurrence.ts     RRULE, expansion des occurrences
     childcare.ts      heures de garde et bilans mensuels
     recommendations.ts vocabulaire par genre, liens, prix, tri des recos
+    checklists.ts     avancement, ordre, lecture d'une liste collée
     ingredients.ts    normalisation et agrégation des ingrédients
 supabase/
   migrations/         schéma et RLS, numérotés, jamais modifiés après coup
