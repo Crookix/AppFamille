@@ -71,6 +71,39 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
 
 ---
 
+## 1 bis. Étanchéité de l'espace nounou — **RÉEL, sur base jetable**
+
+`supabase/tests/nanny-isolation.sql` vérifie la migration `0014`, qui ouvre
+pour la première fois un accès à quelqu'un qui **n'est pas membre du foyer**.
+Le script se fait passer pour une nounou connectée, exactement comme le fait
+PostgREST, et compte ce qu'elle voit.
+
+**28 vérifications, 28 conformes, aucune faille.** Ce qu'elle voit : ses
+gardes, sa fiche, les enfants qu'elle garde, le nom du foyer. Ce qu'elle ne
+voit pas : le calendrier, les tâches, les courses, les repas, les membres, les
+notifications, les gardes et la fiche d'une autre nounou, un enfant qu'elle ne
+garde pas. Ce qu'elle ne peut pas faire : modifier une garde, déclarer des
+heures sur la garde d'une autre, valider sa propre déclaration. Et une fois
+son accès révoqué, elle ne voit plus rien du tout.
+
+### Rejouer les migrations sans toucher à la base réelle
+
+Les quatorze migrations s'appliquent sur un Postgres local, chacune dans sa
+propre transaction comme le fait `db:push`. Il faut d'abord un décor minimal
+imitant Supabase — schémas `auth`, `extensions` et `storage`, rôles `anon`,
+`authenticated` et `service_role`, `auth.jwt()` lisant
+`request.jwt.claims`, `pgcrypto`, la publication `supabase_realtime` — puis
+les droits de table que Supabase accorde par défaut à `authenticated` :
+
+```sql
+grant all on all tables in schema public to anon, authenticated, service_role;
+```
+
+Sans ce dernier point, tout renvoie « permission denied » et l'on croit à tort
+que la RLS ferme là où c'est en réalité le GRANT qui manque.
+
+---
+
 ## 2. Schéma, politiques et conseillers Supabase — **RÉEL**
 
 - **Les 35 tables** de `public` portent la RLS active — vérifié par requête sur
@@ -228,6 +261,7 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
+| Étanchéité de l'espace nounou (migration `0014`) | Postgres local, RLS active | **28/28** |
 | Récurrences, ingrédients, gardes, conversion Google, exports | Tests unitaires | **85/85** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur | Playwright | **écrits (28), non joués — réseau bloqué** |
