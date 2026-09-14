@@ -111,6 +111,14 @@ récupère l'enfant, et le billet de train en pièce jointe.
 | 3.2 | Cocher une tâche hebdomadaire | Elle se recrée sept jours plus tard, et la réalisation est enregistrée |
 | 3.3 | Taper « 2 kg de pommes » | Quantité 2, unité kg, libellé « pommes », rayon « Fruits et légumes » |
 | 3.4 | Ajouter « pommes » alors que « 2 kg de pommes » y est déjà | Les deux lignes fusionnent au lieu de se doubler |
+
+> ⚠️ **3.3 et 3.4 ne sont pas tenus.** Vérifié en navigateur le 14 septembre
+> 2026 : la saisie rapide a trois champs séparés (Article, Quantité, Unité) et
+> n'analyse pas « 2 kg de pommes » — le libellé est enregistré entier, quantité
+> et unité vides, et aucune fusion n'a lieu. Seul le rayon est bien deviné. La
+> logique d'analyse existe et est testée, mais n'est câblée que sur le chemin
+> repas → courses. À trancher : compléter la saisie rapide, ou réécrire ces
+> deux critères.
 | 3.5 | Cocher trois articles puis « effacer les articles cochés » | Seuls ces trois disparaissent |
 | 3.6 | Deux adultes sur la même liste, l'un coche | L'autre voit la case se cocher |
 

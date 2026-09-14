@@ -342,6 +342,14 @@ une relecture attentive.
   « Plus ») ; un **champ replié** qu'il faut déplier avant de le viser. Un
   parcours qui n'a pas tourné au moins une fois ne prouve rien — et croire qu'il
   prouve quelque chose est pire que de ne pas l'avoir écrit.
+- **Playwright jette le worker après un échec**, et rejoue donc `beforeAll`.
+  Dans un fichier dont les parcours s'enchaînent, le compte fabriqué là est
+  remplacé par un autre, sans foyer : tous les tests suivants échouent sur
+  « Créons votre foyer », pour une raison étrangère à ce qu'ils vérifient. La
+  cascade imite à s'y méprendre un défaut systémique — celui-ci a failli être
+  publié comme un bogue produit. Déclarer `test.describe.serial` quand les
+  parcours dépendent les uns des autres : les suivants sont alors **sautés**, et
+  le rapport dit un défaut là où il y en a un.
 - **Le client navigateur des cookies ignore le jeton Clerk.** Onze composants
   appelaient `createClient()` directement plutôt que `useSupabase()`. Sans
   Clerk, rien ne se voyait ; avec lui, leurs requêtes partaient en anonyme :

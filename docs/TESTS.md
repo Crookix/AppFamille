@@ -255,28 +255,58 @@ que la version précédente de ce document affirmait :
 | Texte approximatif | l'écran Google dit « Configuration à terminer », pas « non configuré » | oui |
 | `check()` qui ne retombe pas | cocher déclenche un rafraîchissement ; un clic suivi de l'assertion dit la même chose | oui |
 
-### Un symptôme reproductible, cause non élucidée
+### Le symptôme trompeur, élucidé — ce n'est pas un défaut produit
 
-Les parcours restants butent presque tous au même endroit, et **ce n'est
-peut-être pas un défaut de test** :
+Une version précédente de ce document annonçait un défaut possible : « un compte
+se reconnecte dans un contexte de navigateur neuf et l'application le renvoie
+sur *Créons votre foyer* ». **C'était faux, et la cause est maintenant connue.**
 
-> Un compte crée son foyer, tout fonctionne. Le même compte se reconnecte dans
-> un **contexte de navigateur neuf** : l'application le renvoie sur
-> « Créons votre foyer », alors que son foyer existe et qu'il en est membre.
+`beforeAll` fabrique un compte pour tout le fichier. Or **Playwright jette le
+worker après un échec et en démarre un neuf**, pour garantir un environnement
+propre aux tests suivants — `beforeAll` est donc rejoué, et fabrique un
+**autre** compte, qui n'a évidemment pas de foyer. Tous les tests suivants du
+fichier échouaient alors sur l'écran de bienvenue, pour une raison étrangère à
+ce qu'ils vérifient.
 
-Reproduit isolément, hors des specs du dépôt : le premier test crée le foyer et
-« Plus » l'affiche ; le second se reconnecte et `/plus` redirige vers
-`/bienvenue`. La personne est bien authentifiée à ce moment — l'écran de
-bienvenue pré-remplit son prénom depuis son compte — et son appartenance est
-bien en base.
+Établi par instrumentation, pas par raisonnement : en journalisant ce que
+`getActiveHousehold()` observe, un fichier de trois tests montrait **trois
+identifiants d'utilisateur différents** — le premier avec son foyer
+(`lignes:1`), les deux suivants sans (`lignes:0`). Reproduit isolément sur une
+pile saine, une session neuve retrouve son foyer sans faute.
 
-Si cela se produit hors des tests, c'est sérieux : quelqu'un qui se reconnecte
-depuis un autre appareil verrait « Créons votre foyer ». `getActiveHousehold()`
-retombe pourtant sur la première appartenance quand le cookie `tribu_foyer`
-manque, donc l'explication n'est pas le cookie. **La cause n'est pas
-identifiée** ; c'est la première chose à reprendre.
+La leçon dépasse ce dépôt : un échec en cascade ressemble à s'y méprendre à un
+défaut systémique, et j'ai failli en publier un qui n'existait pas.
+
+**Correctif** : les trois fichiers dont les parcours s'enchaînent sont déclarés
+`test.describe.serial`. Après un échec, les suivants sont **sautés** au lieu
+d'échouer faussement — le rapport dit alors un défaut là où il y en a un.
+
+### Une vraie trouvaille, celle-là
+
+Le parcours « ajouter le même produit fusionne au lieu de doubler » échoue pour
+de bon, et il a mis au jour un écart entre le cahier des charges et le produit.
+
+Taper « 2 kg de pommes » dans la saisie rapide enregistre **le libellé entier**,
+quantité et unité vides. La saisie rapide a trois champs séparés — Article,
+Quantité, Unité — et ne sait pas analyser une phrase. Elle devine le rayon, et
+c'est tout. Aucune fusion ne peut donc avoir lieu : quatre lignes « … pommes »
+cohabitaient en base.
+
+Les critères **3.3 et 3.4** de [`FONCTIONNALITES.md`](FONCTIONNALITES.md)
+décrivent l'inverse. La logique d'analyse existe pourtant et elle est testée
+(`parseUnit`, `normalizeLabel`, `aggregateIngredients`) — mais elle n'est câblée
+que sur le chemin repas → courses.
+
+À trancher : compléter la saisie rapide, ou corriger le cahier des charges.
+Ce n'est pas une décision de test.
+
+Le parcours précédent, « la saisie rapide devine quantité, unité et rayon »,
+**passait à vide** : ses assertions cherchaient « pommes » et « 2 kg » à
+l'écran, et les trouvaient… dans le libellé brut.
 
 ### État actuel, profil bureau
+
+**11 passent, 4 échouent, 2 sautés** — contre 0 avant ce travail.
 
 | Fichier | Passent | Reste |
 | --- | --- | --- |
@@ -284,13 +314,12 @@ identifiée** ; c'est la première chose à reprendre.
 | `01-foyer-invitation.spec.ts` | **2/2** | — |
 | `07-google.spec.ts` | **2/2** | — |
 | `06-etancheite.spec.ts` | **1/1** | — |
-| `02-calendrier.spec.ts` | 1/3 | les deux suivants butent sur le symptôme ci-dessus |
-| `03-listes.spec.ts` | 0/3 | idem |
-| `04-repas.spec.ts` | 0/1 | la recette ne s'enregistre pas — à reprendre |
-| `05-nounous.spec.ts` | 0/2 | le parcours décrit un enchaînement qui n'existe pas |
+| `03-listes.spec.ts` | 2/3 | le troisième est la vraie trouvaille ci-dessus |
+| `02-calendrier.spec.ts` | 1/3 | l'événement créé n'apparaît pas dans les vues — à creuser |
+| `04-repas.spec.ts` | 0/1 | la recette ne s'enregistre pas — à creuser |
+| `05-nounous.spec.ts` | 0/2 | le parcours décrit un « Ajouter une garde » qui n'existe pas ; les gardes passent par l'ajout rapide |
 
-**8 sur 17**, contre 0 avant ce travail. Aucun de ces échecs ne provoque
-d'erreur applicative côté serveur.
+Aucun de ces échecs ne provoque d'erreur applicative côté serveur.
 
 ### Pour rejouer
 
@@ -355,5 +384,5 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Récurrences, ingrédients, gardes, conversion Google, exports, recommandations | Tests unitaires | **110/110** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur, reco | Playwright sur pile Supabase locale | **6/6** (bureau et mobile) |
-| Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **8/17 — 1 défaut produit corrigé, 5 specs réparées, 1 symptôme à élucider** |
+| Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **11/17 — 1 défaut produit corrigé, 7 specs réparées, 1 écart cahier des charges / produit trouvé** |
 | Google Agenda de bout en bout | — | **non joué — aucun identifiant OAuth** |
