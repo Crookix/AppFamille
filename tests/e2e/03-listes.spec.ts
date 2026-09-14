@@ -43,7 +43,10 @@ test.describe('Tâches et courses', () => {
     const tache = page.getByText('Prendre rendez-vous chez le dentiste');
     await expect(tache).toBeVisible();
 
-    await page.getByRole('checkbox', { name: /dentiste/i }).first().check();
+    // `check()` attend que l'état se stabilise ; ici cocher déclenche un
+    // rafraîchissement du serveur, et l'attente ne retombe jamais. Un clic
+    // suivi de l'assertion dit la même chose, sans se suspendre.
+    await page.getByRole('checkbox', { name: /dentiste/i }).first().click();
     await expect(page.getByRole('checkbox', { name: /dentiste/i }).first()).toBeChecked();
   });
 

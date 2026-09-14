@@ -96,6 +96,7 @@ supabase/
   tests/echafaudage.sql ce que Supabase fournit d'office, pour rejouer les
                       migrations sur un PostgreSQL nu (CI, ou vérification locale)
 tests/unit/           tests Vitest
+.claude/skills/       procédures du dépôt : pile locale, relecture de migration
 ```
 
 ### Les quatre clients Supabase
@@ -333,9 +334,14 @@ une relecture attentive.
   module (`src/components/providers/use-supabase.ts`).
 - **Des tests écrits ne sont pas des tests joués.** Les sept fichiers Playwright
   du dépôt n'avaient jamais été exécutés ; à la première exécution réelle, la
-  plupart visaient des libellés que l'interface n'a jamais eus (un bouton
-  « Agenda » au calendrier, le nom du foyer sur l'accueil). Un parcours qui n'a
-  pas tourné au moins une fois ne prouve rien.
+  plupart échouaient. Les causes étaient de trois ordres, et il faut les
+  distinguer : un **rôle ARIA** faux (le sélecteur de vue du calendrier est un
+  `tablist`, donc `getByRole('tab')` et non `'button'` — le libellé
+  « Agenda », lui, existe bel et bien) ; une **affirmation sur l'interface** qui
+  n'a jamais été vraie (le nom du foyer n'apparaît pas sur l'accueil, mais sur
+  « Plus ») ; un **champ replié** qu'il faut déplier avant de le viser. Un
+  parcours qui n'a pas tourné au moins une fois ne prouve rien — et croire qu'il
+  prouve quelque chose est pire que de ne pas l'avoir écrit.
 - **Le client navigateur des cookies ignore le jeton Clerk.** Onze composants
   appelaient `createClient()` directement plutôt que `useSupabase()`. Sans
   Clerk, rien ne se voyait ; avec lui, leurs requêtes partaient en anonyme :

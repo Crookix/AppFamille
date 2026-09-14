@@ -44,8 +44,10 @@ test.describe('Calendrier', () => {
     await page.getByLabel(/^Titre/).fill('Pédiatre');
     await page.getByRole('button', { name: /^Ajouter$/ }).last().click();
 
+    // Le sélecteur de vue est un `tablist` : ses quatre entrées portent le
+    // rôle `tab`, pas `button`.
     for (const vue of ['Agenda', 'Jour', 'Semaine', 'Mois']) {
-      await page.getByRole('button', { name: vue, exact: true }).click();
+      await page.getByRole('tab', { name: vue, exact: true }).click();
       await expect(page.getByText('Pédiatre').first()).toBeVisible();
     }
   });
@@ -56,11 +58,14 @@ test.describe('Calendrier', () => {
     await page.getByRole('button', { name: /Un événement/i }).click();
 
     await page.getByLabel(/^Titre/).fill('Piscine');
+    // Le formulaire ne montre d'abord que l'essentiel ; la répétition vit dans
+    // la section qu'on déplie.
+    await page.getByRole('button', { name: /Lieu, responsable, répétition/i }).click();
     await page.getByLabel(/Répétition/).selectOption({ label: 'Toutes les semaines' });
     await page.getByRole('button', { name: /^Ajouter$/ }).last().click();
 
     // En vue mois, une série hebdomadaire doit se voir au moins quatre fois.
-    await page.getByRole('button', { name: 'Mois', exact: true }).click();
+    await page.getByRole('tab', { name: 'Mois', exact: true }).click();
     await expect(page.getByText('Piscine').first()).toBeVisible();
     expect(await page.getByText('Piscine').count()).toBeGreaterThanOrEqual(4);
   });

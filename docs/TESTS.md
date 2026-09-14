@@ -240,35 +240,57 @@ dessus. Aucune écriture n'est faite dans le projet réel.
 plantait sur l'écran « Quelque chose a coincé » : `useSupabase()` appelait
 `useAuth()` sans condition, or celui-ci lève hors `ClerkProvider` — lequel
 n'est pas monté quand Clerk n'est pas configuré. Quatorze composants étaient
-concernés : accueil, calendrier, listes, repas, courses, notifications, reco.
-Le correctif choisit la variante au chargement du module. Détail et raison
-dans `CLAUDE.md`.
+concernés. Le correctif choisit la variante au chargement du module ; détail et
+raison dans `CLAUDE.md`.
 
-**Onze parcours visent une interface qui n'existe pas.** Les spécifications
-ayant été écrites sans jamais être jouées, elles attendent des libellés
-imaginaires : un bouton « Agenda » dans le calendrier (les vues s'appellent
-Jour, Semaine, Mois), le nom du foyer sur l'accueil (qui ne l'affiche jamais).
-Ce sont des défauts de test, pas de produit : après le correctif ci-dessus,
-**le serveur ne rapporte plus aucune erreur applicative**.
+**Des specs qui visaient à côté.** Écrites sans jamais être jouées, elles
+échouaient pour trois raisons qu'il faut distinguer — et la première corrige ce
+que la version précédente de ce document affirmait :
 
-### État actuel
-
-| Fichier | Bureau | Remarque |
+| Cause | Exemple | Corrigé |
 | --- | --- | --- |
-| `08-reco.spec.ts` | **3/3** | également **3/3 en profil mobile** (375 px) |
-| `06-etancheite.spec.ts` | **1/1** | l'étanchéité vue depuis l'interface |
-| `07-google.spec.ts` | 1/2 | le second attend un libellé absent |
-| `01-foyer-invitation.spec.ts` | 1/2 | |
-| `02` à `05` | 0/9 | libellés à aligner sur l'interface réelle |
+| Mauvais rôle ARIA | le sélecteur de vue du calendrier est un `tablist` : `getByRole('tab')`, pas `'button'`. Le mode « Agenda » existe bien | oui |
+| Affirmation jamais vraie | le nom du foyer n'est pas sur l'accueil, mais sur « Plus » | oui |
+| Champ replié | la répétition d'un événement vit dans la section qu'on déplie | oui |
+| Texte approximatif | l'écran Google dit « Configuration à terminer », pas « non configuré » | oui |
+| `check()` qui ne retombe pas | cocher déclenche un rafraîchissement ; un clic suivi de l'assertion dit la même chose | oui |
 
-Les parcours de la reco sont donc **vérifiés en navigateur**, sur les deux
-profils : un film ajouté, mis en envie et marqué « Vu » ; une idée cadeau avec
-destinataire, occasion et prix, marquée « Offert » ; le filtrage par onglet.
+### Un symptôme reproductible, cause non élucidée
 
-Les neuf restants demandent d'aligner les specs sur l'interface — un travail
-qui porte sur des fonctionnalités antérieures, et qu'il vaut mieux faire écran
-par écran plutôt qu'en ajustant des sélecteurs jusqu'à ce que le vert
-apparaisse.
+Les parcours restants butent presque tous au même endroit, et **ce n'est
+peut-être pas un défaut de test** :
+
+> Un compte crée son foyer, tout fonctionne. Le même compte se reconnecte dans
+> un **contexte de navigateur neuf** : l'application le renvoie sur
+> « Créons votre foyer », alors que son foyer existe et qu'il en est membre.
+
+Reproduit isolément, hors des specs du dépôt : le premier test crée le foyer et
+« Plus » l'affiche ; le second se reconnecte et `/plus` redirige vers
+`/bienvenue`. La personne est bien authentifiée à ce moment — l'écran de
+bienvenue pré-remplit son prénom depuis son compte — et son appartenance est
+bien en base.
+
+Si cela se produit hors des tests, c'est sérieux : quelqu'un qui se reconnecte
+depuis un autre appareil verrait « Créons votre foyer ». `getActiveHousehold()`
+retombe pourtant sur la première appartenance quand le cookie `tribu_foyer`
+manque, donc l'explication n'est pas le cookie. **La cause n'est pas
+identifiée** ; c'est la première chose à reprendre.
+
+### État actuel, profil bureau
+
+| Fichier | Passent | Reste |
+| --- | --- | --- |
+| `08-reco.spec.ts` | **3/3** | — *également 3/3 en profil mobile (375 px)* |
+| `01-foyer-invitation.spec.ts` | **2/2** | — |
+| `07-google.spec.ts` | **2/2** | — |
+| `06-etancheite.spec.ts` | **1/1** | — |
+| `02-calendrier.spec.ts` | 1/3 | les deux suivants butent sur le symptôme ci-dessus |
+| `03-listes.spec.ts` | 0/3 | idem |
+| `04-repas.spec.ts` | 0/1 | la recette ne s'enregistre pas — à reprendre |
+| `05-nounous.spec.ts` | 0/2 | le parcours décrit un enchaînement qui n'existe pas |
+
+**8 sur 17**, contre 0 avant ce travail. Aucun de ces échecs ne provoque
+d'erreur applicative côté serveur.
 
 ### Pour rejouer
 
@@ -333,5 +355,5 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Récurrences, ingrédients, gardes, conversion Google, exports, recommandations | Tests unitaires | **110/110** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur, reco | Playwright sur pile Supabase locale | **6/6** (bureau et mobile) |
-| Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **joués pour la première fois : 1 défaut produit corrigé, 11 specs à aligner** |
+| Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **8/17 — 1 défaut produit corrigé, 5 specs réparées, 1 symptôme à élucider** |
 | Google Agenda de bout en bout | — | **non joué — aucun identifiant OAuth** |
