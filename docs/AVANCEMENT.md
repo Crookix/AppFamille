@@ -22,56 +22,67 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 6 — Google Agenda | Écrite | **Demande une configuration externe** — voir plus bas |
 | 7 — Notifications, PWA, mode démo | Terminée | Confirmer sur un vrai téléphone |
 | 8 — Vérifications | Terminée | Jouer les parcours Playwright |
-| 9 — Reco (films, séries, théâtre, cadeaux) | Écrite | **Appliquer la migration `0016`** sur le projet, puis confirmer en navigateur |
+| 9 — Reco (films, séries, théâtre, cadeaux) | Terminée | Confirmer en navigateur |
 
-Le dépôt compte quatorze migrations, numérotées `0001`–`0013` puis `0016`.
-**La dernière, `0016` (la reco), n'a été appliquée sur aucune base réelle** :
-c'est le geste qui manque pour que l'écran fonctionne en ligne. Le projet
-`tribu-foyer` compte aujourd'hui 38 tables, toutes protégées par la RLS ;
-`npm run db:push` en ajoutera deux — `recommendations` et
-`recommendation_wants`.
+Le dépôt compte seize migrations, `0001` à `0016`, **toutes appliquées sur le
+projet `tribu-foyer`**, qui porte désormais 40 tables et 141 politiques, toutes
+avec la RLS active.
 
-Le saut de numéro n'est pas une erreur, et il signale un écart à régler —
-voir « Écart entre le dépôt et la base » ci-dessous.
+`0016` (la reco) a été appliquée le 14 septembre 2026 à 13:07 UTC. Le SQL
+enregistré par Supabase a la même empreinte MD5
+(`fcc9242646ed243397bcdc5445838c8e`) que le fichier rejoué en local avant
+application : ce qui a tourné en production est exactement ce qui avait été
+vérifié.
+
+Comme l'application est passée par le connecteur Supabase et non par
+`npm run db:push`, la ligne correspondante a été ajoutée à la main dans
+`_tribu_migrations`. Sans cela, le prochain `db:push` aurait tenté de rejouer
+la migration et se serait arrêté en erreur.
 
 110 tests unitaires passent, la compilation produit 24 routes sans erreur, et
-la vérification d'étanchéité donne 42 conformités sur 42 — dont 36 jouées
-contre la base Supabase réelle et les 42 contre un PostgreSQL local rejouant
-les migrations du dépôt. Le détail, et la raison de cette distinction, sont
-dans [`TESTS.md`](TESTS.md).
+la vérification d'étanchéité donne 42 conformités sur 42. Le détail est dans
+[`TESTS.md`](TESTS.md).
 
 ---
 
-## Écart entre le dépôt et la base — **à régler**
+## Écart entre le dépôt et la base — **résorbé, une réserve**
 
-Constaté le 14 septembre 2026 en interrogeant le projet `tribu-foyer` :
-le journal `_tribu_migrations` contient deux migrations **qui ne sont dans
-aucune branche du dépôt** :
+Constaté le 14 septembre 2026 : le journal `_tribu_migrations` contenait deux
+migrations qui n'étaient dans **aucune branche** du dépôt.
 
-| Migration | Appliquée le |
-| --- | --- |
-| `0014_espace_nounou.sql` | 14 septembre 2026, 09:38 UTC |
-| `0015_politiques_nounou_alignees.sql` | 14 septembre 2026, 09:39 UTC |
+| Migration | Appliquée le | État |
+| --- | --- | --- |
+| `0014_espace_nounou.sql` | 14 septembre 2026, 09:38 UTC | reconstituée et committée |
+| `0015_politiques_nounou_alignees.sql` | 14 septembre 2026, 09:39 UTC | reconstituée et committée |
 
 Elles ont créé trois tables — `nanny_accesses`, `nanny_availability`,
-`childcare_declarations` — toutes avec la RLS active. La base de production
-est donc **en avance sur le dépôt**, ce qui met en défaut la règle « le dépôt
-décrit le schéma » : une base reconstruite depuis `main` n'aurait pas ces
-tables.
+`childcare_declarations` — toutes avec la RLS active.
 
-Ce qu'il faut faire, dans cet ordre :
+**Les fichiers n'ont pas été devinés depuis le schéma.** Supabase conserve le
+SQL exact de chaque migration appliquée dans
+`supabase_migrations.schema_migrations` ; les deux corps en sont repris à
+l'octet près, ce que prouve leur empreinte MD5, identique à celle enregistrée
+(`01e19abb…` et `0e290de4…`). Seul un en-tête a été ajouté au-dessus.
 
-1. **Committer les deux fichiers manquants** sous leurs noms exacts, sinon
-   `db:push` les rejouera un jour sur une base qui les a déjà, ou les oubliera
-   sur une base neuve.
-2. Vérifier `public.delete_user_data` : `nanny_accesses` porte un `user_id` en
-   texte, **que la fonction d'effacement ne traite pas**. Un identifiant de
-   compte survivrait donc à la suppression de ce compte. À confirmer par qui
-   connaît cette fonctionnalité.
-3. Relancer `supabase/tests/isolation.sql` en y ajoutant les trois tables.
+La fidélité est vérifiée une seconde fois, autrement : les seize migrations
+rejouées depuis une base vide sur un PostgreSQL local produisent, pour les huit
+tables concernées par l'espace nounou, **exactement les mêmes politiques que la
+production** — même empreinte `b68bb41c…`, expressions et rôles compris.
 
-La migration `0016` de la reco a été numérotée pour passer **après** ces deux
-migrations, afin que l'ordre du dépôt soit celui qu'a connu la production.
+### Ce qui reste
+
+1. **Le « pourquoi » manque** en tête des deux fichiers : ce dépôt l'exige, et
+   il n'appartient pas à qui les a reconstitués de l'inventer. À compléter par
+   l'auteur de l'espace nounou.
+2. **`nanny_accesses.user_id` échappe à `public.delete_user_data`.** Un
+   identifiant de compte survivrait donc à la suppression de ce compte. Le
+   correctif n'est pas évident — la contrainte `nanny_accesses_accepted_pair`
+   lie `user_id` et `accepted_at` — et la décision (effacer l'accès, ou le
+   dissocier) revient à qui connaît la fonctionnalité.
+3. **`supabase/tests/isolation.sql` ne couvre pas les trois tables nounou.**
+   Elles introduisent un accès pour quelqu'un qui n'est **pas** membre du
+   foyer : c'est précisément le genre de règle que ce script existe pour
+   vérifier.
 
 ---
 

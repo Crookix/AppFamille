@@ -83,6 +83,8 @@ src/
     ingredients.ts    normalisation et agrégation des ingrédients
 supabase/
   migrations/         schéma et RLS, numérotés, jamais modifiés après coup
+                      (`0014`/`0015` ont été reconstituées depuis le journal
+                       du projet : voir docs/AVANCEMENT.md)
   tests/isolation.sql vérification d'étanchéité entre foyers
 tests/unit/           tests Vitest
 ```

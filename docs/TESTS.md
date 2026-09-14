@@ -47,18 +47,30 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
 
 **Résultat : 42 vérifications, 42 conformes.**
 
-Deux exécutions distinctes, et la distinction compte :
+Deux exécutions, sur deux bases différentes :
 
 - **36 vérifications contre la base Supabase réelle**, avant l'arrivée de la
-  reco. C'est la mesure de référence.
+  reco. C'est la mesure de référence historique.
 - **42 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
-  points qui portent sur `recommendations` et `recommendation_wants`. Les
-  migrations du dépôt y sont rejouées depuis une base vide, sur un
-  échafaudage reconstituant ce que Supabase fournit d'office (rôles `anon`,
+  points portant sur `recommendations` et `recommendation_wants`. Les seize
+  migrations y sont rejouées depuis une base vide, sur un échafaudage
+  reconstituant ce que Supabase fournit d'office (rôles `anon`,
   `authenticated`, `service_role`, schémas `auth` et `storage`, `auth.jwt()`,
-  publication `supabase_realtime`). Les politiques testées sont les vraies,
-  mais **la base du projet n'a pas été rejouée depuis** : à refaire avec les
-  identifiants réels avant mise en production.
+  publication `supabase_realtime`).
+
+**Pourquoi le résultat local vaut pour la production.** Une réplique ne prouve
+rien si elle diverge de l'original. Les deux schémas ont donc été comparés
+après application de `0016`, par empreinte du catalogue plutôt que de visu :
+les **141 politiques** de `public` — nom, table, action, rôles, clauses
+`using` et `with check` — donnent la **même empreinte `125d9c04…`** des deux
+côtés, de même que les colonnes des deux tables de reco et le corps de
+`delete_user_data`. Les politiques éprouvées en local sont, à l'octet près,
+celles qui tournent en production.
+
+Le script n'a volontairement **pas** été joué contre la base du projet : il
+insère dans `auth.users` avant de tout annuler, et la commodité ne justifiait
+pas d'écrire, même temporairement, dans la table des comptes réels. Pour le
+jouer malgré tout : `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql`.
 
 Depuis la migration `0013`, le script fait intervenir **deux fournisseurs
 d'authentification à la fois** : Camille et Alex arrivent par Supabase Auth,
@@ -89,7 +101,7 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
 
 ## 2. Schéma, politiques et conseillers Supabase — **RÉEL**
 
-- **Les 37 tables** de `public` portent la RLS active — vérifié par requête sur
+- **Les 40 tables** de `public` portent la RLS active — vérifié par requête sur
   `pg_class`, pas par relecture des migrations. Deux d'entre elles,
   `google_credentials` et `_tribu_migrations`, ont la RLS active **et aucune
   politique** : elles sont donc invisibles à `anon` comme à `authenticated`.
@@ -112,12 +124,26 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
   paires de politiques permissives redondantes. L'étanchéité a été **revérifiée
   après** cette fusion — c'est la raison pour laquelle les 36 vérifications
   ci-dessus datent d'après `0011`, et non d'avant.
-- La migration `0016` (reco) a été passée au crible des mêmes règles, sur la
-  base locale : RLS active et politiques présentes sur les deux nouvelles
-  tables, aucune clé étrangère sans index couvrant, aucune politique
-  permissive en double, et **aucune politique ne lit `auth.uid()`** — le piège
-  `22P02` décrit en `0013`. Les conseillers Supabase eux-mêmes restent à
-  relancer sur le projet réel après application.
+- **Les conseillers ont été relancés sur le projet réel après `0016`**, le
+  14 septembre 2026. Aucun signalement nouveau n'est imputable à la reco :
+  - *sécurité* — les deux `rls_enabled_no_policy` habituels
+    (`google_credentials`, `_tribu_migrations`, les verrous voulus) ; les
+    fonctions `SECURITY DEFINER` appelables passent de six à dix, les quatre
+    nouvelles venant de l'espace nounou et de `ensure_profile`.
+    `sync_recommendation_done` **n'y figure pas** : le `revoke` de `0016` a
+    bien produit son effet.
+  - *performance* — aucune clé étrangère sans index, aucune politique
+    permissive en double, aucun `auth_rls_initplan` sur les deux tables de
+    reco. Leurs politiques passent par `is_household_member()` et
+    `current_member_id()`, jamais par `auth.<fonction>()` en direct, ce qui
+    évite la réévaluation ligne à ligne.
+  - Seuls sept *unused index* concernent la reco : les tables viennent d'être
+    créées et sont vides. Le signalement disparaîtra à l'usage.
+- Neuf *multiple permissive policies* et une réévaluation `auth_rls_initplan`
+  concernent l'**espace nounou** : deux politiques de lecture cohabitent sur
+  les mêmes tables, l'une pour le foyer, l'autre pour la nounou. C'est une
+  conséquence du besoin, pas une erreur, mais elle revient à qui tient cette
+  fonctionnalité — voir `AVANCEMENT.md`.
 
 ---
 
@@ -248,7 +274,10 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Domaine | Vérifié comment | État |
 | --- | --- | --- |
 | Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **36/36** |
-| Étanchéité des recommandations et des envies | PostgreSQL 16 local, 14 migrations rejouées | **42/42** — à refaire sur la base du projet |
+| Étanchéité des recommandations et des envies | PostgreSQL 16 local, 16 migrations rejouées ; schéma prouvé identique à la production par empreinte | **42/42** |
+| Migration `0016` appliquée en production | Empreinte du SQL enregistré = celle du fichier testé | **conforme** |
+| Fidélité des migrations `0014`/`0015` reconstituées | Empreinte MD5 du corps = celle du journal Supabase | **exacte** |
+| Conseillers Supabase après `0016` | Service réel | **aucun signalement nouveau dû à la reco** |
 | Invitations : expiration, révocation, rejeu, jeton inventé | Base réelle | **conforme** |
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
