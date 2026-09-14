@@ -111,6 +111,14 @@ récupère l'enfant, et le billet de train en pièce jointe.
 | 3.2 | Cocher une tâche hebdomadaire | Elle se recrée sept jours plus tard, et la réalisation est enregistrée |
 | 3.3 | Taper « 2 kg de pommes » | Quantité 2, unité kg, libellé « pommes », rayon « Fruits et légumes » |
 | 3.4 | Ajouter « pommes » alors que « 2 kg de pommes » y est déjà | Les deux lignes fusionnent au lieu de se doubler |
+
+> ⚠️ **3.3 et 3.4 ne sont pas tenus.** Vérifié en navigateur le 14 septembre
+> 2026 : la saisie rapide a trois champs séparés (Article, Quantité, Unité) et
+> n'analyse pas « 2 kg de pommes » — le libellé est enregistré entier, quantité
+> et unité vides, et aucune fusion n'a lieu. Seul le rayon est bien deviné. La
+> logique d'analyse existe et est testée, mais n'est câblée que sur le chemin
+> repas → courses. À trancher : compléter la saisie rapide, ou réécrire ces
+> deux critères.
 | 3.5 | Cocher trois articles puis « effacer les articles cochés » | Seuls ces trois disparaissent |
 | 3.6 | Deux adultes sur la même liste, l'un coche | L'autre voit la case se cocher |
 
@@ -261,7 +269,84 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 
 ---
 
-## 8. Étanchéité entre foyers — *fait, vérifié sur la base réelle*
+## 8. Reco — films, séries, théâtre, idées cadeaux — *fait, vérifié en navigateur*
+
+### Ce que ça fait
+
+- Un espace partagé pour ce que la famille se recommande : **films, séries,
+  théâtre, idées cadeaux**, et un genre « autre » pour le reste (un livre, un
+  restaurant, un podcast).
+- Chaque fiche porte un titre, qui la recommande, **pourquoi**, un lien, et une
+  note sur cinq étoiles. C'est le « pourquoi » qui distingue une recommandation
+  d'une simple liste de titres.
+- Les mots suivent le genre : un film se marque « Vu », un cadeau « Offert »,
+  une place de théâtre passe par « Places prises ». La base, elle, n'a que
+  trois états.
+- **Les envies** : chaque membre peut dire « moi aussi ». Les avatars montrent
+  d'un coup d'œil si l'on est seul à vouloir, ou si toute la maison attend.
+  Personne ne peut déclarer une envie à la place d'un autre.
+- Les idées cadeaux ajoutent leurs propres champs : destinataire (un enfant du
+  foyer ou quelqu'un d'autre), occasion et prix.
+- Un lien collé sans « https:// » est complété tout seul ; seul le domaine
+  s'affiche, pour ne pas déborder sur téléphone.
+- Ce qui est fait sort de la liste sans disparaître : un bouton le ramène.
+
+### Critères d'acceptation
+
+| # | On fait ceci | On doit obtenir cela |
+| --- | --- | --- |
+| 9.1 | Ajouter un film | Il apparaît « À voir », signé du prénom de qui l'a proposé |
+| 9.2 | Ajouter une idée cadeau | Les champs destinataire, occasion et prix apparaissent ; ils restent absents pour un film |
+| 9.3 | Marquer un film « Vu », puis un cadeau « Offert » | Le libellé suit le genre ; le bouton « Annuler » revient en arrière |
+| 9.4 | Appuyer sur « Envie » depuis deux téléphones | Le compteur monte à deux, les deux avatars s'affichent |
+| 9.5 | Appuyer deux fois de suite sur « Envie » | Une seule envie enregistrée, sans erreur |
+| 9.6 | Changer le genre d'une fiche de « cadeau » à « film » | Destinataire, occasion et prix sont effacés, pas seulement masqués |
+| 9.7 | Coller « allocine.fr/film/12 » | Le lien s'ouvre vers l'extérieur ; la fiche n'affiche que « allocine.fr » |
+| 9.8 | Saisir un prix « 25,50 € » | Enregistré comme 25,50, réaffiché « 25,50 € » |
+| 8.9 | Chercher « oeuvre » | Trouve « Une Œuvre majeure » |
+| 8.10 | Un adulte ajoute une reco | L'autre la voit apparaître sans recharger |
+
+---
+
+## 9. Check-lists — les listes qu'on refait à l'identique — *fait*
+
+### Ce que ça fait
+
+- Des listes **réutilisables** : la valise des enfants, le sac de piscine, ce
+  qu'on emporte chez la nounou. On coche, puis on **remet à zéro** pour la fois
+  suivante — le contenu reste, seules les coches partent.
+- À la création, le contenu s'écrit **ou se colle** : tirets, puces, numéros et
+  cases `[ ]` sont retirés, et les doublons écartés. On ne saisit pas une valise
+  ligne à ligne, on la reprend d'ailleurs.
+- L'avancement se lit sans ouvrir la liste (« 3 sur 6 », et une jauge), et une
+  liste entièrement cochée s'annonce **prête**.
+- La date de la dernière remise à zéro est affichée, avec qui l'a faite : sans
+  elle, on ne sait pas si les coches encore en place datent de ce matin ou du
+  voyage précédent.
+- Deux adultes qui préparent la même valise voient les coches de l'autre en
+  temps réel.
+
+**Ce que ce n'est pas.** Ni échéance, ni responsable, ni récurrence : ce sont
+les marques d'une tâche. Une tâche est un engagement ponctuel qui disparaît une
+fois faite ; une check-list est un modèle qui survit à son usage. Mélanger les
+deux rendrait les deux écrans illisibles.
+
+### Critères d'acceptation
+
+| # | On fait ceci | On doit obtenir cela |
+| --- | --- | --- |
+| 9.1 | Créer une check-list en collant « - Doudou / - Pyjama / 1. Brosse à dents » | Trois points, sans les tirets ni le numéro |
+| 9.2 | Coller deux fois la même ligne | Un seul point — la valise ne double pas |
+| 9.3 | Cocher deux points sur six | L'en-tête affiche « 2 sur 6 », la jauge suit |
+| 9.4 | Tout cocher | La liste s'annonce « Prête » |
+| 9.5 | Remettre à zéro | Tout est décoché, **le contenu est intact**, et la date du jour s'affiche |
+| 9.6 | Une liste que personne n'a cochée | Le bouton « Remettre à zéro » ne se propose pas |
+| 9.7 | Deux adultes sur la même liste, l'un coche | L'autre voit la case se cocher |
+| 9.8 | Une liste vide | Elle n'est pas annoncée « prête » — une valise sans contenu n'est pas une valise prête |
+
+---
+
+## 10. Étanchéité entre foyers — *fait, vérifié sur la base réelle*
 
 Ce n'est pas une fonctionnalité visible, mais c'est le critère le plus
 important du produit : **les données d'un foyer ne sortent pas de ce foyer.**
@@ -277,12 +362,14 @@ important du produit : **les données d'un foyer ne sortent pas de ce foyer.**
 | 8.7 | Un adulte non-administrateur tente de se promouvoir, de modifier la fiche d'un autre membre, ou d'exclure l'administrateur | Refusé les trois fois |
 | 8.8 | **Témoins** : les mêmes requêtes, faites par un membre légitime | Elles renvoient bien les données |
 
-Le point 8.8 n'est pas décoratif : sans lui, une session inerte renverrait zéro
+Le point 10.8 n'est pas décoratif : sans lui, une session inerte renverrait zéro
 partout et l'on conclurait à tort à l'étanchéité.
 
-Ces huit points sont exécutés par `supabase/tests/isolation.sql`. Résultat de la
-dernière exécution : **36 vérifications, 36 conformes**. Voir
-[`TESTS.md`](TESTS.md).
+Ces huit points sont exécutés par `supabase/tests/isolation.sql`, qui couvre
+aussi les recommandations et leurs envies depuis la section 8. Le script porte
+**67 vérifications**, l'espace nounou et les check-lists compris. Voir [`TESTS.md`](TESTS.md) pour
+le détail de ce qui a été joué contre la base réelle et de ce qui l'a été
+contre un Postgres local.
 
 ---
 

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { requireHousehold } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ListsTabs } from '@/components/lists/lists-tabs';
+import { loadChecklists } from '@/lib/data/checklists';
 
 export const metadata: Metadata = { title: 'Listes' };
 
@@ -18,9 +19,14 @@ export default async function ListesPage({
   const { household } = await requireHousehold();
   const supabase = await createClient();
 
-  const tab = params.onglet === 'courses' ? 'courses' : 'taches';
+  const tab =
+    params.onglet === 'courses'
+      ? 'courses'
+      : params.onglet === 'checklists'
+        ? 'checklists'
+        : 'taches';
 
-  const [tasksResult, listsResult] = await Promise.all([
+  const [tasksResult, listsResult, checklists] = await Promise.all([
     supabase
       .from('tasks')
       .select('*')
@@ -34,6 +40,7 @@ export default async function ListesPage({
       .eq('household_id', household.id)
       .order('is_default', { ascending: false })
       .order('created_at'),
+    loadChecklists(household.id),
   ]);
 
   const allTasks = tasksResult.data ?? [];
@@ -60,6 +67,7 @@ export default async function ListesPage({
       items={items}
       lists={lists}
       activeListId={activeListId}
+      checklists={checklists}
     />
   );
 }

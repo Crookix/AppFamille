@@ -18,7 +18,17 @@ import {
 
 skipIfUnconfigured();
 
-test.describe('Nounous et gardes', () => {
+/**
+ * Ces parcours s'enchaînent : chacun s'appuie sur ce que le précédent a créé.
+ *
+ * `serial` n'est pas un confort. Après un échec, Playwright jette le worker et
+ * en démarre un neuf — `beforeAll` est donc rejoué et fabrique un AUTRE compte,
+ * sans foyer. Les tests suivants échouaient alors sur « Créons votre foyer »,
+ * pour une raison étrangère à ce qu'ils vérifient, et le rapport accusait cinq
+ * défauts là où il n'y en avait qu'un. En série, ils sont sautés : on lit le
+ * vrai.
+ */
+test.describe.serial('Nounous et gardes', () => {
   let user: TestUser;
 
   test.beforeAll(async ({ admin }) => {

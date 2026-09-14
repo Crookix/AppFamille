@@ -18,7 +18,17 @@ import {
 
 skipIfUnconfigured();
 
-test.describe('Tâches et courses', () => {
+/**
+ * Ces parcours s'enchaînent : chacun s'appuie sur ce que le précédent a créé.
+ *
+ * `serial` n'est pas un confort. Après un échec, Playwright jette le worker et
+ * en démarre un neuf — `beforeAll` est donc rejoué et fabrique un AUTRE compte,
+ * sans foyer. Les tests suivants échouaient alors sur « Créons votre foyer »,
+ * pour une raison étrangère à ce qu'ils vérifient, et le rapport accusait cinq
+ * défauts là où il n'y en avait qu'un. En série, ils sont sautés : on lit le
+ * vrai.
+ */
+test.describe.serial('Tâches et courses', () => {
   let user: TestUser;
 
   test.beforeAll(async ({ admin }) => {
@@ -43,13 +53,21 @@ test.describe('Tâches et courses', () => {
     const tache = page.getByText('Prendre rendez-vous chez le dentiste');
     await expect(tache).toBeVisible();
 
-    await page.getByRole('checkbox', { name: /dentiste/i }).first().check();
-    await expect(page.getByRole('checkbox', { name: /dentiste/i }).first()).toBeChecked();
+    // Cocher fait SORTIR la tâche de la liste : l'écran montre « à faire » ou
+    // « terminées », jamais les deux. Vérifier qu'elle reste cochée sur place
+    // reviendrait à vérifier qu'elle n'a pas été prise en compte.
+    await page.getByRole('checkbox', { name: /dentiste/i }).first().click();
+    await expect(tache).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Terminées', exact: true }).click();
+    await expect(tache.first()).toBeVisible();
   });
 
   test('la saisie rapide devine quantité, unité et rayon', async ({ page, admin }) => {
     await signIn(page, admin, user);
-    await page.goto('/listes');
+    // `/listes` s'ouvre sur les tâches : sans cet onglet, la course ajoutée
+    // existe bien mais n'est pas à l'écran.
+    await page.goto('/listes?onglet=courses');
 
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await page.getByRole('button', { name: /Une course/i }).click();
@@ -63,7 +81,7 @@ test.describe('Tâches et courses', () => {
 
   test('ajouter le même produit fusionne au lieu de doubler', async ({ page, admin }) => {
     await signIn(page, admin, user);
-    await page.goto('/listes');
+    await page.goto('/listes?onglet=courses');
 
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await page.getByRole('button', { name: /Une course/i }).click();

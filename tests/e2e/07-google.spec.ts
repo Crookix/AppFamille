@@ -41,7 +41,8 @@ test.describe('Google Agenda', () => {
 
     if (!configure) {
       // Il doit être écrit noir sur blanc que ce n'est pas configuré…
-      await expect(page.getByText(/pas encore configuré|non configuré/i)).toBeVisible();
+      await expect(page.getByText(/Configuration à terminer/i)).toBeVisible();
+      await expect(page.getByText(/aucune n[’']est simulée/i)).toBeVisible();
       // …et surtout, aucune promesse de synchronisation réussie.
       await expect(page.getByText(/synchronisation réussie|synchronisé le/i)).toHaveCount(0);
       await expect(page.getByText(/à jour|dernière synchronisation/i)).toHaveCount(0);

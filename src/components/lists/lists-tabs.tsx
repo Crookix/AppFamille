@@ -2,12 +2,16 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ListChecks, ShoppingBasket } from 'lucide-react';
+import { ListChecks, ListTodo, ShoppingBasket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/ui/primitives';
 import { TaskList } from '@/components/tasks/task-list';
 import { ShoppingList } from '@/components/shopping/shopping-list';
+import { ChecklistsPanel } from '@/components/checklists/checklists-panel';
 import type { ShoppingItemRow, ShoppingListRow, TaskRow } from '@/lib/database.types';
+import type { ChecklistWithItems } from '@/lib/data/checklists';
+
+export type ListsTab = 'taches' | 'courses' | 'checklists';
 
 export function ListsTabs({
   tab,
@@ -16,20 +20,27 @@ export function ListsTabs({
   items,
   lists,
   activeListId,
+  checklists,
 }: {
-  tab: 'taches' | 'courses';
+  tab: ListsTab;
   tasks: TaskRow[];
   subtasks: TaskRow[];
   items: ShoppingItemRow[];
   lists: ShoppingListRow[];
   activeListId: string | null;
+  checklists: ChecklistWithItems[];
 }) {
   const router = useRouter();
 
   const openTasks = tasks.filter((t) => t.status !== 'termine').length;
   const openItems = items.filter((i) => !i.is_checked).length;
+  // Une check-list entamée est ce qui demande attention : ni celle qu'on n'a
+  // pas commencée, ni celle qui est prête.
+  const enCours = checklists.filter(
+    (c) => c.items.some((i) => i.is_checked) && c.items.some((i) => !i.is_checked),
+  ).length;
 
-  function switchTab(next: 'taches' | 'courses') {
+  function switchTab(next: ListsTab) {
     router.push(`/listes?onglet=${next}`);
   }
 
@@ -39,13 +50,17 @@ export function ListsTabs({
 
       <div
         role="tablist"
-        aria-label="Tâches ou courses"
-        className="mb-4 flex gap-1 rounded-full bg-[var(--bg-subtle)] p-1"
+        aria-label="Tâches, courses ou check-lists"
+        // Trois onglets ne tiennent pas côte à côte à 375 px : « Check-lists »
+        // se cassait sur deux lignes. Même traitement que le sélecteur de vues
+        // du calendrier — on laisse défiler plutôt que de comprimer.
+        className="no-scrollbar mb-4 flex gap-1 overflow-x-auto rounded-full bg-[var(--bg-subtle)] p-1"
       >
         {(
           [
             { key: 'taches', label: 'Tâches', icon: ListChecks, count: openTasks },
             { key: 'courses', label: 'Courses', icon: ShoppingBasket, count: openItems },
+            { key: 'checklists', label: 'Check-lists', icon: ListTodo, count: enCours },
           ] as const
         ).map(({ key, label, icon: Icon, count }) => (
           <button
@@ -54,7 +69,7 @@ export function ListsTabs({
             aria-selected={tab === key}
             onClick={() => switchTab(key)}
             className={cn(
-              'flex h-10 flex-1 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors',
+              'flex h-10 flex-1 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-3 text-sm font-semibold transition-colors',
               tab === key
                 ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-sm'
                 : 'text-[var(--fg-muted)]',
@@ -76,7 +91,9 @@ export function ListsTabs({
         ))}
       </div>
 
-      {tab === 'taches' ? (
+      {tab === 'checklists' ? (
+        <ChecklistsPanel initial={checklists} />
+      ) : tab === 'taches' ? (
         <TaskList initialTasks={tasks} subtasks={subtasks} />
       ) : activeListId ? (
         <ShoppingList initialItems={items} lists={lists} activeListId={activeListId} />

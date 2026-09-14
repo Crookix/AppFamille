@@ -43,6 +43,9 @@ test.describe('Foyer et invitations', () => {
     const foyer = `Foyer E2E ${Date.now()}`;
     await createHousehold(page, foyer, 'Camille');
 
+    // L'accueil n'affiche pas le nom du foyer — il montre la journée, pas
+    // l'administration. C'est « Plus » qui le porte.
+    await page.goto('/plus');
     await expect(page.getByText(foyer).first()).toBeVisible();
 
     // --- Elle déclare un enfant -------------------------------------------

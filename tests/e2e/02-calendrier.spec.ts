@@ -19,7 +19,17 @@ import {
 
 skipIfUnconfigured();
 
-test.describe('Calendrier', () => {
+/**
+ * Ces parcours s'enchaînent : chacun s'appuie sur ce que le précédent a créé.
+ *
+ * `serial` n'est pas un confort. Après un échec, Playwright jette le worker et
+ * en démarre un neuf — `beforeAll` est donc rejoué et fabrique un AUTRE compte,
+ * sans foyer. Les tests suivants échouaient alors sur « Créons votre foyer »,
+ * pour une raison étrangère à ce qu'ils vérifient, et le rapport accusait cinq
+ * défauts là où il n'y en avait qu'un. En série, ils sont sautés : on lit le
+ * vrai.
+ */
+test.describe.serial('Calendrier', () => {
   let camille: TestUser;
 
   test.beforeAll(async ({ admin }) => {
@@ -44,8 +54,10 @@ test.describe('Calendrier', () => {
     await page.getByLabel(/^Titre/).fill('Pédiatre');
     await page.getByRole('button', { name: /^Ajouter$/ }).last().click();
 
+    // Le sélecteur de vue est un `tablist` : ses quatre entrées portent le
+    // rôle `tab`, pas `button`.
     for (const vue of ['Agenda', 'Jour', 'Semaine', 'Mois']) {
-      await page.getByRole('button', { name: vue, exact: true }).click();
+      await page.getByRole('tab', { name: vue, exact: true }).click();
       await expect(page.getByText('Pédiatre').first()).toBeVisible();
     }
   });
@@ -56,11 +68,14 @@ test.describe('Calendrier', () => {
     await page.getByRole('button', { name: /Un événement/i }).click();
 
     await page.getByLabel(/^Titre/).fill('Piscine');
+    // Le formulaire ne montre d'abord que l'essentiel ; la répétition vit dans
+    // la section qu'on déplie.
+    await page.getByRole('button', { name: /Lieu, responsable, répétition/i }).click();
     await page.getByLabel(/Répétition/).selectOption({ label: 'Toutes les semaines' });
     await page.getByRole('button', { name: /^Ajouter$/ }).last().click();
 
     // En vue mois, une série hebdomadaire doit se voir au moins quatre fois.
-    await page.getByRole('button', { name: 'Mois', exact: true }).click();
+    await page.getByRole('tab', { name: 'Mois', exact: true }).click();
     await expect(page.getByText('Piscine').first()).toBeVisible();
     expect(await page.getByText('Piscine').count()).toBeGreaterThanOrEqual(4);
   });

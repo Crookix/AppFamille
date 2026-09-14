@@ -1,8 +1,8 @@
 # MyFamily — repères pour travailler sur ce dépôt
 
 MyFamily est une application de gestion du foyer : le calendrier familial, les
-tâches, les courses, les repas et les heures de garde au même endroit, sur
-téléphone comme sur ordinateur.
+tâches, les courses, les repas, les heures de garde, les recommandations et les
+check-lists du foyer au même endroit, sur téléphone comme sur ordinateur.
 
 L'application s'appelait **Tribu** jusqu'en septembre 2026. Le nom visible a
 changé partout, mais **quatre identifiants techniques gardent l'ancien** parce
@@ -32,6 +32,8 @@ vérifications dans [`docs/TESTS.md`](docs/TESTS.md), l'intégration Google dans
 | `npm run test:watch` | Les mêmes, en continu |
 | `npm run test:e2e` | Parcours navigateur Playwright — demande une application qui tourne |
 | `npm run db:push` | Applique les migrations SQL manquantes sur la base Supabase |
+| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 67 vérifications |
+| `psql "$SUPABASE_DB_URL" -f supabase/tests/effacement.sql` | Ce que la suppression d'un compte laisserait derrière |
 
 `npm run db:push` lit `SUPABASE_DB_URL` dans `.env.local`, applique les fichiers
 de `supabase/migrations` dans l'ordre alphabétique, chacun dans sa propre
@@ -39,6 +41,10 @@ transaction, et note les fichiers appliqués dans `_tribu_migrations`. Une
 migration déjà appliquée n'est jamais rejouée.
 
 **Avant de pousser du code : `npm run typecheck && npm test && npm run build`.**
+Ces trois commandes tournent aussi en intégration continue
+(`.github/workflows/verification.yml`), avec les scripts de base ci-dessus.
+La CI n'est pas une raison de ne pas les jouer d'abord : elle est le filet, pas
+la vérification.
 
 ---
 
@@ -63,7 +69,7 @@ fonctionne sauf la synchronisation d'agenda, qui s'annonce comme non configurée
 ```
 src/
   app/
-    (app)/            écrans connectés (accueil, calendrier, listes, repas, plus)
+    (app)/            écrans connectés (accueil, calendrier, listes, repas, reco, plus)
     api/google/       connexion, retour d'autorisation, synchronisation, révocation
     auth/callback/    retour d'authentification Supabase
     bienvenue/        création ou choix du foyer
@@ -79,11 +85,19 @@ src/
     clerk.ts          détection de Clerk, domaine de l'instance
     recurrence.ts     RRULE, expansion des occurrences
     childcare.ts      heures de garde et bilans mensuels
+    recommendations.ts vocabulaire par genre, liens, prix, tri des recos
+    checklists.ts     avancement, ordre, lecture d'une liste collée
     ingredients.ts    normalisation et agrégation des ingrédients
 supabase/
   migrations/         schéma et RLS, numérotés, jamais modifiés après coup
+                      (`0014`/`0015` ont été reconstituées depuis le journal
+                       du projet : voir docs/AVANCEMENT.md)
   tests/isolation.sql vérification d'étanchéité entre foyers
+  tests/effacement.sql couverture de `delete_user_data`, colonne par colonne
+  tests/echafaudage.sql ce que Supabase fournit d'office, pour rejouer les
+                      migrations sur un PostgreSQL nu (CI, ou vérification locale)
 tests/unit/           tests Vitest
+.claude/skills/       procédures du dépôt : pile locale, relecture de migration
 ```
 
 ### Les quatre clients Supabase
@@ -194,8 +208,16 @@ et ses politiques dans le même fichier. Une table sans politique est invisible 
 c'est le comportement voulu pour `google_credentials` et `_tribu_migrations`,
 c'est un oubli partout ailleurs.
 
-Après toute migration, relancer les conseillers Supabase (« advisors ») et le
-script `supabase/tests/isolation.sql`.
+Après toute migration, relancer les conseillers Supabase (« advisors ») et les
+deux scripts de `supabase/tests/` : `isolation.sql` (étanchéité entre foyers) et
+`effacement.sql` (aucun identifiant de compte ne survit à sa suppression). Les
+deux tournent aussi en intégration continue, sur une base reconstruite depuis
+zéro — mais les conseillers, eux, ne se jouent que sur le projet réel.
+
+**Toute colonne `text` qui porte un identifiant de compte doit s'appeler
+`*user*` ou `*_by`** : `effacement.sql` reconnaît les colonnes à leur nom. Une
+colonne nommée autrement lui échapperait, et l'identifiant survivrait en
+silence à la suppression du compte.
 
 ### Dates et fuseaux
 
@@ -299,6 +321,36 @@ une relecture attentive.
 - **Monter `ClerkProvider` sans clé publiable fait tomber toute
   l'application.** L'absence de Clerk est un état normal : `AuthProvider` rend
   ses enfants tels quels dans ce cas.
+- **`useAuth()` de Clerk ne survit pas à l'absence de `ClerkProvider` : il
+  lève.** Le corollaire du point précédent, et il a coûté cher. `useSupabase()`
+  appelait `useAuth()` sans condition « par respect de la règle des hooks », en
+  supposant qu'il renverrait un objet inerte hors provider. Faux : en v7 il
+  lève `useAssertWrappedByClerkProvider`. Comme `AuthProvider` ne monte pas
+  `ClerkProvider` quand Clerk n'est pas configuré, **tout écran touchant à
+  Supabase plantait dès que Clerk était absent** — c'est-à-dire dans la
+  configuration que `.env.example` présente comme normale. La règle des hooks
+  demande un ordre d'appel stable **entre deux rendus**, pas un appel
+  inconditionnel dans le fichier : `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` étant
+  remplacée à la compilation, on choisit la variante une fois au chargement du
+  module (`src/components/providers/use-supabase.ts`).
+- **Des tests écrits ne sont pas des tests joués.** Les sept fichiers Playwright
+  du dépôt n'avaient jamais été exécutés ; à la première exécution réelle, la
+  plupart échouaient. Les causes étaient de trois ordres, et il faut les
+  distinguer : un **rôle ARIA** faux (le sélecteur de vue du calendrier est un
+  `tablist`, donc `getByRole('tab')` et non `'button'` — le libellé
+  « Agenda », lui, existe bel et bien) ; une **affirmation sur l'interface** qui
+  n'a jamais été vraie (le nom du foyer n'apparaît pas sur l'accueil, mais sur
+  « Plus ») ; un **champ replié** qu'il faut déplier avant de le viser. Un
+  parcours qui n'a pas tourné au moins une fois ne prouve rien — et croire qu'il
+  prouve quelque chose est pire que de ne pas l'avoir écrit.
+- **Playwright jette le worker après un échec**, et rejoue donc `beforeAll`.
+  Dans un fichier dont les parcours s'enchaînent, le compte fabriqué là est
+  remplacé par un autre, sans foyer : tous les tests suivants échouent sur
+  « Créons votre foyer », pour une raison étrangère à ce qu'ils vérifient. La
+  cascade imite à s'y méprendre un défaut systémique — celui-ci a failli être
+  publié comme un bogue produit. Déclarer `test.describe.serial` quand les
+  parcours dépendent les uns des autres : les suivants sont alors **sautés**, et
+  le rapport dit un défaut là où il y en a un.
 - **Le client navigateur des cookies ignore le jeton Clerk.** Onze composants
   appelaient `createClient()` directement plutôt que `useSupabase()`. Sans
   Clerk, rien ne se voyait ; avec lui, leurs requêtes partaient en anonyme :

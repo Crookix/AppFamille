@@ -79,6 +79,10 @@ do $$
 declare
   v_camille text := (select valeur from _t where cle='camille');
   v_foyer_a uuid;
+  v_reco_a  uuid;
+  v_nounou  uuid;
+  v_garde   uuid;
+  v_liste_a uuid;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_camille::text, 'role','authenticated')::text, true);
@@ -95,13 +99,64 @@ begin
           now() + interval '1 day', now() + interval '1 day 1 hour');
 
   insert into public.tasks (household_id, title) values (v_foyer_a, 'Tâche privée');
-  insert into public.nannies (household_id, name) values (v_foyer_a, 'Sofia');
+
+  insert into public.recommendations
+    (household_id, kind, title, note, suggested_by, created_by)
+  values (v_foyer_a, 'film', 'Film que le foyer A garde pour lui',
+          'Pourquoi on le recommande — contenu privé',
+          public.current_member_id(v_foyer_a), v_camille)
+  returning id into v_reco_a;
+
+  insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+  values (v_foyer_a, v_reco_a, public.current_member_id(v_foyer_a));
+
+  insert into public.checklists (household_id, name, note, created_by)
+  values (v_foyer_a, 'La valise des enfants', 'Week-end chez les grands-parents',
+          v_camille)
+  returning id into v_liste_a;
+
+  insert into public.checklist_items (household_id, checklist_id, label, position)
+  values (v_foyer_a, v_liste_a, 'Doudou', 0),
+         (v_foyer_a, v_liste_a, 'Pyjama', 1);
+
+  insert into public.nannies (household_id, name) values (v_foyer_a, 'Sofia')
+  returning id into v_nounou;
+
+  -- Un second enfant, que la nounou ne garde PAS : c'est lui qui prouvera que
+  -- la politique « enfants » est bien restreinte aux enfants effectivement
+  -- confiés, et non ouverte à tout le foyer.
+  insert into public.children (household_id, first_name) values (v_foyer_a, 'Max');
+
+  insert into public.childcare_sessions
+    (household_id, nanny_id, scheduled_start, scheduled_end, applied_hourly_rate)
+  values (v_foyer_a, v_nounou, now() + interval '1 day',
+          now() + interval '1 day 3 hours', 12.00)
+  returning id into v_garde;
+
+  insert into public.childcare_session_children (household_id, session_id, child_id)
+  select v_foyer_a, v_garde, c.id
+  from public.children c
+  where c.household_id = v_foyer_a and c.first_name = 'Léa';
   insert into public.attachments (household_id, storage_path, file_name, uploaded_by)
   values (v_foyer_a, v_foyer_a::text || '/billet-prive.pdf', 'billet-prive.pdf', v_camille);
 
   reset role;
-  insert into _t values ('foyer_a', v_foyer_a::text);
+  insert into _t values ('foyer_a', v_foyer_a::text), ('reco_a', v_reco_a::text),
+                        ('nounou', v_nounou::text), ('garde', v_garde::text),
+                        ('liste_a', v_liste_a::text);
 end $$;
+
+-- Le lien d'accès de la nounou, posé hors rôle applicatif : c'est du montage,
+-- pas la vérification d'une politique d'écriture.
+insert into public.nanny_accesses
+  (household_id, nanny_id, email, token_hash, expires_at)
+values (
+  (select valeur from _t where cle='foyer_a')::uuid,
+  (select valeur from _t where cle='nounou')::uuid,
+  'sofia@verif.test',
+  encode(extensions.digest('jeton-nounou-verif', 'sha256'), 'hex'),
+  now() + interval '7 days'
+);
 
 -- Un objet de stockage réel dans l'espace du foyer A.
 insert into storage.objects (bucket_id, name, owner, owner_id, metadata)
@@ -117,17 +172,24 @@ declare
   v_alex   text := (select valeur from _t where cle='alex');
   v_intrus text := (select valeur from _t where cle='intrus');
   v_foyer_b uuid;
+  v_reco_b  uuid;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_alex::text, 'role','authenticated')::text, true);
   set local role authenticated;
   select public.create_household('Foyer B (vérif)', 'Alex', 'Europe/Paris') into v_foyer_b;
+
+  insert into public.recommendations (household_id, kind, title, suggested_by, created_by)
+  values (v_foyer_b, 'serie', 'Série du foyer B',
+          public.current_member_id(v_foyer_b), v_alex)
+  returning id into v_reco_b;
+
   reset role;
 
   insert into public.household_members (household_id, user_id, role, display_name)
   values (v_foyer_b, v_intrus, 'adulte', 'Intrus');
 
-  insert into _t values ('foyer_b', v_foyer_b::text);
+  insert into _t values ('foyer_b', v_foyer_b::text), ('reco_b', v_reco_b::text);
 end $$;
 
 -- Invitations du foyer A dans les quatre états possibles.
@@ -174,6 +236,34 @@ begin
   select count(*) into n from public.nannies where household_id = a;
   insert into _r (domaine, tentative, observe, verdict)
     values ('Lecture', 'Nounous du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.recommendations where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Recos du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.checklists where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Check-lists du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.checklist_items where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Points de check-list du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.nanny_accesses where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Accès nounou du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.nanny_availability where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Indisponibilités nounou du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.childcare_declarations where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Déclarations d''heures du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.recommendation_wants where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Envies de reco du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
 
   select count(*) into n from public.attachments where household_id = a;
   insert into _r (domaine, tentative, observe, verdict)
@@ -260,6 +350,74 @@ begin
   exception when others then
     insert into _r (domaine, tentative, observe, verdict)
       values ('Écriture', 'Modifier une tâche du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    update public.recommendations set title='PIRATE' where household_id = a;
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Modifier une reco du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Modifier une reco du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- Une envie porte un `household_id` : sans le contrôle d'appartenance, on
+  -- pourrait accrocher la sienne à la fiche d'un foyer voisin.
+  begin
+    insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+    values (a, (select valeur from _t where cle='reco_a')::uuid,
+            (select id from public.household_members where household_id = b and user_id = v_alex));
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Déclarer une envie sur une reco du foyer A', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Déclarer une envie sur une reco du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    update public.checklists set name='PIRATE' where household_id = a;
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Renommer une check-list du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Renommer une check-list du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- Décocher la valise du voisin serait sans gravité, mais c'est la même
+  -- politique qui protège tout le reste : elle doit tenir ici aussi.
+  begin
+    update public.checklist_items set is_checked = true where household_id = a;
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Cocher un point de check-list du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Cocher un point de check-list du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    insert into public.checklist_items (household_id, checklist_id, label)
+    values (a, (select valeur from _t where cle='liste_a')::uuid, 'Intrusion');
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Ajouter un point à une check-list du foyer A', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Ajouter un point à une check-list du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- L'espace nounou ouvre un accès à quelqu'un qui n'est pas membre du foyer :
+  -- raison de plus pour vérifier qu'il ne s'ouvre pas au foyer d'à côté.
+  begin
+    insert into public.nanny_accesses (household_id, nanny_id, token_hash, expires_at)
+    values (a, (select valeur from _t where cle='nounou')::uuid,
+            'faux-condensat', now() + interval '1 day');
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'S''inviter comme nounou du foyer A', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'S''inviter comme nounou du foyer A', 'refusé ('||sqlstate||')', 'OK');
   end;
 
   begin
@@ -392,6 +550,31 @@ begin
       values ('Élévation', 'Adulte non-admin : exclure l''administrateur', 'refusé ('||sqlstate||')', 'OK');
   end;
 
+  -- Les envies ne s'ajoutent que pour soi : la politique compare `member_id`
+  -- à `current_member_id()`, sinon n'importe qui voterait à la place des autres.
+  begin
+    insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+    values (b, (select valeur from _t where cle='reco_b')::uuid,
+            (select id from public.household_members where household_id = b and user_id = v_alex));
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'Adulte : déclarer une envie au nom d''un autre', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'Adulte : déclarer une envie au nom d''un autre', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    insert into public.recommendation_wants (household_id, recommendation_id, member_id)
+    values (b, (select valeur from _t where cle='reco_b')::uuid,
+            (select id from public.household_members where household_id = b and user_id = v_intrus));
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'TÉMOIN — déclarer sa propre envie', n || ' ligne(s)', case when n=1 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Élévation', 'TÉMOIN — déclarer sa propre envie', 'refusé ('||sqlstate||')', 'FAILLE');
+  end;
+
   begin
     update public.household_members set display_name='Intrus renommé'
       where household_id = b and user_id = v_intrus;
@@ -485,6 +668,161 @@ begin
   insert into _r (domaine, tentative, observe, verdict)
     values ('Invitations', 'TÉMOIN — après acceptation, les pièces jointes du foyer A', n || ' objet(s)',
             case when n=1 then 'OK' else 'FAILLE' end);
+
+  reset role;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Acte 5 — L'espace nounou n'ouvre que ce qu'il doit
+--
+-- Jusqu'ici, tout le produit reposait sur une règle simple : on voit le foyer
+-- dont on est membre, et rien d'autre. L'espace nounou (migration `0014`)
+-- introduit le premier accès accordé à quelqu'un qui n'est PAS membre. C'est
+-- donc le premier endroit où « membre du foyer » et « autorisé à lire »
+-- cessent de coïncider, et c'est exactement ce qu'il faut éprouver.
+--
+-- Chloé accepte le lien envoyé pour Sofia, par le vrai chemin applicatif
+-- (`accept_nanny_access`). Elle doit alors voir sa fiche, ses gardes, l'enfant
+-- qu'elle garde et le foyer — et rien de plus. Ni le calendrier, ni les
+-- tâches, ni les courses, ni les recommandations. Ni l'enfant qu'elle ne garde
+-- pas.
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_nounou_user text := 'user_nounou_' || replace(gen_random_uuid()::text, '-', '');
+  v_res uuid;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_nounou_user, 'role','authenticated')::text, true);
+  set local role authenticated;
+
+  begin
+    select public.accept_nanny_access('jeton-nounou-verif') into v_res;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'TÉMOIN — accepter un lien d''accès valide',
+              case when v_res is null then 'aucun rattachement' else 'rattachée' end,
+              case when v_res is null then 'FAILLE' else 'OK' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'TÉMOIN — accepter un lien d''accès valide',
+              'refusé : '||left(sqlerrm, 60), 'FAILLE');
+  end;
+
+  reset role;
+  insert into _t values ('nounou_user', v_nounou_user);
+end $$;
+
+do $$
+declare
+  a uuid := (select valeur from _t where cle='foyer_a')::uuid;
+  b uuid := (select valeur from _t where cle='foyer_b')::uuid;
+  v_nounou_user text := (select valeur from _t where cle='nounou_user');
+  v_nounou uuid := (select valeur from _t where cle='nounou')::uuid;
+  n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_nounou_user, 'role','authenticated')::text, true);
+  set local role authenticated;
+
+  -- Ce à quoi elle a droit.
+  select count(*) into n from public.nannies where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'TÉMOIN — la nounou lit sa propre fiche', n || ' ligne(s)',
+            case when n=1 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.households where id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'TÉMOIN — la nounou lit le foyer qui l''emploie', n || ' ligne(s)',
+            case when n=1 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.childcare_sessions where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'TÉMOIN — la nounou lit la garde qu''on lui confie', n || ' ligne(s)',
+            case when n=1 then 'OK' else 'FAILLE' end);
+
+  -- Ce à quoi elle n'a PAS droit, alors même qu'elle a un pied dans le foyer.
+  select count(*) into n from public.children
+   where household_id = a and first_name = 'Max';
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'L''enfant qu''elle ne garde pas', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.children where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'TÉMOIN — seul l''enfant qu''elle garde', n || ' ligne(s)',
+            case when n=1 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.events where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'Le calendrier du foyer', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.tasks where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'Les tâches du foyer', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.recommendations where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'Les recos du foyer', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.shopping_lists where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'Les listes de courses du foyer', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.attachments where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'Les pièces jointes du foyer', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.household_members where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'La liste des membres du foyer', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  -- Et rien du tout du foyer d'à côté.
+  select count(*) into n from public.households where id = b;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Espace nounou', 'Le foyer B, qui ne l''emploie pas', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  -- Écriture : elle déclare ses heures, elle ne touche pas au foyer.
+  begin
+    update public.households set name='PIRATE' where id = a;
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'Renommer le foyer qui l''emploie', n || ' ligne(s)',
+              case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'Renommer le foyer qui l''emploie', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    insert into public.events (household_id, title, starts_at, ends_at)
+    values (a, 'Intrusion nounou', now(), now() + interval '1 hour');
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'Créer un événement dans le foyer', 'inséré', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'Créer un événement dans le foyer', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  begin
+    insert into public.nanny_availability (household_id, nanny_id, starts_at, ends_at, reason)
+    values (a, v_nounou, now() + interval '10 days', now() + interval '11 days', 'Congés');
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'TÉMOIN — déclarer sa propre indisponibilité', n || ' ligne(s)',
+              case when n=1 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Espace nounou', 'TÉMOIN — déclarer sa propre indisponibilité',
+              'refusé ('||sqlstate||')', 'FAILLE');
+  end;
 
   reset role;
 end $$;
