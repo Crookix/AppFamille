@@ -43,7 +43,7 @@ function event(overrides: Partial<EventRow> = {}): EventRow {
   };
 }
 
-describe('Google → Tribu', () => {
+describe('Google → MyFamily', () => {
   const options = { shareMode: 'details' as const, fallbackTimezone: 'Europe/Paris' };
 
   it('convertit un événement horaire avec son fuseau', () => {
@@ -172,7 +172,7 @@ describe('Google → Tribu', () => {
   });
 });
 
-describe('Tribu → Google', () => {
+describe('MyFamily → Google', () => {
   it('envoie dateTime et fuseau pour un événement horaire', () => {
     const body = localToGoogle(event());
     expect(body.start).toEqual({
@@ -207,7 +207,7 @@ describe('Tribu → Google', () => {
     expect(body.recurrence).toEqual(['RRULE:FREQ=DAILY']);
   });
 
-  it('marque les événements créés par Tribu', () => {
+  it('marque les événements créés par MyFamily', () => {
     const body = localToGoogle(event({ id: 'ev-42' }));
     expect(body.extendedProperties?.private?.[TRIBU_PROPERTY]).toBe('ev-42');
     expect(isTribuOrigin(body)).toBe('ev-42');
@@ -215,7 +215,7 @@ describe('Tribu → Google', () => {
 
   it("ne transmet jamais de pièce jointe à Google", () => {
     const body = localToGoogle(event()) as Record<string, unknown>;
-    // Les documents du foyer restent dans le stockage privé de Tribu.
+    // Les documents du foyer restent dans le stockage privé de MyFamily.
     expect(body.attachments).toBeUndefined();
   });
 });

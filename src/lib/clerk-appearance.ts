@@ -1,5 +1,5 @@
 /**
- * Apparence de Clerk, accordée à Tribu.
+ * Apparence de Clerk, accordée à MyFamily.
  *
  * On passe par `variables` plutôt que par des surcharges de classes.
  * `appearance.elements` demande de connaître les noms internes des éléments de

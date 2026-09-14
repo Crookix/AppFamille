@@ -14,7 +14,7 @@ export default function HorsConnexionPage() {
       </div>
       <h1 className="text-xl font-extrabold tracking-tight">Pas de connexion</h1>
       <p className="mt-2 text-sm text-muted">
-        Tribu a besoin d'internet pour afficher les informations à jour du foyer —
+        MyFamily a besoin d'internet pour afficher les informations à jour du foyer —
         une course cochée par quelqu'un d'autre, un rendez-vous déplacé.
       </p>
       <p className="mt-4 text-sm text-muted">

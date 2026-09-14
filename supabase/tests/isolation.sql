@@ -66,9 +66,9 @@ begin
          '{"provider":"email","providers":["email"]}'::jsonb,
          jsonb_build_object('full_name', u.nom)
   from (values
-    (v_camille, 'verif.camille@tribu.test', 'Camille'),
-    (v_alex,    'verif.alex@tribu.test',    'Alex'),
-    (v_intrus,  'verif.intrus@tribu.test',  'Intrus')
+    (v_camille, 'verif.camille@myfamily.test', 'Camille'),
+    (v_alex,    'verif.alex@myfamily.test',    'Alex'),
+    (v_intrus,  'verif.intrus@myfamily.test',  'Intrus')
   ) as u(id, email, nom);
 
   insert into _t values ('camille', v_camille), ('alex', v_alex), ('intrus', v_intrus);

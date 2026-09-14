@@ -109,7 +109,7 @@ c'est le propre de ces tests, et c'est aussi leur limite.
 | `tests/unit/recurrence.test.ts` | 17 | Expansion RRULE, changements d'heure, fin par date ou par compte, relecture d'une règle en français |
 | `tests/unit/ingredients.test.ts` | 25 | Analyse « 2 kg de pommes », normalisation, ligatures, conversions d'unités, agrégation, rayons |
 | `tests/unit/childcare.test.ts` | 20 | Heures prévues et réalisées, ajustements, tarifs datés, bilan mensuel |
-| `tests/unit/google-mapping.test.ts` | 20 | Conversion Google ↔ Tribu, empreintes de comparaison, droit d'écriture par agenda |
+| `tests/unit/google-mapping.test.ts` | 20 | Conversion Google ↔ MyFamily, empreintes de comparaison, droit d'écriture par agenda |
 | `tests/unit/exports.test.ts` | 3 | Nom de fichier d'export : ligatures, accents, séparateurs |
 
 `npm test`
@@ -191,7 +191,7 @@ main en quelques minutes si vous préférez commencer par là.
 
 **Ce qui est vérifié :**
 
-- La conversion entre un événement Google et un événement Tribu, dans les deux
+- La conversion entre un événement Google et un événement MyFamily, dans les deux
   sens, est couverte par 20 tests unitaires (**simulé**) : dates et journées
   entières, récurrences, exceptions d'occurrence, annulations, empreintes de
   comparaison, et le fait qu'on n'écrit que dans un agenda où l'on est

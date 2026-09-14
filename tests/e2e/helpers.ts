@@ -39,7 +39,7 @@ export function adminClient(): SupabaseClient {
 /** Adresse unique, reconnaissable, pour ne jamais heurter un vrai compte. */
 export function e2eEmail(role: string): string {
   const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-  return `e2e-${role}-${suffix}@tribu.test`;
+  return `e2e-${role}-${suffix}@myfamily.test`;
 }
 
 export type TestUser = { id: string; email: string };

@@ -1,5 +1,5 @@
 /**
- * Types de la base Tribu.
+ * Types de la base MyFamily.
  *
  * Écrits à la main pour rester alignés sur `supabase/migrations`. Une fois le
  * projet Supabase provisionné, ils peuvent être régénérés fidèlement avec :

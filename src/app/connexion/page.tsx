@@ -30,7 +30,7 @@ export default async function ConnexionPage({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/icon.svg" alt="" className="h-16 w-16" />
         </div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Tribu</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">MyFamily</h1>
         <p className="mt-1.5 text-sm text-muted">
           Le calendrier, les tâches, les courses et les gardes de la famille,
           au même endroit.

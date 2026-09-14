@@ -1,4 +1,4 @@
-# Tribu — fonctionnalités et critères d'acceptation
+# MyFamily — fonctionnalités et critères d'acceptation
 
 Ce document dit, pour chaque partie du produit, **ce qu'elle fait** et **à quoi
 on reconnaît qu'elle marche**. Les critères sont écrits pour être vérifiables :
@@ -198,7 +198,7 @@ Réglage séparé, dans « Plus › Google Agenda ».
 - Synchronisation **incrémentale** par `syncToken`, avec reprise complète
   automatique si Google déclare le jeton périmé (410).
 - Synchronisation **bidirectionnelle** : ce qui vient de Google descend, ce qui
-  est créé dans Tribu remonte — mais seulement vers les agendas où l'on a le
+  est créé dans MyFamily remonte — mais seulement vers les agendas où l'on a le
   droit d'écrire.
 - Trois garde-fous contre les boucles d'écho, documentés en tête de
   `src/lib/google/sync.ts`.
@@ -216,13 +216,13 @@ Réglage séparé, dans « Plus › Google Agenda ».
 | 6.1 | Se connecter avec Google sans autoriser l'agenda | On est connecté ; « Google Agenda » indique « non autorisé » |
 | 6.2 | Autoriser l'agenda | La liste des agendas s'affiche, **aucun** n'est coché |
 | 6.3 | Cocher un agenda et synchroniser | Les événements arrivent, marqués comme venant de Google |
-| 6.4 | Créer un événement dans Tribu sur un agenda inscriptible | Il apparaît dans Google Agenda |
+| 6.4 | Créer un événement dans MyFamily sur un agenda inscriptible | Il apparaît dans Google Agenda |
 | 6.5 | Modifier ce même événement dans Google | La modification redescend, sans créer de doublon |
 | 6.6 | Modifier des deux côtés en même temps | L'application signale le conflit ; rien n'est écrasé en silence |
 | 6.7 | Synchroniser deux fois de suite sans rien changer | Rien ne bouge, aucun doublon |
 | 6.8 | Retirer les variables Google de la configuration | L'écran dit « non configuré » et explique quoi faire — **il n'affiche jamais une synchronisation réussie** |
 | 6.9 | Révoquer l'accès Google | Les événements importés restent ; rien n'est supprimé sans demande explicite |
-| 6.10 | Révoquer **et** supprimer les événements importés | Seuls ceux venant de Google disparaissent ; ceux créés dans Tribu restent |
+| 6.10 | Révoquer **et** supprimer les événements importés | Seuls ceux venant de Google disparaissent ; ceux créés dans MyFamily restent |
 
 Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 [`GOOGLE.md`](GOOGLE.md).
@@ -252,7 +252,7 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 | --- | --- | --- |
 | 7.1 | Un adulte accepte une invitation | L'auteur de l'invitation reçoit une notification |
 | 7.2 | Désactiver un type de notification | Ce type cesse d'arriver, les autres continuent |
-| 7.3 | Ouvrir l'application sur un téléphone | « Ajouter à l'écran d'accueil » est proposé ; l'icône et le nom sont ceux de Tribu |
+| 7.3 | Ouvrir l'application sur un téléphone | « Ajouter à l'écran d'accueil » est proposé ; l'icône et le nom sont ceux de MyFamily |
 | 7.4 | Couper le réseau et rouvrir | Un écran hors connexion s'affiche, pas une erreur du navigateur |
 | 7.5 | Basculer en thème sombre | Tout l'écran suit, et le choix survit au rechargement |
 | 7.6 | Charger le foyer de démonstration | Calendrier, tâches, courses, repas et gardes sont remplis |
@@ -286,7 +286,7 @@ dernière exécution : **36 vérifications, 36 conformes**. Voir
 
 ---
 
-## Ce que Tribu ne fait pas
+## Ce que MyFamily ne fait pas
 
 Dit ici pour qu'on ne le cherche pas :
 

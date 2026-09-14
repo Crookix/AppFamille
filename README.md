@@ -1,4 +1,4 @@
-# Tribu
+# MyFamily
 
 L'organisation du foyer au même endroit : le calendrier de la famille, les
 tâches, les courses, les repas et les heures de garde. Sur téléphone comme sur
@@ -89,8 +89,9 @@ ce qui fait échouer la compilation si un composant client les importe.
 
 ## Hébergement
 
-En ligne sur Vercel : **<https://tribu-umber.vercel.app>**, redéployé à chaque
-push. Tant que les variables d'environnement ne sont pas renseignées dans les
+En ligne sur Vercel : **<https://myfamily.mykrew.app>**, redéployé à chaque
+push. Le projet Vercel s'appelle encore `tribu` et répond aussi sur
+`tribu-umber.vercel.app`. Tant que les variables d'environnement ne sont pas renseignées dans les
 réglages du projet Vercel, l'application affiche « Installation à terminer » et
 la marche à suivre — c'est voulu, pas une panne.
 

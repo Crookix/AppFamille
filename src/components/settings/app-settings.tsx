@@ -151,7 +151,7 @@ export function AppSettings({
     await prompt.prompt();
     const choice = await prompt.userChoice;
     if (choice.outcome === 'accepted') {
-      toast.success('Tribu est installée.');
+      toast.success('MyFamily est installée.');
       setInstallEvent(null);
     }
   }
@@ -231,7 +231,7 @@ export function AppSettings({
               <Smartphone className="h-5 w-5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">Installer Tribu</p>
+              <p className="font-semibold">Installer MyFamily</p>
               <p className="text-sm text-muted">
                 {installEvent
                   ? "L'application s'ouvrira en plein écran, comme une application native."
@@ -329,7 +329,7 @@ export function AppSettings({
       </Button>
 
       <p className="mt-6 text-center text-xs text-muted">
-        Tribu — organisation du foyer
+        MyFamily — organisation du foyer
       </p>
 
       {/* --- Feuilles ----------------------------------------------------------- */}

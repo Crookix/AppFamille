@@ -30,7 +30,7 @@ export function BottomNav() {
       )}
     >
       <p className="hidden px-3 pb-6 text-xl font-extrabold tracking-tight md:block">
-        <span className="text-brand-500">Tribu</span>
+        <span className="text-brand-500">MyFamily</span>
       </p>
 
       <ul className="flex items-stretch justify-around md:flex-col md:gap-1">

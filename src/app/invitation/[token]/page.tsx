@@ -46,7 +46,7 @@ export default async function InvitationPage({
     return (
       <Shell>
         <p className="text-sm text-muted">
-          Cette installation de Tribu n'est pas encore configurée.
+          Cette installation de MyFamily n'est pas encore configurée.
         </p>
       </Shell>
     );
@@ -98,7 +98,7 @@ export default async function InvitationPage({
           className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--line)] px-5 font-semibold transition-colors hover:bg-[var(--bg-subtle)]"
         >
           <Home className="h-4 w-4" aria-hidden />
-          Retour à Tribu
+          Retour à MyFamily
         </Link>
       </Shell>
     );

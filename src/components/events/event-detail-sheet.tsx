@@ -451,7 +451,7 @@ export function EventDetailSheet({
             )}
             {event.origin === 'google' && attachments.length > 0 ? (
               <p className="mt-2 text-xs text-muted">
-                Ces documents restent dans Tribu et ne sont pas envoyés à Google.
+                Ces documents restent dans MyFamily et ne sont pas envoyés à Google.
               </p>
             ) : null}
           </div>

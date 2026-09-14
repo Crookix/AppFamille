@@ -1,5 +1,5 @@
 /*
- * Service worker de Tribu.
+ * Service worker de MyFamily.
  *
  * Volontairement modeste. Une application familiale manipule des données
  * partagées qui changent d'une minute à l'autre : servir une version en cache
@@ -11,7 +11,7 @@
  * à Supabase et toutes les méthodes autres que GET.
  */
 
-const VERSION = 'tribu-v1';
+const VERSION = 'myfamily-v1';
 const SHELL_CACHE = `${VERSION}-shell`;
 const PAGES_CACHE = `${VERSION}-pages`;
 

@@ -14,20 +14,29 @@ réussi si Google n'a pas répondu.
 ## 1. Créer le projet Google Cloud
 
 1. Ouvrir <https://console.cloud.google.com/> et créer un projet
-   (par exemple « Tribu »).
+   (par exemple « MyFamily »).
 2. Aller dans **API et services → Bibliothèque**, chercher
    **Google Calendar API**, puis cliquer sur **Activer**.
 
 ## 2. Configurer l'écran de consentement
 
-**API et services → Écran de consentement OAuth**
+La console a été refondue : ce qui s'appelait « Écran de consentement OAuth »
+est maintenant réparti dans **Google Auth Platform**, dont voici la
+correspondance.
+
+| Ce qu'il faut régler | Où le trouver |
+| --- | --- |
+| Nom de l'application, adresse d'assistance, domaines autorisés | **Branding** |
+| Type d'utilisateur, utilisateurs tests, publication | **Audience** |
+| Portées demandées | **Accès aux données** |
+| Identifiants OAuth | **Clients** |
 
 | Champ | Valeur |
 | --- | --- |
 | Type d'utilisateur | **Externe** |
-| Nom de l'application | Tribu |
+| Nom de l'application | MyFamily |
 | Adresse d'assistance | votre adresse e-mail |
-| Domaines autorisés | le domaine de déploiement (ex. `mon-tribu.vercel.app`) |
+| Domaines autorisés | le domaine de déploiement — ici `mykrew.app` |
 
 Ajouter ces portées, et seulement celles-là :
 
@@ -49,18 +58,23 @@ foyer dans **Utilisateurs tests**. C'est suffisant pour un usage familial et
 
 ## 3. Créer l'identifiant OAuth
 
-**API et services → Identifiants → Créer des identifiants → ID client OAuth**
+**Google Auth Platform → Clients → Créer un client**
 
 - Type : **Application Web**
-- Nom : Tribu
+- Nom : MyFamily
 - **URI de redirection autorisés** — la valeur doit correspondre au caractère près :
 
 ```
 http://localhost:3000/api/google/callback
-https://VOTRE-DOMAINE/api/google/callback
+https://myfamily.mykrew.app/api/google/callback
 ```
 
-Google affiche ensuite un **ID client** et un **code secret**.
+Google affiche ensuite un **ID client** et un **code secret**. Le secret ne se
+réaffiche plus après la fermeture de la fenêtre : le copier tout de suite.
+
+Le domaine de la deuxième URI doit être **servi par le projet Vercel** (Settings
+› Domains) et être exactement celui de `NEXT_PUBLIC_SITE_URL`. Ces trois valeurs
+— URI Google, variable, domaine Vercel — ne tolèrent aucun écart.
 
 ## 4. Renseigner les variables
 
@@ -96,10 +110,10 @@ n'apparaissent ni dans le navigateur ni dans les journaux.
 
 ### Deux choses distinctes
 
-Se connecter à Tribu **avec** Google et **autoriser** l'accès à Google Agenda
+Se connecter à MyFamily **avec** Google et **autoriser** l'accès à Google Agenda
 sont deux opérations séparées, comme le demande le cahier des charges :
 
-- on peut utiliser Tribu pendant des mois avec la connexion Google sans avoir
+- on peut utiliser MyFamily pendant des mois avec la connexion Google sans avoir
   jamais donné accès à son agenda ;
 - retirer l'accès à l'agenda ne fait pas perdre son compte.
 
@@ -110,9 +124,9 @@ comptes Google du foyer.
 
 | Réglage | Effet |
 | --- | --- |
-| **Afficher** | les événements de ce calendrier apparaissent dans Tribu |
+| **Afficher** | les événements de ce calendrier apparaissent dans MyFamily |
 | **Ce que le foyer voit** | *Détails complets* ou *Disponibilités seulement* |
-| **Calendrier cible** | reçoit les événements créés dans Tribu (un seul) |
+| **Calendrier cible** | reçoit les événements créés dans MyFamily (un seul) |
 
 En mode « disponibilités », le titre et la description ne sont pas seulement
 masqués : ils **n'entrent pas** dans la base du foyer. Un agenda professionnel
@@ -125,7 +139,7 @@ reste en lecture, et l'interface le dit.
 ### Comment les doublons sont évités
 
 Une paire (calendrier Google, identifiant d'événement Google) ne peut
-correspondre qu'à **un seul** événement Tribu — garanti par un index unique en
+correspondre qu'à **un seul** événement MyFamily — garanti par un index unique en
 base, pas par une comparaison approximative de titres.
 
 ### Comment les boucles sont cassées
@@ -133,7 +147,7 @@ base, pas par une comparaison approximative de titres.
 Trois gardes, indépendantes :
 
 1. un événement importé porte `origin = 'google'` et n'est **jamais** réexporté ;
-2. un événement Tribu n'est réexporté que si sa **révision** a changé depuis le
+2. un événement MyFamily n'est réexporté que si sa **révision** a changé depuis le
    dernier envoi — révision qu'un déclencheur n'incrémente que sur les champs
    réellement synchronisés ;
 3. l'**etag** renvoyé par Google sert d'accusé de réception : s'il n'a pas
@@ -150,7 +164,7 @@ version Google est rapatriée à la synchronisation suivante.
 
 Les séries sont importées telles quelles (`singleEvents=false`), avec leur
 RRULE. Une occurrence modifiée arrive comme un événement distinct portant
-`recurringEventId` et `originalStartTime` — exactement le modèle de Tribu
+`recurringEventId` et `originalStartTime` — exactement le modèle de MyFamily
 (`recurring_parent_id` + `original_starts_at`), choisi dès la conception. Il
 s'agit donc d'une correspondance directe, pas d'une traduction.
 
@@ -169,11 +183,11 @@ tests `tests/unit/google-mapping.test.ts`.
 
 | Situation | Comportement |
 | --- | --- |
-| Événement **importé** de Google, supprimé chez Google | supprimé dans Tribu (c'est son miroir) |
-| Événement **créé dans Tribu**, supprimé chez Google | **conservé** ; seule la correspondance est coupée |
-| Événement Tribu supprimé dans l'application | supprimé chez Google au passage suivant |
+| Événement **importé** de Google, supprimé chez Google | supprimé dans MyFamily (c'est son miroir) |
+| Événement **créé dans MyFamily**, supprimé chez Google | **conservé** ; seule la correspondance est coupée |
+| Événement MyFamily supprimé dans l'application | supprimé chez Google au passage suivant |
 
-Une suppression faite dans Tribu passe par une file d'attente alimentée par un
+Une suppression faite dans MyFamily passe par une file d'attente alimentée par un
 déclencheur : on peut supprimer hors connexion, la répercussion suivra.
 
 ### Reprise après interruption
@@ -192,7 +206,7 @@ bouton pour réautoriser.
 ### Pièces jointes
 
 Les documents joints à un événement (billets, ordonnances, réservations)
-**restent dans Tribu**. Ils ne sont jamais transmis à Google, même quand
+**restent dans MyFamily**. Ils ne sont jamais transmis à Google, même quand
 l'événement est synchronisé, et ne s'ouvrent que par une URL signée délivrée
 après vérification de l'appartenance au foyer.
 
@@ -209,6 +223,7 @@ cocher explicite, jamais un effet de bord.
 | Message | Cause | Correction |
 | --- | --- | --- |
 | `redirect_uri_mismatch` | l'URI ne correspond pas exactement | recopier `NEXT_PUBLIC_SITE_URL` + `/api/google/callback` dans la console Google |
+| « La demande d'autorisation n'a pas pu être vérifiée » | l'autorisation a été lancée depuis un autre domaine que `NEXT_PUBLIC_SITE_URL` — le cookie anti-CSRF est posé sur le domaine de départ, Google renvoie sur celui de la variable | relancer depuis le domaine canonique |
 | « L'accès à l'agenda n'a pas été accordé » | portée décochée dans la fenêtre de consentement | relancer et cocher Google Agenda |
 | « L'autorisation a été révoquée ou a expiré » | accès retiré depuis le compte Google | réautoriser depuis l'écran Google Agenda |
 | « TOKEN_ENCRYPTION_KEY absente ou invalide » | clé manquante ou pas 32 octets | `openssl rand -base64 32` |
