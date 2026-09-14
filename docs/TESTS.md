@@ -45,15 +45,16 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
   déclarer une envie de recommandation **au nom d'un autre membre** ;
 - accepter une invitation expirée, révoquée, déjà utilisée, ou inventée.
 
-**Résultat : 42 vérifications, 42 conformes.**
+**Résultat : 62 vérifications, 62 conformes.**
 
 Deux exécutions, sur deux bases différentes :
 
 - **36 vérifications contre la base Supabase réelle**, avant l'arrivée de la
   reco. C'est la mesure de référence historique.
-- **42 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
-  points portant sur `recommendations` et `recommendation_wants`. Les seize
-  migrations y sont rejouées depuis une base vide, sur un échafaudage
+- **62 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
+  points portant sur `recommendations` et `recommendation_wants`, puis des
+  vingt de l'espace nounou. Les migrations du dépôt y sont rejouées depuis une
+  base vide, sur un échafaudage
   reconstituant ce que Supabase fournit d'office (rôles `anon`,
   `authenticated`, `service_role`, schémas `auth` et `storage`, `auth.jwt()`,
   publication `supabase_realtime`).
@@ -78,6 +79,25 @@ Chloé par une identité au format Clerk (`user_2abc…`) qui n'existe dans aucu
 table `auth.users`. Elle crée son profil et son foyer, puis se heurte au foyer
 d'à côté sur les dix tables et le stockage. C'est la vérification qui compte
 le plus : elle prouve que le découplage n'a pas ouvert de porte.
+
+**L'espace nounou est le cas limite du produit.** Partout ailleurs, une seule
+règle suffit : on voit le foyer dont on est membre. Les migrations `0014` et
+`0015` introduisent le premier accès accordé à quelqu'un qui n'en est **pas**
+membre — c'est donc le premier endroit où « membre » et « autorisé à lire »
+cessent de coïncider, et il est couvert depuis. Chloé accepte un lien d'accès
+par le vrai chemin applicatif (`accept_nanny_access`, pas une écriture
+directe), puis on vérifie les deux côtés de la règle :
+
+- ce qu'elle doit voir — sa fiche nounou, le foyer qui l'emploie, la garde
+  qu'on lui confie, l'enfant qu'elle garde, et sa propre indisponibilité
+  qu'elle peut déclarer ;
+- ce qu'elle ne doit pas voir — le calendrier, les tâches, les courses, les
+  recommandations, les pièces jointes, la liste des membres, le foyer d'à
+  côté, et **l'enfant du foyer qu'elle ne garde pas**. Ce dernier point est le
+  plus instructif : il distingue une politique correctement restreinte aux
+  enfants effectivement confiés d'une politique qui ouvrirait tout le foyer.
+
+Elle ne peut ni renommer le foyer, ni y créer un événement.
 
 Les lignes marquées « TÉMOIN » comptent autant que les autres. Sans elles, une
 session inerte renverrait zéro partout et l'on conclurait à tort à
@@ -139,6 +159,16 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
     évite la réévaluation ligne à ligne.
   - Seuls sept *unused index* concernent la reco : les tables viennent d'être
     créées et sont vides. Le signalement disparaîtra à l'usage.
+- **L'effacement des comptes a été audité par requête, pas par relecture.** La
+  liste des colonnes `text` du schéma portant un identifiant de compte
+  (`%user%` ou `%_by`) a été comparée aux instructions réellement exécutées par
+  `public.delete_user_data`. Trois des dix-huit n'étaient pas couvertes :
+  `nanny_accesses.user_id`, `invitations.created_by` et
+  `households.created_by` — les deux dernières depuis l'origine du projet. La
+  migration `0017` les traite, et l'audit rejoué ne signale plus rien. Le
+  comportement est vérifié en plus sur base : après suppression d'un compte,
+  l'identifiant a disparu partout, le foyer partagé survit, et les
+  contributions de la personne y restent, désaffiliées.
 - Neuf *multiple permissive policies* et une réévaluation `auth_rls_initplan`
   concernent l'**espace nounou** : deux politiques de lecture cohabitent sur
   les mêmes tables, l'une pour le foyer, l'autre pour la nounou. C'est une
@@ -274,7 +304,8 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Domaine | Vérifié comment | État |
 | --- | --- | --- |
 | Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **36/36** |
-| Étanchéité des recommandations et des envies | PostgreSQL 16 local, 16 migrations rejouées ; schéma prouvé identique à la production par empreinte | **42/42** |
+| Étanchéité, reco et espace nounou compris | PostgreSQL 16 local, migrations rejouées ; schéma prouvé identique à la production par empreinte | **62/62** |
+| Effacement d'un compte : couverture des 18 colonnes | Audit du catalogue + exécution sur base | **complète après `0017`** |
 | Migration `0016` appliquée en production | Empreinte du SQL enregistré = celle du fichier testé | **conforme** |
 | Fidélité des migrations `0014`/`0015` reconstituées | Empreinte MD5 du corps = celle du journal Supabase | **exacte** |
 | Conseillers Supabase après `0016` | Service réel | **aucun signalement nouveau dû à la reco** |

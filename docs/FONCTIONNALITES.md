@@ -321,8 +321,9 @@ partout et l'on conclurait à tort à l'étanchéité.
 
 Ces huit points sont exécutés par `supabase/tests/isolation.sql`, qui couvre
 aussi les recommandations et leurs envies depuis la section 8. Le script porte
-**42 vérifications**. Voir [`TESTS.md`](TESTS.md) pour le détail de ce qui a été
-joué contre la base réelle et de ce qui l'a été contre un Postgres local.
+**62 vérifications**, l'espace nounou compris. Voir [`TESTS.md`](TESTS.md) pour
+le détail de ce qui a été joué contre la base réelle et de ce qui l'a été
+contre un Postgres local.
 
 ---
 

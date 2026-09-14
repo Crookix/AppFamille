@@ -24,9 +24,9 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 8 — Vérifications | Terminée | Jouer les parcours Playwright |
 | 9 — Reco (films, séries, théâtre, cadeaux) | Terminée | Confirmer en navigateur |
 
-Le dépôt compte seize migrations, `0001` à `0016`, **toutes appliquées sur le
-projet `tribu-foyer`**, qui porte désormais 40 tables et 141 politiques, toutes
-avec la RLS active.
+Le dépôt compte dix-sept migrations, `0001` à `0017`, **toutes appliquées sur
+le projet `tribu-foyer`**, qui porte 40 tables et 141 politiques, toutes avec
+la RLS active.
 
 `0016` (la reco) a été appliquée le 14 septembre 2026 à 13:07 UTC. Le SQL
 enregistré par Supabase a la même empreinte MD5
@@ -40,7 +40,7 @@ Comme l'application est passée par le connecteur Supabase et non par
 la migration et se serait arrêté en erreur.
 
 110 tests unitaires passent, la compilation produit 24 routes sans erreur, et
-la vérification d'étanchéité donne 42 conformités sur 42. Le détail est dans
+la vérification d'étanchéité donne 62 conformités sur 62. Le détail est dans
 [`TESTS.md`](TESTS.md).
 
 ---
@@ -64,25 +64,53 @@ SQL exact de chaque migration appliquée dans
 l'octet près, ce que prouve leur empreinte MD5, identique à celle enregistrée
 (`01e19abb…` et `0e290de4…`). Seul un en-tête a été ajouté au-dessus.
 
-La fidélité est vérifiée une seconde fois, autrement : les seize migrations
+La fidélité est vérifiée une seconde fois, autrement : les migrations du dépôt
 rejouées depuis une base vide sur un PostgreSQL local produisent, pour les huit
 tables concernées par l'espace nounou, **exactement les mêmes politiques que la
 production** — même empreinte `b68bb41c…`, expressions et rôles compris.
 
+### Ce qui a été corrigé depuis
+
+Les deux défauts relevés ci-dessus ont été traités par la migration `0017` et
+par l'extension du test d'étanchéité.
+
+**L'effacement des comptes était incomplet — et pas seulement pour la nounou.**
+Plutôt que de corriger le seul cas repéré, la liste des colonnes `text` portant
+un identifiant de compte (`%user%` ou `%_by`) a été comparée aux instructions
+réellement exécutées par `delete_user_data`. **Trois** manquaient, dont deux
+antérieures à l'espace nounou :
+
+| Colonne | Depuis | Traitement retenu |
+| --- | --- | --- |
+| `nanny_accesses.user_id` | `0014` | ligne supprimée — elle ne contient que cette personne |
+| `invitations.created_by` | l'origine | mis à NULL — l'invitation appartient au foyer |
+| `households.created_by` | l'origine | mis à NULL — le foyer appartient à ses membres |
+
+Les deux `created_by` étaient `not null` : `0017` relâche la contrainte, sans
+quoi la désaffiliation était impossible. Aucun écran ne lit ces colonnes.
+
+Vérifié sur base : après suppression d'un compte, plus aucune des 18 colonnes
+concernées ne porte son identifiant, le foyer partagé survit, et ses
+contributions y restent. L'audit est rejouable — c'est une requête sur le
+catalogue, pas une relecture.
+
+**Le test d'étanchéité couvre désormais l'espace nounou**, qui est le premier
+endroit du produit où « membre du foyer » et « autorisé à lire » cessent de
+coïncider. Une nounou rattachée par le vrai chemin applicatif
+(`accept_nanny_access`) voit sa fiche, ses gardes, l'enfant qu'elle garde et le
+foyer — et rien d'autre : ni le calendrier, ni les tâches, ni les courses, ni
+les recos, ni la liste des membres, ni **l'enfant qu'elle ne garde pas**.
+Le script passe de 42 à 62 vérifications.
+
 ### Ce qui reste
 
-1. **Le « pourquoi » manque** en tête des deux fichiers : ce dépôt l'exige, et
+1. **Le « pourquoi » manque** en tête de `0014` et `0015` : ce dépôt l'exige, et
    il n'appartient pas à qui les a reconstitués de l'inventer. À compléter par
    l'auteur de l'espace nounou.
-2. **`nanny_accesses.user_id` échappe à `public.delete_user_data`.** Un
-   identifiant de compte survivrait donc à la suppression de ce compte. Le
-   correctif n'est pas évident — la contrainte `nanny_accesses_accepted_pair`
-   lie `user_id` et `accepted_at` — et la décision (effacer l'accès, ou le
-   dissocier) revient à qui connaît la fonctionnalité.
-3. **`supabase/tests/isolation.sql` ne couvre pas les trois tables nounou.**
-   Elles introduisent un accès pour quelqu'un qui n'est **pas** membre du
-   foyer : c'est précisément le genre de règle que ce script existe pour
-   vérifier.
+2. **Neuf *multiple permissive policies*** signalées par les conseillers portent
+   sur les tables nounou : deux politiques de lecture y cohabitent, l'une pour
+   le foyer, l'autre pour la nounou. C'est une conséquence du besoin, pas une
+   erreur, mais elle mérite un regard de qui tient cette fonctionnalité.
 
 ---
 

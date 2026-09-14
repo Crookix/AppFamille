@@ -94,7 +94,8 @@ export type HouseholdRow = {
   name: string;
   timezone: string;
   is_demo: boolean;
-  created_by: string;
+  // Devient NULL quand son fondateur supprime son compte (migration 0017).
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -118,7 +119,8 @@ export type InvitationRow = {
   role: HouseholdRole;
   token_hash: string;
   expires_at: string;
-  created_by: string;
+  // Devient NULL quand son émetteur supprime son compte (migration 0017).
+  created_by: string | null;
   accepted_at: string | null;
   accepted_by: string | null;
   revoked_at: string | null;
