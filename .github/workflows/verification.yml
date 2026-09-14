@@ -1,0 +1,115 @@
+# ===========================================================================
+# Vérifications automatiques
+#
+# `CLAUDE.md` demande `typecheck && test && build` avant de pousser. Jusqu'ici
+# cette règle ne tenait que par la discipline de qui poussait : rien ne la
+# vérifiait, et la seule marque sur une pull request venait de la
+# prévisualisation Vercel — qui ne dit rien des tests.
+#
+# Deux travaux, séparés parce qu'ils échouent pour des raisons différentes :
+#   * `code` répond à « est-ce que ça compile et est-ce que la logique tient ? »
+#   * `base` répond à « est-ce que le schéma s'applique depuis zéro, et
+#     est-ce qu'un foyer reste étanche ? »
+# ===========================================================================
+
+name: Vérifications
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  code:
+    name: Types, tests, compilation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Tests unitaires
+        run: npm test
+
+      # La compilation n'est pas qu'une formalité : `import 'server-only'` fait
+      # échouer le build si un composant client importe par mégarde un module
+      # qui touche la clé de service ou les jetons Google. La frontière
+      # secret / navigateur est donc vérifiée ici.
+      - name: Compilation de production
+        run: npm run build
+        env:
+          # Valeurs de façade : le build ne contacte rien, mais les modules qui
+          # lisent ces variables doivent les trouver.
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: cle-de-facade-pour-la-compilation
+
+  base:
+    name: Schéma, étanchéité, effacement
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      PGPASSWORD: postgres
+      SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Ce qu'un projet Supabase fournit d'office et qu'un PostgreSQL nu n'a
+      # pas : rôles, schémas `auth` et `storage`, `auth.jwt()`, publication.
+      - name: Échafaudage Supabase
+        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -q -f supabase/tests/echafaudage.sql
+
+      # Le vrai chemin du dépôt, pas une variante : on vérifie que les
+      # migrations s'appliquent depuis une base vide, dans l'ordre.
+      - name: Migrations depuis une base vide
+        run: npm run db:push
+
+      - name: Étanchéité entre foyers
+        run: |
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/isolation.sql | tee /tmp/isolation.txt
+          if grep -q 'TROU DANS LES RÈGLES' /tmp/isolation.txt; then
+            echo "::error::Une tentative interdite a réussi : voir les lignes FAILLE ci-dessus."
+            exit 1
+          fi
+          # Un script qui ne vérifierait rien passerait aussi : on exige la
+          # conclusion, pas seulement l'absence d'échec.
+          grep -q 'ÉTANCHE' /tmp/isolation.txt || {
+            echo "::error::Le script d'étanchéité n'a pas rendu de conclusion."
+            exit 1
+          }
+
+      - name: Effacement d'un compte
+        run: |
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/effacement.sql | tee /tmp/effacement.txt
+          grep -q 'EFFACEMENT COMPLET' /tmp/effacement.txt || {
+            echo "::error::Une colonne portant un identifiant de compte échappe à delete_user_data."
+            exit 1
+          }

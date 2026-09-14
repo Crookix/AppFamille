@@ -32,6 +32,8 @@ vérifications dans [`docs/TESTS.md`](docs/TESTS.md), l'intégration Google dans
 | `npm run test:watch` | Les mêmes, en continu |
 | `npm run test:e2e` | Parcours navigateur Playwright — demande une application qui tourne |
 | `npm run db:push` | Applique les migrations SQL manquantes sur la base Supabase |
+| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 62 vérifications |
+| `psql "$SUPABASE_DB_URL" -f supabase/tests/effacement.sql` | Ce que la suppression d'un compte laisserait derrière |
 
 `npm run db:push` lit `SUPABASE_DB_URL` dans `.env.local`, applique les fichiers
 de `supabase/migrations` dans l'ordre alphabétique, chacun dans sa propre
@@ -39,6 +41,10 @@ transaction, et note les fichiers appliqués dans `_tribu_migrations`. Une
 migration déjà appliquée n'est jamais rejouée.
 
 **Avant de pousser du code : `npm run typecheck && npm test && npm run build`.**
+Ces trois commandes tournent aussi en intégration continue
+(`.github/workflows/verification.yml`), avec les scripts de base ci-dessus.
+La CI n'est pas une raison de ne pas les jouer d'abord : elle est le filet, pas
+la vérification.
 
 ---
 
@@ -86,6 +92,9 @@ supabase/
                       (`0014`/`0015` ont été reconstituées depuis le journal
                        du projet : voir docs/AVANCEMENT.md)
   tests/isolation.sql vérification d'étanchéité entre foyers
+  tests/effacement.sql couverture de `delete_user_data`, colonne par colonne
+  tests/echafaudage.sql ce que Supabase fournit d'office, pour rejouer les
+                      migrations sur un PostgreSQL nu (CI, ou vérification locale)
 tests/unit/           tests Vitest
 ```
 
@@ -197,8 +206,16 @@ et ses politiques dans le même fichier. Une table sans politique est invisible 
 c'est le comportement voulu pour `google_credentials` et `_tribu_migrations`,
 c'est un oubli partout ailleurs.
 
-Après toute migration, relancer les conseillers Supabase (« advisors ») et le
-script `supabase/tests/isolation.sql`.
+Après toute migration, relancer les conseillers Supabase (« advisors ») et les
+deux scripts de `supabase/tests/` : `isolation.sql` (étanchéité entre foyers) et
+`effacement.sql` (aucun identifiant de compte ne survit à sa suppression). Les
+deux tournent aussi en intégration continue, sur une base reconstruite depuis
+zéro — mais les conseillers, eux, ne se jouent que sur le projet réel.
+
+**Toute colonne `text` qui porte un identifiant de compte doit s'appeler
+`*user*` ou `*_by`** : `effacement.sql` reconnaît les colonnes à leur nom. Une
+colonne nommée autrement lui échapperait, et l'identifiant survivrait en
+silence à la suppression du compte.
 
 ### Dates et fuseaux
 

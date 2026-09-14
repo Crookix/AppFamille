@@ -35,9 +35,15 @@ const files = readdirSync(migrationsDir)
   .filter((f) => f.endsWith('.sql'))
   .sort();
 
+// Supabase n'accepte que le TLS ; un PostgreSQL local n'en a pas du tout, et
+// le lui imposer fait échouer la connexion avant la première migration. C'est
+// ce qui empêchait de rejouer les migrations hors Supabase — en intégration
+// continue, ou contre la pile locale de `npx supabase start`.
+const local = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(connectionString);
+
 const client = new pg.Client({
   connectionString,
-  ssl: { rejectUnauthorized: false },
+  ssl: local ? false : { rejectUnauthorized: false },
 });
 
 const only = process.argv[2];
