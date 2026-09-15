@@ -1,14 +1,30 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+import { z } from 'zod';
 import { getActiveHousehold, getUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { isEncryptionConfigured } from '@/lib/google/crypto';
-import { isGoogleConfigured } from '@/lib/google/oauth';
-import { GoogleCalendarClient } from '@/lib/google/client';
-import { syncCalendar, type SyncOutcome } from '@/lib/google/sync';
+import {
+  EMPTY_TOTALS,
+  googleSyncReadiness,
+  syncCalendars,
+  totalsOf,
+} from '@/lib/google/run';
+import { isStale } from '@/lib/google/schedule';
 
 /** Une campagne peut prendre du temps : on laisse de la marge à la fonction. */
 export const maxDuration = 60;
+
+/**
+ * Seule forme de corps acceptée.
+ *
+ * `ifStaleMinutes` sert à la synchronisation déclenchée à l'ouverture d'un
+ * écran : le navigateur demande « synchronise si ça date de plus de N
+ * minutes », et c'est le serveur qui tranche. Mettre cette décision côté
+ * navigateur aurait donné autant de politiques que d'onglets ouverts.
+ */
+const optionsSchema = z.object({
+  ifStaleMinutes: z.number().int().min(0).max(1440).optional(),
+});
 
 /**
  * Lance une synchronisation des calendriers sélectionnés.
@@ -17,7 +33,7 @@ export const maxDuration = 60;
  * Google refuse, la réponse le dit explicitement et l'interface affiche
  * l'erreur telle quelle.
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: 'Connexion requise.' }, { status: 401 });
@@ -28,34 +44,19 @@ export async function POST() {
     return NextResponse.json({ error: 'Aucun foyer actif.' }, { status: 400 });
   }
 
-  if (!isGoogleConfigured()) {
-    return NextResponse.json(
-      {
-        error:
-          "Google Agenda n'est pas configuré sur cette installation (GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET manquants). Voir docs/GOOGLE.md.",
-      },
-      { status: 503 },
-    );
+  // Le bouton « Synchroniser » n'envoie rien du tout : un corps absent ou
+  // illisible vaut « synchronise maintenant », sans condition.
+  let options: z.infer<typeof optionsSchema> = {};
+  try {
+    const parsed = optionsSchema.safeParse(await request.json());
+    if (parsed.success) options = parsed.data;
+  } catch {
+    /* corps vide : comportement par défaut */
   }
 
-  if (!isEncryptionConfigured()) {
-    return NextResponse.json(
-      {
-        error:
-          "TOKEN_ENCRYPTION_KEY est absente ou invalide : les jetons Google ne peuvent pas être lus en sécurité.",
-      },
-      { status: 503 },
-    );
-  }
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json(
-      {
-        error:
-          "SUPABASE_SERVICE_ROLE_KEY est absente : la synchronisation ne peut pas accéder aux jetons chiffrés.",
-      },
-      { status: 503 },
-    );
+  const readiness = googleSyncReadiness();
+  if (!readiness.ok) {
+    return NextResponse.json({ error: readiness.error }, { status: 503 });
   }
 
   const supabase = await createClient();
@@ -89,26 +90,32 @@ export async function POST() {
     );
   }
 
-  const client = new GoogleCalendarClient(admin, account.id);
-  const outcomes: SyncOutcome[] = [];
+  const now = new Date();
+  const staleAfter = options.ifStaleMinutes;
+  const due =
+    staleAfter === undefined
+      ? calendars
+      : calendars.filter((calendar) => isStale(calendar.last_sync_at, now, staleAfter));
 
-  for (const calendar of calendars) {
-    outcomes.push(await syncCalendar(admin, client, calendar));
+  // Tout est déjà frais : on le dit sans rien prétendre d'autre.
+  if (due.length === 0) {
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      outcomes: [],
+      totals: EMPTY_TOTALS,
+    });
   }
 
+  const outcomes = await syncCalendars(admin, due);
   const failed = outcomes.filter((o) => o.status === 'echec');
 
   return NextResponse.json(
     {
       ok: failed.length === 0,
+      skipped: false,
       outcomes,
-      totals: {
-        imported: outcomes.reduce((sum, o) => sum + o.imported, 0),
-        updated: outcomes.reduce((sum, o) => sum + o.updated, 0),
-        exported: outcomes.reduce((sum, o) => sum + o.exported, 0),
-        deleted: outcomes.reduce((sum, o) => sum + o.deleted, 0),
-        conflicts: outcomes.reduce((sum, o) => sum + o.conflicts, 0),
-      },
+      totals: totalsOf(outcomes),
     },
     { status: failed.length === outcomes.length && failed.length > 0 ? 502 : 200 },
   );

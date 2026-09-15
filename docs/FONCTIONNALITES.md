@@ -255,6 +255,12 @@ Réglage séparé, dans « Plus › Google Agenda ».
 - Jetons chiffrés en AES-256-GCM avant d'entrer en base, dans une table sans
   aucune politique RLS : le navigateur ne peut littéralement pas les lire.
 - Choix explicite des agendas à synchroniser ; aucun n'est activé d'office.
+- Synchronisation **automatique**, par trois chemins complémentaires : Google
+  prévient MyFamily dès qu'un agenda observé change (`events.watch`), l'écran
+  Calendrier rafraîchit à l'ouverture ce qui date de plus de cinq minutes, et
+  un passage programmé toutes les quinze minutes sert de filet. Le bouton
+  « Synchroniser » reste là pour forcer un passage. L'état réel de chacun des
+  trois est affiché, y compris quand l'un n'est pas disponible.
 - Synchronisation **incrémentale** par `syncToken`, avec reprise complète
   automatique si Google déclare le jeton périmé (410).
 - Synchronisation **bidirectionnelle** : ce qui vient de Google descend, ce qui
@@ -283,6 +289,9 @@ Réglage séparé, dans « Plus › Google Agenda ».
 | 6.8 | Retirer les variables Google de la configuration | L'écran dit « non configuré » et explique quoi faire — **il n'affiche jamais une synchronisation réussie** |
 | 6.9 | Révoquer l'accès Google | Les événements importés restent ; rien n'est supprimé sans demande explicite |
 | 6.10 | Révoquer **et** supprimer les événements importés | Seuls ceux venant de Google disparaissent ; ceux créés dans MyFamily restent |
+| 6.11 | Ajouter un rendez-vous dans Google Agenda, sans rien toucher dans MyFamily | Il apparaît dans MyFamily en quelques secondes, sans avoir cliqué sur « Synchroniser » |
+| 6.12 | Décocher un agenda | Google cesse d'envoyer ses notifications pour cet agenda |
+| 6.13 | Déployer sans `CRON_SECRET` | L'écran Google Agenda annonce le passage régulier comme **désactivé** et dit pourquoi ; la route programmée refuse de s'exécuter |
 
 Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 [`GOOGLE.md`](GOOGLE.md).

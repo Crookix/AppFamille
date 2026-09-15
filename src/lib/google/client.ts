@@ -241,6 +241,70 @@ export class GoogleCalendarClient {
     return { events, nextSyncToken };
   }
 
+  /**
+   * Demande à Google de prévenir MyFamily quand ce calendrier change.
+   *
+   * `address` doit être une URL **publique en HTTPS** : Google vérifie qu'elle
+   * répond avant d'ouvrir le canal, et refuse tout ce qui ressemble à une
+   * adresse locale. Le `token` revient tel quel dans chaque notification et
+   * sert à prouver qu'elle vient bien de ce canal-ci.
+   *
+   * `expiration` est renvoyée en millisecondes depuis l'époque, sous forme de
+   * chaîne. Google est libre de raccourcir la durée demandée : c'est cette
+   * valeur-là qui fait foi, jamais le `ttl` qu'on a proposé.
+   */
+  async watchEvents(
+    calendarId: string,
+    options: { channelId: string; address: string; token: string; ttlSeconds: number },
+  ): Promise<{ resourceId: string; expiration: string | null }> {
+    const response = await this.request<{
+      id?: string;
+      resourceId?: string;
+      expiration?: string;
+    }>(`/calendars/${encodeURIComponent(calendarId)}/events/watch`, {
+      method: 'POST',
+      body: JSON.stringify({
+        id: options.channelId,
+        type: 'web_hook',
+        address: options.address,
+        token: options.token,
+        params: { ttl: String(options.ttlSeconds) },
+      }),
+    });
+
+    if (!response.resourceId) {
+      throw new Error(
+        "Google a ouvert le canal sans renvoyer d'identifiant de ressource : il serait impossible de l'arrêter.",
+      );
+    }
+
+    const expirationMs = Number(response.expiration);
+    return {
+      resourceId: response.resourceId,
+      expiration: Number.isFinite(expirationMs)
+        ? new Date(expirationMs).toISOString()
+        : null,
+    };
+  }
+
+  /**
+   * Ferme un canal de notification.
+   *
+   * Les deux identifiants sont exigés par Google. Un canal qui a déjà expiré
+   * ou été fermé répond 404 : le but est atteint, ce n'est pas une erreur.
+   */
+  async stopChannel(channelId: string, resourceId: string): Promise<void> {
+    try {
+      await this.request<void>('/channels/stop', {
+        method: 'POST',
+        body: JSON.stringify({ id: channelId, resourceId }),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (!/\b(404|410)\b/.test(message)) throw error;
+    }
+  }
+
   async insertEvent(calendarId: string, body: GoogleEvent): Promise<GoogleEvent> {
     return this.request<GoogleEvent>(
       `/calendars/${encodeURIComponent(calendarId)}/events`,

@@ -158,6 +158,39 @@ values (
   now() + interval '7 days'
 );
 
+-- Un agenda Google relié au foyer A, avec son canal de notification. Posé hors
+-- rôle applicatif : la table des canaux n'accepte aucune écriture depuis
+-- `authenticated`, et c'est précisément ce que l'acte 2 vérifie.
+--
+-- L'identifiant du calendrier est retenu dans `_t` : sans lui, la tentative
+-- d'écriture de l'acte 2 devrait aller le chercher dans une table qu'Alex ne
+-- peut pas lire, n'insérerait rien faute de ligne source, et passerait pour
+-- un refus alors qu'aucune politique n'aurait été éprouvée.
+do $$
+declare
+  v_foyer_a uuid := (select valeur from _t where cle='foyer_a')::uuid;
+  v_compte  uuid;
+  v_agenda  uuid;
+begin
+  insert into public.google_accounts (user_id, google_sub, email, calendar_authorized)
+  values ((select valeur from _t where cle='camille'), 'sub-verif-camille',
+          'camille@verif.test', true)
+  returning id into v_compte;
+
+  insert into public.google_calendars
+    (google_account_id, household_id, google_calendar_id, summary, is_selected)
+  values (v_compte, v_foyer_a, 'camille@verif.test', 'Agenda de Camille', true)
+  returning id into v_agenda;
+
+  insert into public.google_watch_channels
+    (household_id, google_calendar_ref, channel_id, resource_id, token_hash, expires_at)
+  values (v_foyer_a, v_agenda, 'canal-verif-foyer-a', 'ressource-verif-foyer-a',
+          encode(extensions.digest('jeton-canal-verif', 'sha256'), 'hex'),
+          now() + interval '7 days');
+
+  insert into _t values ('agenda_a', v_agenda::text);
+end $$;
+
 -- Un objet de stockage réel dans l'espace du foyer A.
 insert into storage.objects (bucket_id, name, owner, owner_id, metadata)
 select 'attachments',
@@ -285,6 +318,10 @@ begin
   insert into _r (domaine, tentative, observe, verdict)
     values ('Lecture', 'Jetons Google (table entière)', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
 
+  select count(*) into n from public.google_watch_channels where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Lecture', 'Canaux de notification Google du foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+
   select count(*) into n from storage.objects
     where bucket_id='attachments' and name like a::text || '/%';
   insert into _r (domaine, tentative, observe, verdict)
@@ -330,6 +367,21 @@ begin
   exception when others then
     insert into _r (domaine, tentative, observe, verdict)
       values ('Écriture', 'Supprimer un événement du foyer A', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- La table des canaux n'a qu'une politique de lecture : personne n'écrit
+  -- ici depuis le navigateur, pas même pour son propre foyer.
+  begin
+    insert into public.google_watch_channels
+      (household_id, google_calendar_ref, channel_id, resource_id, token_hash)
+    values (a, (select valeur from _t where cle='agenda_a')::uuid,
+            'canal-pirate', 'ressource-pirate', 'condensat-pirate');
+    get diagnostics n = row_count;
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Inscrire un canal de notification dans le foyer A', n || ' ligne(s)', case when n=0 then 'OK' else 'FAILLE' end);
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Écriture', 'Inscrire un canal de notification dans le foyer A', 'refusé ('||sqlstate||')', 'OK');
   end;
 
   begin
@@ -667,6 +719,14 @@ begin
     where bucket_id='attachments' and name like a::text || '/%';
   insert into _r (domaine, tentative, observe, verdict)
     values ('Invitations', 'TÉMOIN — après acceptation, les pièces jointes du foyer A', n || ' objet(s)',
+            case when n=1 then 'OK' else 'FAILLE' end);
+
+  -- L'écran Google Agenda a besoin de lire les canaux pour dire si les
+  -- notifications sont actives : un membre doit donc les voir. Sans ce témoin,
+  -- une politique qui ne renverrait jamais rien passerait pour étanche.
+  select count(*) into n from public.google_watch_channels where household_id = a;
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Invitations', 'TÉMOIN — après acceptation, les canaux Google du foyer A', n || ' ligne(s)',
             case when n=1 then 'OK' else 'FAILLE' end);
 
   reset role;
