@@ -323,6 +323,20 @@ export type GoogleSyncRunRow = {
   finished_at: string | null;
 };
 
+export type GoogleWatchChannelRow = {
+  id: string;
+  household_id: string;
+  google_calendar_ref: string;
+  channel_id: string;
+  resource_id: string;
+  token_hash: string;
+  expires_at: string | null;
+  last_notified_at: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type TaskRow = {
   id: string;
   household_id: string;
@@ -661,6 +675,14 @@ export type Database = {
         'household_id' | 'event_id' | 'google_calendar_ref' | 'google_event_id'
       >;
       google_sync_runs: Table<GoogleSyncRunRow, 'household_id' | 'direction' | 'status'>;
+      google_watch_channels: Table<
+        GoogleWatchChannelRow,
+        | 'household_id'
+        | 'google_calendar_ref'
+        | 'channel_id'
+        | 'resource_id'
+        | 'token_hash'
+      >;
       tasks: Table<TaskRow, 'household_id' | 'title'>;
       task_completions: Table<TaskCompletionRow, 'household_id' | 'task_id' | 'title'>;
       shopping_lists: Table<ShoppingListRow, 'household_id' | 'name'>;

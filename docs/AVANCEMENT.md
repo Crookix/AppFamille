@@ -1,6 +1,6 @@
 # Avancement et points bloquants
 
-Mis à jour le 14 septembre 2026.
+Mis à jour le 15 septembre 2026.
 
 ---
 
@@ -25,8 +25,12 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 9 — Reco (films, séries, théâtre, cadeaux) | Terminée | — *confirmée en navigateur, bureau et mobile* |
 | 10 — Check-lists (valise, sac de piscine…) | Terminée | — *confirmée en navigateur, bureau et mobile* |
 
-Le dépôt compte dix-huit migrations, `0001` à `0018`, **toutes appliquées sur
-le projet `tribu-foyer`**, qui porte 42 tables, toutes avec la RLS active.
+Le dépôt compte dix-neuf migrations, `0001` à `0019`. Les dix-huit premières
+sont appliquées sur le projet `tribu-foyer`, qui porte 42 tables, toutes avec
+la RLS active. **`0019` — les canaux de notification Google — reste à
+appliquer** : elle est rejouée depuis une base vide et vérifiée (étanchéité,
+effacement), mais `npm run db:push` n'a pas encore été lancé sur le projet
+réel.
 
 `0016` (la reco) et `0018` (les check-lists) ont été appliquées le 14 septembre 2026. Le SQL
 enregistré par Supabase a la même empreinte MD5
@@ -314,6 +318,12 @@ complète est dans [`GOOGLE.md`](GOOGLE.md) ; en résumé :
 5. Reporter `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.local`.
 6. Pour la connexion **avec** Google (distincte de l'agenda) : activer le
    fournisseur Google dans Supabase > Authentication > Providers.
+7. Pour que l'agenda se mette à jour tout seul : **vérifier le domaine** dans
+   la console Google Cloud (sans quoi Google refuse d'envoyer ses
+   notifications) et renseigner `CRON_SECRET` dans les variables Vercel (sans
+   quoi le passage programmé refuse de s'exécuter). Les deux manquent sans
+   danger : l'écran Google Agenda dit alors lequel des trois déclencheurs est
+   inactif, et pourquoi.
 
 Tant que ces variables sont absentes, l'écran « Plus › Google Agenda » affiche
 « non configuré » et explique quoi faire. **Il n'affiche jamais une
@@ -367,6 +377,16 @@ supprimé, le lien vers son homologue Google part en cascade avec lui — et ave
 lui l'identifiant nécessaire pour prévenir Google. Un déclencheur `BEFORE
 DELETE` dépose l'identifiant dans une file avant que la cascade ne l'efface
 (migration `0009`).
+
+**La synchronisation Google ne se déclenche plus au clic seul.** Elle l'a été
+longtemps, et c'était un défaut de conception, pas un choix : un agenda
+familial qui ne se met à jour que sur commande est un import manuel. Trois
+déclencheurs ont été ajoutés plutôt qu'un, parce qu'aucun ne suffit seul — les
+notifications de Google sont les plus rapides mais demandent un domaine
+vérifié, le cron ne dépasse pas une exécution par jour sur le forfait Hobby de
+Vercel, et la synchronisation à l'ouverture ne couvre que les moments où
+quelqu'un regarde. Ensemble, ils tiennent ; l'écran Google Agenda dit lequel
+marche, et surtout lequel ne marche pas.
 
 **Les jetons Google sont dans une table sans aucune politique.** Ce n'est pas
 un oubli de politique : c'est la politique. Une table avec RLS active et zéro

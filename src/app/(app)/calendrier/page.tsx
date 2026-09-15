@@ -3,6 +3,7 @@ import { requireHousehold } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { loadOccurrences, serializeOccurrences } from '@/lib/data/calendar';
 import { CalendarView, type CalendarMode } from '@/components/calendar/calendar-view';
+import { GoogleAutoSync } from '@/components/google/google-auto-sync';
 import {
   addDays,
   endOfDayIn,
@@ -72,14 +73,24 @@ export default async function CalendrierPage({
   // demander la liste. En interrogeant le foyer entier plutôt que les seuls
   // événements affichés, la dépendance disparaît et avec elle un aller-retour :
   // les pièces jointes d'une famille se comptent en dizaines, pas en milliers.
+  //
+  // La troisième requête ne coûte rien de plus : elle part dans la même vague,
+  // et sert seulement à savoir s'il y a un agenda Google à rafraîchir. Sans
+  // elle, chaque ouverture du calendrier déclencherait un appel de
+  // synchronisation, y compris dans les foyers qui n'ont jamais connecté Google.
   const supabase = await createClient();
-  const [items, attachmentsResult] = await Promise.all([
+  const [items, attachmentsResult, googleResult] = await Promise.all([
     loadOccurrences(household.id, from, to),
     supabase
       .from('attachments')
       .select('event_id')
       .eq('household_id', household.id)
       .not('event_id', 'is', null),
+    supabase
+      .from('google_calendars')
+      .select('id', { count: 'exact', head: true })
+      .eq('household_id', household.id)
+      .eq('is_selected', true),
   ]);
 
   const occurrences = serializeOccurrences(items);
@@ -96,11 +107,14 @@ export default async function CalendrierPage({
   ];
 
   return (
-    <CalendarView
-      occurrences={occurrences}
-      mode={mode}
-      anchorDay={anchor}
-      attachmentEventIds={attachmentEventIds}
-    />
+    <>
+      <GoogleAutoSync enabled={(googleResult.count ?? 0) > 0} />
+      <CalendarView
+        occurrences={occurrences}
+        mode={mode}
+        anchorDay={anchor}
+        attachmentEventIds={attachmentEventIds}
+      />
+    </>
   );
 }

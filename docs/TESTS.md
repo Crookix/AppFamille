@@ -43,17 +43,20 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
 - et, en tant qu'adulte non-administrateur de son **propre** foyer :
   se promouvoir, modifier la fiche d'un autre membre, exclure l'administrateur,
   déclarer une envie de recommandation **au nom d'un autre membre** ;
-- accepter une invitation expirée, révoquée, déjà utilisée, ou inventée.
+- accepter une invitation expirée, révoquée, déjà utilisée, ou inventée ;
+- lire les canaux de notification Google d'un autre foyer, ou en inscrire un
+  chez lui.
 
-**Résultat : 67 vérifications, 67 conformes.**
+**Résultat : 70 vérifications, 70 conformes.**
 
 Deux exécutions, sur deux bases différentes :
 
 - **36 vérifications contre la base Supabase réelle**, avant l'arrivée de la
   reco. C'est la mesure de référence historique.
-- **67 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
-  points portant sur `recommendations`, des vingt de l'espace nounou et des
-  cinq des check-lists. Les migrations du dépôt y sont rejouées depuis une
+- **70 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
+  points portant sur `recommendations`, des vingt de l'espace nounou, des
+  cinq des check-lists et des trois portant sur les canaux de notification
+  Google (`0019`). Les migrations du dépôt y sont rejouées depuis une
   base vide, sur un échafaudage
   reconstituant ce que Supabase fournit d'office (rôles `anon`,
   `authenticated`, `service_role`, schémas `auth` et `storage`, `auth.jwt()`,
@@ -426,8 +429,8 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Domaine | Vérifié comment | État |
 | --- | --- | --- |
 | Étanchéité entre foyers (Supabase Auth **et** Clerk) | Base Supabase réelle, RLS active | **36/36** |
-| Étanchéité, reco, espace nounou et check-lists | PostgreSQL 16 local, migrations rejouées ; schéma prouvé identique à la production par empreinte | **67/67** |
-| Effacement d'un compte : couverture des 18 colonnes | Audit du catalogue + exécution sur base | **complète après `0017`** |
+| Étanchéité, reco, espace nounou, check-lists et canaux Google | PostgreSQL 16 local, migrations rejouées ; schéma prouvé identique à la production par empreinte | **70/70** |
+| Effacement d'un compte : couverture des 19 colonnes | Audit du catalogue + exécution sur base | **complète après `0017`** |
 | Migration `0016` appliquée en production | Empreinte du SQL enregistré = celle du fichier testé | **conforme** |
 | Fidélité des migrations `0014`/`0015` reconstituées | Empreinte MD5 du corps = celle du journal Supabase | **exacte** |
 | Conseillers Supabase après `0016` | Service réel | **aucun signalement nouveau dû à la reco** |
