@@ -122,19 +122,6 @@ export function EventCard({
   );
 }
 
-/** Ligne compacte pour la vue mois. */
-export function EventDot({ item }: { item: SerializedOccurrence }) {
-  const category =
-    CATEGORY_META[item.event.category as CategoryKey] ?? CATEGORY_META.famille;
-  return (
-    <span
-      className="block h-1.5 w-1.5 rounded-full"
-      style={{ backgroundColor: category.color }}
-      aria-hidden
-    />
-  );
-}
-
 /** Pastille d'un membre, utilisée dans les entêtes de jour. */
 export function PersonBadge({
   name,

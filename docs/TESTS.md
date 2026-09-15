@@ -351,6 +351,30 @@ libellé. Ce que cette page ne prouve pas : qu'un appui mène quelque part, ni
 que la puce de notification s'éteint une fois la notification lue. Ce sont
 précisément les critères 0.3 et 0.4, ceux que la spec non jouée couvre.
 
+### La grille horaire : ce qui est prouvé, et ce qui ne l'est pas
+
+Les vues « Jour » et « Semaine » sont passées d'une liste à une grille
+horaire, et la vue « Mois » des pastilles aux titres. Le placement — quelle
+tranche de journée occupe un événement, comment se rangent ceux qui se
+chevauchent — vit dans `src/lib/calendar-layout.ts`, hors de tout composant :
+**15 tests unitaires** le couvrent, séjour à cheval sur trois jours, soirée
+qui finit à minuit et dimanche du changement d'heure compris.
+
+Le rendu, lui, a été regardé dans un vrai navigateur, sur le même principe que
+la barre de navigation ci-dessus : une page d'aperçu montée pour l'occasion,
+sans base de données, rendue à 390 px et 1280 px, en clair et en sombre, avec
+une semaine chargée (chevauchements, rendez-vous de vingt minutes, journée
+entière, séjour de 7 h 30 à 20 h). Trois gestes ont été rejoués au pilote :
+clic sur un événement (il s'ouvre), clic dans une case vide à 15 h (la
+création part sur « 15:00 »), activation au clavier (elle part sur « 07:00 »).
+Aucune erreur de page dans les deux thèmes.
+
+Ce que cet aperçu ne prouve pas : que la grille affiche les vrais événements
+d'un vrai foyer. C'est ce que couvre `02-calendrier.spec.ts`, qui demande une
+pile Supabase, et dont l'assertion sur la vue mois — y lire le titre
+« Piscine » — ne pouvait pas passer tant que cette vue ne montrait que des
+pastilles. Elle reste comptée telle qu'elle a été jouée pour la dernière fois.
+
 ### Pour rejouer
 
 ```bash
@@ -411,7 +435,7 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
-| Récurrences, ingrédients, gardes, Google, exports, recos, check-lists | Tests unitaires | **124/124** |
+| Récurrences, ingrédients, gardes, Google, exports, recos, check-lists, grille horaire | Tests unitaires | **139/139** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur, reco | Playwright sur pile Supabase locale | **6/6** (bureau et mobile) |
 | Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **13/19 — 1 défaut produit corrigé, 7 specs réparées, 1 écart cahier des charges / produit trouvé** |

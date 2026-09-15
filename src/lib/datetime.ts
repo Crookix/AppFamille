@@ -102,6 +102,19 @@ export function formatDayShort(day: string): string {
   return `${d === 1 ? '1er' : d} ${MONTHS[date.getUTCMonth()]}`;
 }
 
+/** « 6 – 12 octobre », ou « 29 septembre – 5 octobre » à cheval sur deux mois. */
+export function formatWeekRange(startDay: string): string {
+  const start = new Date(`${startDay}T12:00:00Z`);
+  const end = new Date(`${addDays(startDay, 6)}T12:00:00Z`);
+  const left = start.getUTCDate() === 1 ? '1er' : String(start.getUTCDate());
+  const right = end.getUTCDate() === 1 ? '1er' : String(end.getUTCDate());
+
+  if (start.getUTCMonth() === end.getUTCMonth()) {
+    return `${left} – ${right} ${MONTHS[end.getUTCMonth()]}`;
+  }
+  return `${left} ${MONTHS[start.getUTCMonth()]} – ${right} ${MONTHS[end.getUTCMonth()]}`;
+}
+
 export function formatMonthLong(day: string): string {
   const date = new Date(`${day}T12:00:00Z`);
   return `${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
