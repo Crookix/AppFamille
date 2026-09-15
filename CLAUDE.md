@@ -358,6 +358,27 @@ une relecture attentive.
   Aucune erreur nulle part — un `update` bloqué par la RLS ne lève rien, il ne
   touche simplement aucune ligne. La règle était écrite, le garde-fou existait,
   il n'était appelé qu'à un seul endroit.
+- **`new Date('2026-07-01T18:00')` lit dans le fuseau du NAVIGATEUR, et
+  `.toISOString()` écrit en UTC.** Enchaîner les deux pour recalculer un champ
+  `datetime-local` introduit un décalage égal à celui du fuseau — nul sur une
+  machine réglée en UTC, deux heures à Paris en été. C'est donc un bogue
+  invisible en intégration continue et bien réel sur le téléphone de la
+  famille : avancer un événement de 9 h à 18 h remettait sa fin à 17 h, et
+  l'enregistrement était refusé sans explication. Tout passage entre un champ de
+  formulaire et un instant se fait par `fromLocalInputValue` /
+  `toLocalInputValue`, qui prennent le fuseau du FOYER — jamais celui de la
+  machine.
+- **Un placeholder n'est pas un sélecteur.** Un parcours visait le champ
+  d'ingrédient par `getByPlaceholder(/Ingrédient|Courgettes/i)` ; le champ du nom
+  de la recette, dont le placeholder est « Gratin de courgettes », arrivait
+  premier. Le test écrasait le nom puis s'étonnait de ne pas le retrouver, et le
+  rapport disait « la recette ne s'enregistre pas ». Viser par `aria-label` ou
+  par un rôle, et se souvenir qu'un libellé de champ requis porte un astérisque :
+  le nom accessible est « Nom * », jamais « Nom ».
+- **Une assertion qui dépend de la date du jour n'est pas une assertion.**
+  « Au moins quatre occurrences d'une série hebdomadaire dans la vue du mois »
+  est vrai le 1er et faux le 28. Ancrer la donnée de test à une date calculée,
+  jamais à « aujourd'hui ».
 - **Ce qui défile n'existe pas.** « Check-lists » était le troisième onglet
   d'une rangée qu'il fallait faire défiler pour l'atteindre, et la reco la
   première entrée du tiroir « Plus ». Les deux fonctionnalités venaient d'être

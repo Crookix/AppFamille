@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/toast';
 import { useSupabase } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import { addShoppingItemAction } from '@/lib/actions/shopping';
-import { AISLE_LABELS, AISLE_ORDER, guessAisle } from '@/lib/ingredients';
+import { AISLE_LABELS, AISLE_ORDER, guessAisle, parseQuickEntry } from '@/lib/ingredients';
 import type { FrequentItemRow, ShopAisle, ShoppingListRow } from '@/lib/database.types';
 
 /**
@@ -95,21 +95,33 @@ export function QuickShoppingSheet({
     setPending(true);
     setError(null);
 
-    const parsedQuantity = quantity.trim()
-      ? Number(quantity.replace(',', '.'))
-      : null;
+    const saisie = quantity.trim() ? Number(quantity.replace(',', '.')) : null;
 
-    if (parsedQuantity !== null && (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0)) {
+    if (saisie !== null && (!Number.isFinite(saisie) || saisie <= 0)) {
       setPending(false);
       setError('La quantité doit être un nombre positif.');
       return;
     }
 
+    /* On écrit « 2 kg de pommes » d'une traite devant le frigo — c'est plus
+       rapide que trois champs. Les champs restent pourtant là, et l'emportent
+       quand ils sont remplis : ce qu'on a saisi explicitement ne doit jamais
+       être contredit par une devinette faite sur une phrase.
+
+       Les habitudes (« + pain ») passent ici avec leur unité déjà connue :
+       elles ne sont pas une phrase à analyser, d'où le court-circuit. */
+    const analyse =
+      unitToAdd === undefined ? parseQuickEntry(trimmed) : { label: trimmed, quantity: null, unit: null };
+
+    const libelle = analyse.label || trimmed;
+    const quantiteFinale = saisie ?? analyse.quantity;
+    const uniteFinale = unitToAdd ?? (unit.trim() || analyse.unit) ?? null;
+
     const result = await addShoppingItemAction({
       listId: targetList,
-      label: trimmed,
-      quantity: parsedQuantity,
-      unit: unitToAdd ?? unit ?? null,
+      label: libelle,
+      quantity: quantiteFinale,
+      unit: uniteFinale,
       aisle: aisleToAdd ?? (aisle || null),
     });
 
@@ -120,7 +132,7 @@ export function QuickShoppingSheet({
       return;
     }
 
-    setAdded((current) => [trimmed, ...current].slice(0, 8));
+    setAdded((current) => [libelle, ...current].slice(0, 8));
     setLabel('');
     setQuantity('');
     setUnit('');
@@ -138,7 +150,9 @@ export function QuickShoppingSheet({
     onClose();
   }
 
-  const suggestedAisle = label.trim() ? guessAisle(label) : null;
+  // Le rayon se devine sur le PRODUIT : « 2 kg de pommes » doit deviner sur
+  // « pommes », sinon le nombre et l'unité brouillent la reconnaissance.
+  const suggestedAisle = label.trim() ? guessAisle(parseQuickEntry(label).label) : null;
 
   return (
     <Sheet

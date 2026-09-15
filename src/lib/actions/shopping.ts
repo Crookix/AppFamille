@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, ShopAisle } from '@/lib/database.types';
-import { guessAisle, normalizeLabel, parseUnit } from '@/lib/ingredients';
+import { combineQuantities, guessAisle, normalizeLabel, parseUnit } from '@/lib/ingredients';
 import { fail, humanizeDbError, ok, requireActiveHousehold } from './_helpers';
 
 const AISLES = [
@@ -93,6 +93,70 @@ export async function addShoppingItemAction(input: ShoppingItemInput) {
   const unit = parseUnit(item.unit).canonical;
   const aisle: ShopAisle = item.aisle ?? guessAisle(item.label);
 
+  /* --- Fusion plutôt que doublon (critère 3.4) ---------------------------
+     Deux lignes « pommes » dans la même liste, c'est une liste qu'on relit
+     mal et un article qu'on achète deux fois.
+
+     On ne fusionne QUE dans une ligne saisie à la main. Une ligne venue des
+     repas porte son `source_meal_id` : la régénération du menu supprime les
+     lignes « repas » non cochées de ces repas, et emporterait avec elle ce
+     que quelqu'un y aurait ajouté à la main. Mieux vaut deux lignes qu'une
+     ligne qui disparaît toute seule.
+
+     Une ligne déjà cochée est laissée tranquille : elle est achetée. */
+  const { data: existante } = await supabase
+    .from('shopping_items')
+    .select('*')
+    .eq('household_id', household.id)
+    .eq('list_id', listId)
+    .eq('label_key', labelKey)
+    .eq('source', 'manuel')
+    .eq('is_checked', false)
+    .order('created_at')
+    .limit(1)
+    .maybeSingle();
+
+  if (existante) {
+    /* `numeric` revient de PostgREST en CHAÎNE, pour ne pas perdre de précision
+       en passant par un nombre flottant — le dépôt le sait déjà ailleurs
+       (`Number(rate.hourly_rate)`). Le type déclaré dit `number` ; on ne s'en
+       remet donc pas à lui, ni à la coercition implicite de `*`. */
+    const quantiteExistante =
+      existante.quantity == null ? null : Number(existante.quantity);
+
+    const fusion = Number.isFinite(quantiteExistante ?? 0)
+      ? combineQuantities(
+          { quantity: quantiteExistante, unit: existante.unit },
+          { quantity: item.quantity ?? null, unit },
+        )
+      : null;
+
+    if (fusion) {
+      const { data: fusionnee, error: fusionError } = await supabase
+        .from('shopping_items')
+        .update({
+          quantity: fusion.quantity,
+          unit: fusion.unit,
+          // Le libellé et le rayon déjà en place font foi : quelqu'un a pu les
+          // corriger à la main, et un ajout ne doit pas défaire cette correction.
+          note: existante.note ?? blankToNull(item.note),
+        })
+        .eq('id', existante.id)
+        .select('*')
+        .single();
+
+      if (fusionError || !fusionnee) return fail(humanizeDbError(fusionError));
+
+      await rememberFrequentItem(supabase, household.id, item.label.trim(), labelKey, unit, aisle);
+
+      revalidatePath('/');
+      revalidatePath('/listes');
+      return ok({ item: fusionnee, merged: true });
+    }
+    // Unités inconciliables (« 1 kg » et « 1 L ») : deux lignes valent mieux
+    // qu'une addition fausse.
+  }
+
   const { data, error } = await supabase
     .from('shopping_items')
     .insert({
@@ -116,7 +180,7 @@ export async function addShoppingItemAction(input: ShoppingItemInput) {
 
   revalidatePath('/');
   revalidatePath('/listes');
-  return ok({ item: data });
+  return ok({ item: data, merged: false });
 }
 
 /**

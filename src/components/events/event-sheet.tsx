@@ -19,7 +19,7 @@ import {
 import { AttachmentsField, uploadPendingAttachments } from '@/components/events/attachments';
 import { useSupabase } from '@/components/providers/use-supabase';
 import { createEventAction, updateEventAction, type EditScope } from '@/lib/actions/events';
-import { fromLocalInputValue, toLocalInputValue } from '@/lib/datetime';
+import { fromLocalInputValue, shiftEndWithStart, toLocalInputValue } from '@/lib/datetime';
 import type { AttachmentRow, EventRow, TripDetailRow } from '@/lib/database.types';
 
 const TRANSPORTS: { value: string; label: string }[] = [
@@ -207,22 +207,24 @@ export function EventSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, event?.id, occurrenceStart]);
 
-  /** Décale la fin quand on avance le début, pour garder la durée. */
+  /**
+   * Décale la fin quand on avance le début, pour garder la durée.
+   *
+   * Tout passe par `fromLocalInputValue` / `toLocalInputValue`, et jamais par
+   * `new Date(valeur)` puis `.toISOString()`. Ce raccourci-là était faux deux
+   * fois : il lisait l'heure saisie dans le fuseau du NAVIGATEUR, alors que le
+   * formulaire travaille dans celui du FOYER, et il réécrivait la fin en UTC
+   * dans un champ qui attend l'heure locale.
+   *
+   * Le résultat se voyait : à Paris en été, avancer un événement de 9 h à 18 h
+   * remettait la fin à 17 h — une heure AVANT son début — et l'enregistrement
+   * était refusé sans que rien n'explique pourquoi. Le décalage valait l'écart
+   * du fuseau, donc zéro sur une machine réglée en UTC : invisible en
+   * intégration continue, bien réel sur le téléphone de la famille.
+   */
   function onStartChange(next: string) {
-    if (startLocal && endLocal) {
-      const previousStart = new Date(startLocal).getTime();
-      const previousEnd = new Date(endLocal).getTime();
-      const nextStart = new Date(next).getTime();
-      if (
-        Number.isFinite(previousStart) &&
-        Number.isFinite(previousEnd) &&
-        Number.isFinite(nextStart) &&
-        previousEnd >= previousStart
-      ) {
-        const duration = previousEnd - previousStart;
-        setEndLocal(new Date(nextStart + duration).toISOString().slice(0, 16));
-      }
-    }
+    const decalee = shiftEndWithStart(startLocal, endLocal, next, tz);
+    if (decalee) setEndLocal(decalee);
     setStartLocal(next);
   }
 

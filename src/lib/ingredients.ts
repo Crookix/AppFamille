@@ -188,6 +188,118 @@ export function unitsCompatible(a: string | null, b: string | null): boolean {
   return parseUnit(a).groupKey === parseUnit(b).groupKey;
 }
 
+/**
+ * L'unité est-elle RECONNUE, ou seulement conservée faute de mieux ?
+ *
+ * `parseUnit` ne fait jamais échouer : une unité inconnue ressort telle quelle,
+ * additionnable avec elle-même. Cette distinction-là est pourtant nécessaire à
+ * l'analyse d'une saisie libre : dans « 3 citrons », « citrons » ne doit pas
+ * devenir une unité — c'est le produit.
+ */
+export function isKnownUnit(raw: string | null | undefined): boolean {
+  const cleaned = (raw ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\./g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleaned) return false;
+  // `hasOwn` et non `in` : `in` trouverait « constructor » ou « toString ».
+  return Object.hasOwn(UNITS, cleaned) || Object.hasOwn(KITCHEN_UNITS, cleaned);
+}
+
+/**
+ * Additionne deux quantités si leurs unités le permettent, sinon renvoie
+ * `null` — à l'appelant de décider quoi faire d'un refus.
+ *
+ * Une quantité absente n'est pas zéro : ajouter « pommes » à « 2 kg de
+ * pommes » ne fait pas 2 kg + rien, cela veut dire « il en faut, et on sait
+ * déjà combien ». La ligne existante garde donc sa quantité.
+ */
+export function combineQuantities(
+  existing: { quantity: number | null; unit: string | null },
+  addition: { quantity: number | null; unit: string | null },
+): { quantity: number | null; unit: string | null } | null {
+  // L'ordre compte. Exiger des unités compatibles AVANT d'écarter les quantités
+  // absentes refuserait le cas même du critère 3.4 : « pommes » (ni quantité ni
+  // unité, donc famille « pièce ») contre « 2 kg de pommes » (famille « masse »).
+  // Une unité sans quantité ne dit rien ; elle ne peut donc rien contredire.
+  if (addition.quantity == null) {
+    return { quantity: existing.quantity, unit: existing.unit };
+  }
+  if (existing.quantity == null) {
+    return { quantity: addition.quantity, unit: addition.unit };
+  }
+
+  if (!unitsCompatible(existing.unit, addition.unit)) return null;
+
+  const a = parseUnit(existing.unit);
+  const b = parseUnit(addition.unit);
+  const base = existing.quantity * a.toBase + addition.quantity * b.toBase;
+
+  return presentQuantity(a.family, base, existing.unit ?? addition.unit);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Saisie libre                                                               */
+/* -------------------------------------------------------------------------- */
+
+export type QuickEntry = {
+  label: string;
+  quantity: number | null;
+  /** Forme canonique, ou `null` quand aucune unité n'a été reconnue. */
+  unit: string | null;
+};
+
+/**
+ * Lit « 2 kg de pommes » comme une personne le lit.
+ *
+ * Trois règles, et la prudence prime sur l'astuce :
+ *
+ * 1. **Seul un nombre EN TÊTE compte.** « Coca 33cl » reste un libellé entier :
+ *    le nombre y désigne le produit, pas la quantité voulue. Analyser aussi la
+ *    fin transformerait un nom de produit en mesure, ce qui est pire que de ne
+ *    rien analyser.
+ * 2. **Le mot qui suit le nombre n'est une unité que s'il est RECONNU.** Sinon
+ *    c'est le produit : « 3 citrons » donne trois citrons, pas trois « citrons »
+ *    de quelque chose.
+ * 3. **Si le libellé se vide, on n'analyse rien.** « 1664 » est une bière, pas
+ *    une quantité sans produit.
+ *
+ * L'article qui suit l'unité est retiré — mais seulement là, jamais sur une
+ * saisie sans quantité : quelqu'un qui tape « du pain » a écrit son libellé, et
+ * on ne le récrit pas dans son dos.
+ */
+export function parseQuickEntry(raw: string): QuickEntry {
+  const texte = raw.trim().replace(/\s+/g, ' ');
+  const intact: QuickEntry = { label: texte, quantity: null, unit: null };
+  if (!texte) return intact;
+
+  // Le nombre ne doit pas être suivi d'une barre de fraction (« 1/2 baguette »)
+  // ni d'un autre chiffre séparé : dans ces cas, on ne touche à rien.
+  const m = texte.match(/^(\d+(?:[.,]\d+)?)(?!\s*[/-])\s*(.*)$/);
+  if (!m) return intact;
+
+  const quantity = Number(m[1].replace(',', '.'));
+  if (!Number.isFinite(quantity) || quantity <= 0) return intact;
+
+  const reste = m[2].trim();
+  if (!reste) return intact; // « 1664 » : un nombre seul est un libellé.
+
+  const [premier, ...suite] = reste.split(' ');
+  if (isKnownUnit(premier)) {
+    const apresUnite = suite.join(' ').replace(LEADING_ARTICLES, '').trim();
+    // « 33cl », « 12 pièces » : une mesure sans produit. On préfère ne rien
+    // analyser plutôt que de laisser « cl » comme nom d'article.
+    if (!apresUnite) return intact;
+    return { label: apresUnite, quantity, unit: parseUnit(premier).canonical };
+  }
+
+  return { label: reste, quantity, unit: null };
+}
+
 /** Choisit l'unité d'affichage la plus lisible pour une quantité de base. */
 function presentQuantity(
   family: UnitFamily,

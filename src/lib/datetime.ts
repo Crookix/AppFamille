@@ -144,4 +144,37 @@ export function fromLocalInputValue(value: string, tz: string = DEFAULT_TZ): Dat
   return fromZonedTime(value.length === 16 ? `${value}:00` : value, tz);
 }
 
+/**
+ * Nouvelle valeur du champ « Fin » quand on déplace le début, à durée égale.
+ *
+ * Extrait de la fiche événement pour être vérifiable : le calcul y était faux,
+ * et d'une façon que seul un fuseau décalé révèle. Il lisait les deux champs
+ * avec `new Date(valeur)` — donc dans le fuseau du NAVIGATEUR — et réécrivait
+ * la fin avec `.toISOString()` — donc en UTC — dans un champ qui attend l'heure
+ * du FOYER. À Paris en été, avancer un événement de 9 h à 18 h remettait la fin
+ * à 17 h, une heure avant son début.
+ *
+ * Renvoie `null` quand il n'y a rien à décaler : champ vide, date illisible, ou
+ * fin déjà antérieure au début.
+ */
+export function shiftEndWithStart(
+  startLocal: string,
+  endLocal: string,
+  nextStartLocal: string,
+  tz: string = DEFAULT_TZ,
+): string | null {
+  if (!startLocal || !endLocal || !nextStartLocal) return null;
+
+  const start = fromLocalInputValue(startLocal, tz).getTime();
+  const end = fromLocalInputValue(endLocal, tz).getTime();
+  const nextStart = fromLocalInputValue(nextStartLocal, tz).getTime();
+
+  if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(nextStart)) {
+    return null;
+  }
+  if (end < start) return null;
+
+  return toLocalInputValue(new Date(nextStart + (end - start)), tz);
+}
+
 export { toZonedTime };

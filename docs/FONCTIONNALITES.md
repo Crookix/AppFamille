@@ -158,13 +158,32 @@ récupère l'enfant, et le billet de train en pièce jointe.
 | 3.3 | Taper « 2 kg de pommes » | Quantité 2, unité kg, libellé « pommes », rayon « Fruits et légumes » |
 | 3.4 | Ajouter « pommes » alors que « 2 kg de pommes » y est déjà | Les deux lignes fusionnent au lieu de se doubler |
 
-> ⚠️ **3.3 et 3.4 ne sont pas tenus.** Vérifié en navigateur le 14 septembre
-> 2026 : la saisie rapide a trois champs séparés (Article, Quantité, Unité) et
-> n'analyse pas « 2 kg de pommes » — le libellé est enregistré entier, quantité
-> et unité vides, et aucune fusion n'a lieu. Seul le rayon est bien deviné. La
-> logique d'analyse existe et est testée, mais n'est câblée que sur le chemin
-> repas → courses. À trancher : compléter la saisie rapide, ou réécrire ces
-> deux critères.
+**3.3 et 3.4 sont tenus depuis le 15 septembre 2026.** Ils ne l'étaient pas :
+la saisie rapide enregistrait « 2 kg de pommes » comme un libellé entier, et
+chaque ajout créait une ligne de plus. L'arbitrage a été de compléter le
+produit plutôt que de réécrire les critères à la baisse.
+
+Ce que fait l'analyse, et surtout ce qu'elle refuse de faire :
+
+- Seul un nombre **en tête** compte. « Coca 33cl » reste un libellé entier : le
+  nombre y désigne le produit. Analyser aussi la fin transformerait un nom de
+  produit en mesure, ce qui est pire que de ne rien analyser.
+- Le mot qui suit le nombre n'est une unité que s'il est **reconnu**. « 3
+  citrons » donne trois citrons, pas trois « citrons » de quelque chose.
+- Si le libellé se viderait, on n'analyse rien : « 1664 » est une bière.
+- Les trois champs restent, et **l'emportent** quand ils sont remplis : une
+  devinette faite sur une phrase ne contredit jamais une saisie explicite.
+
+La fusion ne touche que les lignes **saisies à la main** et **non cochées**.
+Une ligne venue des repas porte son repas d'origine : la régénération du menu
+la supprime, et emporterait avec elle ce qu'on y aurait ajouté. Deux lignes
+valent mieux qu'une ligne qui disparaît toute seule. Et deux unités
+inconciliables (« 1 kg » et « 1 L ») restent deux lignes, plutôt qu'une
+addition fausse.
+
+Limite connue et assumée : « 2 en 1 » devient une quantité 2 et un libellé
+« en 1 ». Aucune règle générale ne distingue ce cas de « 2 citrons » ; il est
+rare, et la correction se fait en deux frappes.
 | 3.5 | Cocher trois articles puis « effacer les articles cochés » | Seuls ces trois disparaissent |
 | 3.6 | Deux adultes sur la même liste, l'un coche | L'autre voit la case se cocher |
 

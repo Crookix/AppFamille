@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   aggregateIngredients,
+  combineQuantities,
   guessAisle,
+  isKnownUnit,
   normalizeLabel,
+  parseQuickEntry,
   parseUnit,
   unitsCompatible,
 } from '@/lib/ingredients';
@@ -198,5 +201,118 @@ describe('détection du rayon', () => {
 
   it('retombe sur « autre » quand rien ne correspond', () => {
     expect(guessAisle('Bidule inconnu')).toBe('autre');
+  });
+});
+
+describe('analyse d’une saisie libre (critère 3.3)', () => {
+  it('lit « 2 kg de pommes » comme trois informations', () => {
+    expect(parseQuickEntry('2 kg de pommes')).toEqual({
+      quantity: 2,
+      unit: 'kg',
+      label: 'pommes',
+    });
+  });
+
+  it('accepte la virgule décimale et les unités collées', () => {
+    expect(parseQuickEntry('1,5 L de lait')).toEqual({ quantity: 1.5, unit: 'L', label: 'lait' });
+    expect(parseQuickEntry('500g farine')).toEqual({ quantity: 500, unit: 'g', label: 'farine' });
+  });
+
+  it('reconnaît les unités de cuisine et leurs pluriels', () => {
+    expect(parseQuickEntry('2 boîtes de tomates pelées')).toEqual({
+      quantity: 2,
+      unit: 'boîte',
+      label: 'tomates pelées',
+    });
+  });
+
+  it('ne prend pas le produit pour une unité', () => {
+    // « citrons » n'est pas une unité : trois citrons, pas trois « citrons » de
+    // quelque chose.
+    expect(parseQuickEntry('3 citrons')).toEqual({ quantity: 3, unit: null, label: 'citrons' });
+    expect(parseQuickEntry('6 œufs')).toEqual({ quantity: 6, unit: null, label: 'œufs' });
+  });
+
+  it('laisse intacte une saisie sans quantité', () => {
+    expect(parseQuickEntry('pommes')).toEqual({ quantity: null, unit: null, label: 'pommes' });
+    // On ne récrit pas le libellé de quelqu'un dans son dos : l'article n'est
+    // retiré que derrière une unité.
+    expect(parseQuickEntry('du pain')).toEqual({ quantity: null, unit: null, label: 'du pain' });
+  });
+
+  it('ne démonte pas un nom de produit qui contient un nombre', () => {
+    // Une bière, pas une quantité sans produit.
+    expect(parseQuickEntry('1664')).toEqual({ quantity: null, unit: null, label: '1664' });
+    // Le nombre n'est pas en tête : il désigne le produit.
+    expect(parseQuickEntry('Coca 33cl')).toEqual({
+      quantity: null,
+      unit: null,
+      label: 'Coca 33cl',
+    });
+    // Une mesure sans produit reste le libellé, plutôt que de laisser « cl ».
+    expect(parseQuickEntry('33cl')).toEqual({ quantity: null, unit: null, label: '33cl' });
+    // Une fraction n'est pas une quantité décimale.
+    expect(parseQuickEntry('1/2 baguette')).toEqual({
+      quantity: null,
+      unit: null,
+      label: '1/2 baguette',
+    });
+  });
+
+  it('tolère le vide et les espaces', () => {
+    expect(parseQuickEntry('   ')).toEqual({ quantity: null, unit: null, label: '' });
+    expect(parseQuickEntry('  2   kg   de   pommes ')).toEqual({
+      quantity: 2,
+      unit: 'kg',
+      label: 'pommes',
+    });
+  });
+});
+
+describe('unités reconnues', () => {
+  it('distingue une unité d’un produit', () => {
+    expect(isKnownUnit('kg')).toBe(true);
+    expect(isKnownUnit('Litres')).toBe(false); // pluriel non listé, volontairement
+    expect(isKnownUnit('litre')).toBe(true);
+    expect(isKnownUnit('citrons')).toBe(false);
+    expect(isKnownUnit('')).toBe(false);
+  });
+
+  it('ne se laisse pas piéger par les propriétés héritées', () => {
+    expect(isKnownUnit('constructor')).toBe(false);
+    expect(isKnownUnit('toString')).toBe(false);
+  });
+});
+
+describe('fusion de deux quantités (critère 3.4)', () => {
+  it('additionne dans la même famille et choisit l’unité lisible', () => {
+    expect(combineQuantities({ quantity: 2, unit: 'kg' }, { quantity: 500, unit: 'g' })).toEqual({
+      quantity: 2.5,
+      unit: 'kg',
+    });
+    expect(combineQuantities({ quantity: 3, unit: null }, { quantity: 2, unit: null })).toEqual({
+      quantity: 5,
+      unit: null,
+    });
+  });
+
+  it('une quantité absente n’est pas zéro', () => {
+    // Ajouter « pommes » à « 2 kg de pommes » ne retire rien : on sait déjà
+    // combien il en faut.
+    expect(combineQuantities({ quantity: 2, unit: 'kg' }, { quantity: null, unit: null })).toEqual({
+      quantity: 2,
+      unit: 'kg',
+    });
+    expect(combineQuantities({ quantity: null, unit: null }, { quantity: 2, unit: 'kg' })).toEqual({
+      quantity: 2,
+      unit: 'kg',
+    });
+  });
+
+  it('refuse ce qui ne s’additionne pas', () => {
+    expect(combineQuantities({ quantity: 1, unit: 'kg' }, { quantity: 1, unit: 'L' })).toBeNull();
+    expect(
+      combineQuantities({ quantity: 1, unit: 'sachet' }, { quantity: 1, unit: 'boîte' }),
+    ).toBeNull();
   });
 });

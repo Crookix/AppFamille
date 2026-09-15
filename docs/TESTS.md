@@ -310,6 +310,8 @@ l'écran, et les trouvaient… dans le libellé brut.
 ### État actuel, profil bureau
 
 **13 passent, 4 échouent, 2 sautés, 3 jamais joués** — contre 0 avant ce travail.
+Les quatre échecs ont depuis été élucidés et leurs parcours réécrits, mais non
+rejoués : voir plus bas.
 
 | Fichier | Passent | Reste |
 | --- | --- | --- |
@@ -319,12 +321,75 @@ l'écran, et les trouvaient… dans le libellé brut.
 | `07-google.spec.ts` | **2/2** | — |
 | `06-etancheite.spec.ts` | **1/1** | — |
 | `03-listes.spec.ts` | 2/3 | le troisième est la vraie trouvaille ci-dessus |
-| `02-calendrier.spec.ts` | 1/3 | l'événement créé n'apparaît pas dans les vues — à creuser |
-| `04-repas.spec.ts` | 0/1 | la recette ne s'enregistre pas — à creuser |
-| `05-nounous.spec.ts` | 0/2 | le parcours décrit un « Ajouter une garde » qui n'existe pas ; les gardes passent par l'ajout rapide |
-| `10-navigation.spec.ts` | **0/3 — jamais exécuté** | écrit avec la barre repensée, voir ci-dessous |
+| `02-calendrier.spec.ts` | 1/3 | **réécrit le 15 septembre, non rejoué** — voir ci-dessous |
+| `04-repas.spec.ts` | 0/1 | **réécrit le 15 septembre, non rejoué** |
+| `05-nounous.spec.ts` | 0/2 | **réécrit le 15 septembre, non rejoué** |
+| `10-navigation.spec.ts` | **0/3 — jamais exécuté** | écrit avec la barre repensée |
 
 Aucun de ces échecs ne provoque d'erreur applicative côté serveur.
+
+### Les trois parcours en échec, élucidés — sans pouvoir les rejouer
+
+**D'abord la limite, parce qu'elle change la valeur de tout ce qui suit.** Ces
+trois parcours ont été repris le 15 septembre 2026 dans un environnement **sans
+Docker** : pas de pile Supabase locale, donc aucune exécution. GoTrue et
+PostgREST ne sont pas téléchargeables ici (GitHub est restreint aux dépôts de la
+session) et npm n'en publie que les clients. Écrire un simulacre de PostgREST
+aurait été pire que rien : sa fidélité aurait été elle-même invérifiable.
+
+Les causes ci-dessous sont donc établies **par lecture du code**, pas par
+exécution. Elles sont mécaniques — des sélecteurs qui ne désignent pas ce qu'on
+croit — mais **les corrections restent à jouer.** Les trois lignes du tableau
+gardent leur score d'échec jusque-là.
+
+**04 — la recette ne s'enregistrait pas.** Elle s'enregistrait très bien, sous
+un autre nom. Le parcours visait le champ d'ingrédient par
+`getByPlaceholder(/Ingrédient|Courgettes/i)` ; or le champ du NOM de la recette
+a pour placeholder « Gratin de courgettes », que `/Courgettes/i` attrape en
+premier dans l'ordre du document. Le parcours écrasait donc le nom avec
+« courgettes », puis cherchait « Gratin de courgettes ». Trois autres écarts au
+passage : la fiche s'ouvre déjà avec une ligne d'ingrédient vide, la recette se
+choisit dans une liste déroulante et non par un bouton, et « Générer les
+courses » entre en mode sélection — c'est « Continuer » qui ouvre l'aperçu.
+
+**02 — la série hebdomadaire.** L'assertion « au moins quatre occurrences »
+dépendait du jour du mois où le test tournait : une série lancée le 28 n'en a
+que deux dans la grille. Le parcours ancre désormais la série au 1er du mois
+suivant, où le compte est garanti quel que soit le mois, février compris.
+
+**05 — les gardes.** Le parcours décrivait une interface qui n'existe pas : le
+bouton s'appelle « Garde » et non « Ajouter une garde », le tarif se saisit dans
+la fiche et non derrière un bouton « tarif », et l'export s'appelle
+« Export CSV ». Surtout, il planifiait une garde **à venir** puis cherchait à en
+confirmer les heures : l'écran ne le propose que pour une garde terminée. Le
+parcours crée maintenant une garde passée de deux heures et vérifie que le bilan
+du mois porte bien 25,00 €.
+
+### Un vrai bogue produit, trouvé en creusant 02
+
+En lisant la fiche événement pour comprendre l'échec du calendrier, un défaut
+est apparu qui n'avait rien à voir avec les tests.
+
+Avancer le début d'un événement décale sa fin d'autant. Le calcul lisait les
+deux champs avec `new Date(valeur)` — donc dans le fuseau du **navigateur** —
+et réécrivait la fin avec `.toISOString()` — donc en **UTC** — dans un champ qui
+attend l'heure du **foyer**.
+
+Démontré plutôt qu'affirmé, en rejouant l'ancien calcul :
+
+| Fuseau de la machine | Début saisi | Fin produite |
+| --- | --- | --- |
+| `Europe/Paris` | 18:00 | **17:00** — une heure AVANT le début |
+| `UTC` | 18:00 | 19:00 — correct |
+
+L'erreur valait exactement le décalage du fuseau : nulle sur une machine réglée
+en UTC, deux heures à Paris en été. Invisible en intégration continue, bien
+réelle sur le téléphone de la famille — qui voyait l'enregistrement refusé sans
+que rien n'explique pourquoi.
+
+Le calcul est sorti du composant (`shiftEndWithStart` dans `src/lib/datetime.ts`)
+pour devenir vérifiable, et cinq tests le couvrent, dont le passage à l'heure
+d'hiver.
 
 ### La barre repensée : ce qui est prouvé, et ce qui ne l'est pas
 

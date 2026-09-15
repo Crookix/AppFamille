@@ -20,6 +20,27 @@ import {
 skipIfUnconfigured();
 
 /**
+ * Le premier jour du mois PROCHAIN, à 18 h.
+ *
+ * Le parcours de série comptait auparavant les occurrences d'une série
+ * hebdomadaire créée « aujourd'hui », dans la vue du mois courant, et exigeait
+ * au moins quatre. Le compte dépendait donc du jour où le test tournait : une
+ * série lancée le 28 n'a que deux occurrences dans la grille, et le parcours
+ * échouait — sans rien dire du produit.
+ *
+ * Ancré au 1er, il en a toujours au moins quatre : 1, 8, 15, 22, y compris en
+ * février. Le mois prochain plutôt que le mois courant, pour que la série
+ * commence dans le futur quel que soit le moment de l'exécution.
+ */
+function premierDuMoisProchain(): string {
+  const maintenant = new Date();
+  const suivant = new Date(Date.UTC(maintenant.getUTCFullYear(), maintenant.getUTCMonth() + 1, 1));
+  return suivant.toISOString().slice(0, 10);
+}
+
+const ANCRE = premierDuMoisProchain();
+
+/**
  * Ces parcours s'enchaînent : chacun s'appuie sur ce que le précédent a créé.
  *
  * `serial` n'est pas un confort. Après un échec, Playwright jette le worker et
@@ -68,20 +89,26 @@ test.describe.serial('Calendrier', () => {
     await page.getByRole('button', { name: /Un événement/i }).click();
 
     await page.getByLabel(/^Titre/).fill('Piscine');
+    // La série démarre le 1er du mois prochain : voir la note sur ANCRE.
+    await page.getByLabel(/^Début/).fill(`${ANCRE}T18:00`);
+
     // Le formulaire ne montre d'abord que l'essentiel ; la répétition vit dans
     // la section qu'on déplie.
     await page.getByRole('button', { name: /Lieu, responsable, répétition/i }).click();
-    await page.getByLabel(/Répétition/).selectOption({ label: 'Toutes les semaines' });
+    // Par valeur et non par libellé : le libellé est du texte d'interface, la
+    // valeur est le contrat.
+    await page.getByLabel(/^Répétition/).selectOption('hebdomadaire');
     await page.getByRole('button', { name: /^Ajouter$/ }).last().click();
 
-    // En vue mois, une série hebdomadaire doit se voir au moins quatre fois.
-    await page.getByRole('tab', { name: 'Mois', exact: true }).click();
+    // Dans le mois de l'ancre, une série hebdomadaire partie du 1er se voit
+    // les 1, 8, 15 et 22 au minimum.
+    await page.goto(`/calendrier?vue=mois&date=${ANCRE}`);
     await expect(page.getByText('Piscine').first()).toBeVisible();
     expect(await page.getByText('Piscine').count()).toBeGreaterThanOrEqual(4);
   });
 
   test('modifier une occurrence ne touche pas les autres', async ({ page }) => {
-    await page.goto('/calendrier?vue=mois');
+    await page.goto(`/calendrier?vue=mois&date=${ANCRE}`);
 
     const occurrences = page.getByText('Piscine');
     const avant = await occurrences.count();

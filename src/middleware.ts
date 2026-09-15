@@ -11,11 +11,17 @@ import { invitationCookieOptions, PENDING_INVITATION_COOKIE, tokenFromPath } fro
  * lève une erreur dans les Server Components. Sans Clerk, on garde le
  * rafraîchissement de session Supabase, qui existait déjà.
  *
- * On ne protège aucune route ici. La redirection vers `/connexion` reste le
- * fait de `requireUser()`, et l'accès aux données celui de la RLS — un
+ * Ce que la sécurité doit à ce fichier : RIEN. L'accès aux données est le fait
+ * de la RLS, et la redirection vers `/connexion` celui de `requireUser()`. Un
  * middleware qui filtre les URL donne l'illusion de la sécurité sans en
- * fournir : il ne voit pas les requêtes que le navigateur adresse
- * directement à Supabase.
+ * fournir : il ne voit pas les requêtes que le navigateur adresse directement
+ * à Supabase.
+ *
+ * Il reste qu'il redirige, par confort de navigation : sans Clerk,
+ * `updateSession` renvoie vers `/connexion` toute route hors `PUBLIC_PATHS`
+ * (voir `supabase/middleware.ts`). Ce commentaire affirmait le contraire — « on
+ * ne protège aucune route ici » — et la nuance coûte : on cherche ailleurs
+ * pourquoi une page nouvelle est redirigée.
  *
  * En revanche, il est le seul endroit capable de poser un cookie sur le trajet
  * d'une page : un Server Component ne le peut pas. C'est donc ici qu'on retient
