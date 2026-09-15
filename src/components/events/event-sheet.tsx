@@ -19,7 +19,7 @@ import {
 import { AttachmentsField, uploadPendingAttachments } from '@/components/events/attachments';
 import { useSupabase } from '@/components/providers/use-supabase';
 import { createEventAction, updateEventAction, type EditScope } from '@/lib/actions/events';
-import { fromLocalInputValue, toLocalInputValue } from '@/lib/datetime';
+import { addDays, fromLocalInputValue, toLocalInputValue } from '@/lib/datetime';
 import type { AttachmentRow, EventRow, TripDetailRow } from '@/lib/database.types';
 
 const TRANSPORTS: { value: string; label: string }[] = [
@@ -63,6 +63,8 @@ export type EventSheetProps = {
   occurrenceStart?: string | null;
   /** Date pré-remplie à la création (depuis le calendrier). */
   defaultDay?: string;
+  /** Heure pré-remplie (« 14:30 »), quand la création part d'une case horaire. */
+  defaultTime?: string;
   onSaved?: () => void;
 };
 
@@ -85,6 +87,7 @@ export function EventSheet({
   initialReminders = [],
   occurrenceStart = null,
   defaultDay,
+  defaultTime,
   onSaved,
 }: EventSheetProps) {
   const router = useRouter();
@@ -159,12 +162,21 @@ export function EventSheet({
       setScope(occurrenceStart ? 'occurrence' : 'serie');
     } else {
       const day = defaultDay ?? new Date().toISOString().slice(0, 10);
+      // Une création lancée depuis une case de la grille horaire arrive avec
+      // son heure : on la reprend telle quelle, et la fin suit une heure plus
+      // tard. Sans elle, l'heure ouvrable par défaut.
+      const startAt = /^\d{2}:\d{2}$/.test(defaultTime ?? '') ? defaultTime! : '09:00';
+      const [startHour, startMinute] = startAt.split(':').map(Number);
+      const endAt = `${String((startHour + 1) % 24).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
+
       setTitle('');
       setCategory('famille');
       setIsTrip(false);
       setAllDay(false);
-      setStartLocal(`${day}T09:00`);
-      setEndLocal(`${day}T10:00`);
+      setStartLocal(`${day}T${startAt}`);
+      // Un rendez-vous commencé à 23 h 30 ne peut pas finir à 00 h 30 le même
+      // jour : la fin passe alors au lendemain.
+      setEndLocal(`${startHour === 23 ? addDays(day, 1) : day}T${endAt}`);
       setLocation('');
       setAddress('');
       setDescription('');
@@ -202,10 +214,11 @@ export function EventSheet({
 
     setPendingFiles([]);
     setError(null);
-    // Les dépendances sont volontairement limitées à l'ouverture et à
-    // l'événement : re-synchroniser à chaque frappe écraserait la saisie.
+    // Les dépendances sont volontairement limitées à l'ouverture, à
+    // l'événement et à la case visée : re-synchroniser à chaque frappe
+    // écraserait la saisie.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, event?.id, occurrenceStart]);
+  }, [open, event?.id, occurrenceStart, defaultDay, defaultTime]);
 
   /** Décale la fin quand on avance le début, pour garder la durée. */
   function onStartChange(next: string) {

@@ -106,7 +106,13 @@ récupère l'enfant, et le billet de train en pièce jointe.
 
 ### Ce que ça fait
 
-- Vues **jour**, **semaine**, **mois** et **liste**, navigables au doigt.
+- Quatre vues, navigables au doigt : **jour** et **semaine** sur une grille
+  horaire — les heures en colonne, les événements dessinés à leur place et à
+  leur durée, les journées entières dans un bandeau à part, un trait rouge sur
+  l'heure courante ; **mois** en grille de six semaines où chaque événement
+  porte son titre ; **agenda**, la liste de ce qui vient.
+- Sur la grille horaire, un clic dans le vide ouvre la création à l'heure
+  visée, à la demi-heure près.
 - Un événement porte un titre, une description, un lieu, une catégorie de
   couleur, des participants (adultes et enfants), et des rappels.
 - Trois natures d'événement : **standard**, **déplacement** (avec départ,

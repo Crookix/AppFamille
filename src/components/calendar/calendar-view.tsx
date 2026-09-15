@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  Plus,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,8 @@ import { Avatar } from '@/components/ui/avatar';
 import { useHousehold } from '@/components/providers/household-provider';
 import { useHouseholdRealtime } from '@/components/providers/use-realtime';
 import { EventCard } from '@/components/calendar/event-card';
+import { MonthGrid } from '@/components/calendar/month-grid';
+import { TimeGrid } from '@/components/calendar/time-grid';
 import { EventDetailSheet } from '@/components/events/event-detail-sheet';
 import { EventSheet } from '@/components/events/event-sheet';
 import { CATEGORY_META, type CategoryKey } from '@/components/events/pickers';
@@ -24,11 +25,9 @@ import { cn, colorHex } from '@/lib/utils';
 import {
   addDays,
   dayKey,
-  formatDayLong,
   formatMonthLong,
   formatRelativeDay,
-  formatTime,
-  startOfMonth,
+  formatWeekRange,
   startOfWeek,
   todayIn,
 } from '@/lib/datetime';
@@ -65,7 +64,10 @@ export function CalendarView({
 
   const [selected, setSelected] = React.useState<SerializedOccurrence | null>(null);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const [creatingOn, setCreatingOn] = React.useState<string | null>(null);
+  /** Création en cours : la date visée, et l'heure quand elle vient de la grille. */
+  const [creating, setCreating] = React.useState<{ day: string; time?: string } | null>(
+    null,
+  );
 
   const [memberFilter, setMemberFilter] = React.useState<string[]>([]);
   const [childFilter, setChildFilter] = React.useState<string[]>([]);
@@ -106,7 +108,7 @@ export function CalendarView({
     });
   }, [occurrences, memberFilter, childFilter, categoryFilter, filterCount]);
 
-  /** Occurrences regroupées par jour civil, dans le fuseau du foyer. */
+  /** Occurrences regroupées par jour de début — la vue Agenda, qui déroule. */
   const byDay = React.useMemo(() => {
     const map = new Map<string, SerializedOccurrence[]>();
     for (const item of visible) {
@@ -114,6 +116,9 @@ export function CalendarView({
       const list = map.get(key) ?? [];
       list.push(item);
       map.set(key, list);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
     }
     return map;
   }, [visible, tz]);
@@ -138,11 +143,17 @@ export function CalendarView({
     navigate(addDays(anchorDay, amount * direction));
   }
 
+  const weekStart = startOfWeek(anchorDay);
+  const weekDays = React.useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+    [weekStart],
+  );
+
   const periodLabel =
     mode === 'mois'
       ? formatMonthLong(anchorDay)
       : mode === 'semaine'
-        ? `Semaine du ${formatDayLong(startOfWeek(anchorDay))}`
+        ? formatWeekRange(weekStart)
         : mode === 'jour'
           ? formatRelativeDay(anchorDay, tz)
           : 'Prochainement';
@@ -259,27 +270,32 @@ export function CalendarView({
       {mode === 'mois' ? (
         <MonthGrid
           anchorDay={anchorDay}
-          byDay={byDay}
+          occurrences={visible}
+          tz={tz}
           today={today}
+          onOpen={setSelected}
           onPickDay={(day) => navigate(day, 'jour')}
         />
       ) : mode === 'semaine' ? (
-        <WeekList
-          anchorDay={anchorDay}
-          byDay={byDay}
+        <TimeGrid
+          days={weekDays}
+          occurrences={visible}
+          tz={tz}
           today={today}
-          onOpen={setSelected}
-          onAdd={setCreatingOn}
           withAttachments={withAttachments}
+          onOpen={setSelected}
+          onCreate={(day, time) => setCreating({ day, time })}
+          onPickDay={(day) => navigate(day, 'jour')}
         />
       ) : mode === 'jour' ? (
-        <DayList
-          day={anchorDay}
-          items={byDay.get(anchorDay) ?? []}
-          onOpen={setSelected}
-          onAdd={setCreatingOn}
-          withAttachments={withAttachments}
+        <TimeGrid
+          days={[anchorDay]}
+          occurrences={visible}
           tz={tz}
+          today={today}
+          withAttachments={withAttachments}
+          onOpen={setSelected}
+          onCreate={(day, time) => setCreating({ day, time })}
         />
       ) : (
         <AgendaList
@@ -372,16 +388,17 @@ export function CalendarView({
       />
 
       <EventSheet
-        open={Boolean(creatingOn)}
-        onClose={() => setCreatingOn(null)}
-        defaultDay={creatingOn ?? undefined}
+        open={Boolean(creating)}
+        onClose={() => setCreating(null)}
+        defaultDay={creating?.day}
+        defaultTime={creating?.time}
       />
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Vues                                                                       */
+/* Vue Agenda                                                                 */
 /* -------------------------------------------------------------------------- */
 
 function AgendaList({
@@ -438,211 +455,6 @@ function AgendaList({
           </div>
         </section>
       ))}
-    </div>
-  );
-}
-
-function DayList({
-  day,
-  items,
-  onOpen,
-  onAdd,
-  withAttachments,
-  tz,
-}: {
-  day: string;
-  items: SerializedOccurrence[];
-  onOpen: (item: SerializedOccurrence) => void;
-  onAdd: (day: string) => void;
-  withAttachments: Set<string>;
-  tz: string;
-}) {
-  if (items.length === 0) {
-    return (
-      <EmptyState
-        icon={<CalendarDays className="h-7 w-7" aria-hidden />}
-        title="Journée libre"
-        description="Aucun événement ce jour-là."
-        className="surface"
-        action={
-          <Button variant="outline" onClick={() => onAdd(day)}>
-            <Plus className="h-4 w-4" aria-hidden />
-            Ajouter un événement
-          </Button>
-        }
-      />
-    );
-  }
-
-  return (
-    <div className="space-y-2">
-      {items.map((item) => (
-        <div key={item.key} className="flex gap-3">
-          <span className="w-12 shrink-0 pt-3.5 text-right text-xs font-bold text-muted">
-            {item.event.all_day ? 'Jour' : formatTime(item.startsAt, tz)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <EventCard
-              item={item}
-              onOpen={onOpen}
-              hasAttachments={withAttachments.has(item.event.id)}
-            />
-          </div>
-        </div>
-      ))}
-      <Button variant="ghost" className="w-full" onClick={() => onAdd(day)}>
-        <Plus className="h-4 w-4" aria-hidden />
-        Ajouter à cette journée
-      </Button>
-    </div>
-  );
-}
-
-function WeekList({
-  anchorDay,
-  byDay,
-  today,
-  onOpen,
-  onAdd,
-  withAttachments,
-}: {
-  anchorDay: string;
-  byDay: Map<string, SerializedOccurrence[]>;
-  today: string;
-  onOpen: (item: SerializedOccurrence) => void;
-  onAdd: (day: string) => void;
-  withAttachments: Set<string>;
-}) {
-  const start = startOfWeek(anchorDay);
-  const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
-
-  return (
-    <div className="space-y-4">
-      {days.map((day) => {
-        const items = byDay.get(day) ?? [];
-        return (
-          <section key={day}>
-            <div className="mb-2 flex items-center justify-between px-1">
-              <h2
-                className={cn(
-                  'text-sm font-bold first-letter:uppercase',
-                  day === today ? 'text-brand-600' : 'text-muted',
-                )}
-              >
-                {formatDayLong(day, { withYear: false })}
-              </h2>
-              <button
-                type="button"
-                onClick={() => onAdd(day)}
-                aria-label={`Ajouter un événement le ${formatDayLong(day)}`}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--fg)]"
-              >
-                <Plus className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-
-            {items.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-[var(--line)] px-3.5 py-2.5 text-sm text-muted">
-                Rien de prévu
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {items.map((item) => (
-                  <EventCard
-                    key={item.key}
-                    item={item}
-                    onOpen={onOpen}
-                    compact
-                    hasAttachments={withAttachments.has(item.event.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        );
-      })}
-    </div>
-  );
-}
-
-function MonthGrid({
-  anchorDay,
-  byDay,
-  today,
-  onPickDay,
-}: {
-  anchorDay: string;
-  byDay: Map<string, SerializedOccurrence[]>;
-  today: string;
-  onPickDay: (day: string) => void;
-}) {
-  const first = startOfMonth(anchorDay);
-  const gridStart = startOfWeek(first);
-  const month = first.slice(0, 7);
-  const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
-
-  return (
-    <div className="surface rounded-[var(--radius-xl2)] p-2">
-      <div className="grid grid-cols-7 gap-1 pb-1">
-        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((label, i) => (
-          <span
-            key={i}
-            className="py-1 text-center text-[0.7rem] font-bold uppercase text-muted"
-          >
-            {label}
-          </span>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1">
-        {cells.map((day) => {
-          const items = byDay.get(day) ?? [];
-          const inMonth = day.startsWith(month);
-          const isToday = day === today;
-
-          return (
-            <button
-              key={day}
-              type="button"
-              onClick={() => onPickDay(day)}
-              aria-label={`${formatDayLong(day)}, ${items.length} événement${items.length > 1 ? 's' : ''}`}
-              className={cn(
-                'flex aspect-square flex-col items-center justify-start gap-1 rounded-xl p-1 transition-colors',
-                inMonth ? 'hover:bg-[var(--bg-subtle)]' : 'opacity-35',
-                isToday && 'bg-brand-100',
-              )}
-            >
-              <span
-                className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
-                  isToday && 'bg-brand-500 text-white',
-                )}
-              >
-                {Number(day.slice(-2))}
-              </span>
-              <span className="flex max-w-full flex-wrap items-center justify-center gap-0.5">
-                {items.slice(0, 4).map((item) => (
-                  <span
-                    key={item.key}
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{
-                      backgroundColor:
-                        (CATEGORY_META[item.event.category as CategoryKey] ??
-                          CATEGORY_META.famille).color,
-                    }}
-                    aria-hidden
-                  />
-                ))}
-                {items.length > 4 ? (
-                  <span className="text-[0.6rem] font-bold text-muted" aria-hidden>
-                    +
-                  </span>
-                ) : null}
-              </span>
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }
