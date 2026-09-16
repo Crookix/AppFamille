@@ -459,7 +459,7 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
-| Récurrences, ingrédients, gardes, Google, exports, recos, check-lists, grille horaire, planification des synchronisations | Tests unitaires | **156/156** |
+| Récurrences, ingrédients, gardes, Google, exports, recos, check-lists, grille horaire, planification des synchronisations | Tests unitaires | **159/159** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur, reco | Playwright sur pile Supabase locale | **6/6** (bureau et mobile) |
 | Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **13/19 — 1 défaut produit corrigé, 7 specs réparées, 1 écart cahier des charges / produit trouvé** |

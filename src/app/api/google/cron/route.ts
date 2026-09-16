@@ -22,10 +22,13 @@ export const dynamic = 'force-dynamic';
  * perd, un déploiement passe pendant qu'un changement arrive. Le cron rattrape
  * ces cas-là, et c'est aussi lui qui renouvelle les canaux avant échéance.
  *
- * Il est déclaré dans `vercel.json` et appelé par Vercel, qui présente
- * `CRON_SECRET` en en-tête d'autorisation. Cette route n'est donc pas
- * publique : sans le secret, elle refuse — et **sans secret configuré, elle
- * refuse aussi**, plutôt que de s'ouvrir à qui connaît son adresse.
+ * Il est déclaré dans `vercel.json` — **une fois par jour**, parce que le
+ * forfait Hobby de Vercel REFUSE de déployer une planification plus fine — et
+ * appelé par Vercel, qui présente `CRON_SECRET` en en-tête d'autorisation.
+ *
+ * Cette route n'est donc pas publique : sans le secret, elle refuse — et
+ * **sans secret configuré, elle refuse aussi**, plutôt que de s'ouvrir à qui
+ * connaît son adresse.
  */
 
 /** Nombre maximum d'inscriptions ou de renouvellements par passage. */

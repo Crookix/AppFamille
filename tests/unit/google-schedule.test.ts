@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CRON_CALENDAR_BUDGET,
+  describeCronSchedule,
   ERROR_BACKOFF_MINUTES,
   isStale,
   MIN_SYNC_INTERVAL_MINUTES,
@@ -136,6 +137,32 @@ describe('selectCalendarsForCron', () => {
     const tous = [calendar('a', minutesAgo(20)), calendar('b', minutesAgo(600))];
     selectCalendarsForCron(tous, { now: NOW });
     expect(tous.map((c) => c.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('describeCronSchedule', () => {
+  // Cette fonction existe à cause d'une panne : l'écran annonçait « toutes les
+  // quinze minutes » pendant que le forfait Hobby refusait le déploiement.
+  it('traduit la planification réellement en place', () => {
+    expect(describeCronSchedule('0 4 * * *')).toBe('une fois par jour, vers 4 h UTC');
+    expect(describeCronSchedule('30 4 * * *')).toBe('une fois par jour, vers 4 h 30 UTC');
+    expect(describeCronSchedule('*/15 * * * *')).toBe('toutes les 15 minutes');
+    expect(describeCronSchedule('0 */4 * * *')).toBe('toutes les 4 heures');
+    expect(describeCronSchedule('0 * * * *')).toBe('toutes les heures');
+  });
+
+  it("n'invente rien pour ce qu'elle ne sait pas dire", () => {
+    // Annoncer « toutes les heures » à côté d'une expression qu'on n'a pas
+    // comprise serait pire que de ne pas traduire.
+    expect(describeCronSchedule('0 3 */2 * *')).toBe('selon « 0 3 */2 * * »');
+    expect(describeCronSchedule('0 9 * * 1-5')).toBe('selon « 0 9 * * 1-5 »');
+    expect(describeCronSchedule('pas une expression')).toBe('selon « pas une expression »');
+  });
+
+  it("dit clairement quand il n'y a pas de planification", () => {
+    expect(describeCronSchedule(undefined)).toBe('non planifié');
+    expect(describeCronSchedule(null)).toBe('non planifié');
+    expect(describeCronSchedule('')).toBe('non planifié');
   });
 });
 

@@ -258,7 +258,7 @@ Réglage séparé, dans « Plus › Google Agenda ».
 - Synchronisation **automatique**, par trois chemins complémentaires : Google
   prévient MyFamily dès qu'un agenda observé change (`events.watch`), l'écran
   Calendrier rafraîchit à l'ouverture ce qui date de plus de cinq minutes, et
-  un passage programmé toutes les quinze minutes sert de filet. Le bouton
+  un passage programmé quotidien sert de filet. Le bouton
   « Synchroniser » reste là pour forcer un passage. L'état réel de chacun des
   trois est affiché, y compris quand l'un n'est pas disponible.
 - Synchronisation **incrémentale** par `syncToken`, avec reprise complète

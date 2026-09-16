@@ -63,6 +63,7 @@ export function GoogleSettings({
   channels,
   pushSupported,
   scheduledSyncConfigured,
+  scheduleLabel,
   initialError,
   justConnected,
 }: {
@@ -75,6 +76,7 @@ export function GoogleSettings({
   channels: GoogleWatchChannelRow[];
   pushSupported: boolean;
   scheduledSyncConfigured: boolean;
+  scheduleLabel: string;
   initialError?: string | null;
   justConnected?: boolean;
 }) {
@@ -311,6 +313,7 @@ export function GoogleSettings({
         <AutomationCard
           pushSupported={pushSupported}
           scheduledSyncConfigured={scheduledSyncConfigured}
+          scheduleLabel={scheduleLabel}
           selectedCount={selected.length}
           watchedCount={
             selected.filter((c) => channelsByCalendar.has(c.id)).length
@@ -562,6 +565,11 @@ export function GoogleSettings({
   );
 }
 
+/** Première lettre en capitale, la cadence arrivant en milieu de phrase ailleurs. */
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /**
  * Ce qui met l'agenda à jour sans qu'on le demande.
  *
@@ -573,12 +581,14 @@ export function GoogleSettings({
 function AutomationCard({
   pushSupported,
   scheduledSyncConfigured,
+  scheduleLabel,
   selectedCount,
   watchedCount,
   nextRenewal,
 }: {
   pushSupported: boolean;
   scheduledSyncConfigured: boolean;
+  scheduleLabel: string;
   selectedCount: number;
   watchedCount: number;
   nextRenewal: string | null;
@@ -607,7 +617,7 @@ function AutomationCard({
       title: 'Passage régulier',
       active: scheduledSyncConfigured,
       detail: scheduledSyncConfigured
-        ? 'Toutes les quinze minutes, en filet : une notification perdue ou un canal expiré est rattrapé là.'
+        ? `${capitalize(scheduleLabel)}, en filet : une notification perdue ou un canal expiré est rattrapé là.`
         : "Désactivé : CRON_SECRET n'est pas renseignée. Sans elle, la route programmée refuse de s'exécuter plutôt que de rester ouverte.",
     },
     {

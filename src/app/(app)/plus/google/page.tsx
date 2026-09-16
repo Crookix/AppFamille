@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 import { isEncryptionConfigured } from '@/lib/google/crypto';
 import { isGoogleConfigured } from '@/lib/google/oauth';
 import { isPushSupported } from '@/lib/google/watch';
+import { describeCronSchedule } from '@/lib/google/schedule';
+// La planification est lue là où Vercel la lit. L'écran a déjà annoncé une
+// cadence que le forfait refusait de produire : une seule source, désormais.
+import vercelConfig from '../../../../../vercel.json';
 import { GoogleSettings } from '@/components/google/google-settings';
 
 export const metadata: Metadata = { title: 'Google Agenda' };
@@ -55,6 +59,9 @@ export default async function GooglePage({
       channels={channelsResult.data ?? []}
       pushSupported={isPushSupported()}
       scheduledSyncConfigured={Boolean(process.env.CRON_SECRET)}
+      scheduleLabel={describeCronSchedule(
+        vercelConfig.crons?.find((cron) => cron.path === '/api/google/cron')?.schedule,
+      )}
       initialError={params.erreur ?? null}
       justConnected={params.connecte === '1'}
     />

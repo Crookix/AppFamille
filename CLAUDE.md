@@ -375,6 +375,25 @@ une relecture attentive.
   lisible. Et la barre de navigation n'appartient qu'aux **destinations** :
   tant que « Plus » y occupait une place sur cinq, chaque fonctionnalité
   nouvelle tombait dans le tiroir.
+- **Sur le forfait Hobby de Vercel, un cron trop fréquent ne ralentit pas
+  l'application : il l'empêche de se déployer.** `vercel.json` demandait
+  `*/15 * * * *` ; Vercel a refusé le déploiement — *« Hobby accounts are
+  limited to daily cron jobs »* — et la pull request est passée au rouge alors
+  que **les deux travaux de la CI étaient verts**. C'est là que se trouvait le
+  piège : la CI GitHub ne voit pas les crons, elle compile et joue les tests,
+  qui n'avaient aucune raison d'échouer. Le rouge venait d'un *commit status*
+  Vercel, pas d'un *check run* GitHub — deux choses distinctes, et il faut
+  regarder les deux avant de conclure. Corollaire : un plafond de plateforme se
+  vérifie sur la page de tarification avant d'écrire la valeur, pas après.
+- **Une cadence affichée ne se recopie pas à la main.** L'écran Google Agenda
+  annonçait « toutes les quinze minutes » pendant que le forfait refusait cette
+  cadence : l'interface aurait menti sans rien pour la contredire. La
+  planification est désormais **lue dans `vercel.json`** et traduite par
+  `describeCronSchedule()` — une seule source, et changer de forfait ne demande
+  de toucher qu'à une ligne.
+- **`*/` referme un commentaire de bloc.** Une expression cron citée dans un
+  `/** … */` casse la compilation, avec une erreur (`Unexpected "*"`) qui
+  désigne le commentaire et non la vraie cause.
 - **« Redeploy » sur Vercel rejoue le déploiement existant, pas le dernier
   commit.** Quand un webhook GitHub est manqué, le bouton reconstruit
   l'ancienne version sans rien signaler. Vérifier le SHA du déploiement avant

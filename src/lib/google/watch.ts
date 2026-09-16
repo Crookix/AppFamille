@@ -9,10 +9,11 @@ import { WATCH_TTL_SECONDS } from '@/lib/google/schedule';
 /**
  * Canaux de notification Google Agenda.
  *
- * Le principe : plutôt que d'aller demander à Google toutes les quinze
- * minutes s'il s'est passé quelque chose, on lui demande une fois de nous
- * prévenir. Google appelle alors `/api/google/notifications` à chaque
- * changement, et la synchronisation part dans la seconde.
+ * Le principe : plutôt que de repasser demander à Google s'il s'est passé
+ * quelque chose, on lui demande une fois de nous prévenir. Google appelle
+ * alors `/api/google/notifications` à chaque changement, et la synchronisation
+ * part dans la seconde. C'est le seul déclencheur qui ne dépende ni d'une
+ * cadence, ni de quelqu'un qui regarde.
  *
  * Deux contraintes gouvernent ce fichier, et aucune n'est négociable :
  *

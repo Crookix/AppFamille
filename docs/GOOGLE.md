@@ -130,7 +130,7 @@ rapide au plus lent :
 | --- | --- | --- |
 | **Notification de Google** | quelques secondes | un calendrier observé a changé ; c'est Google qui appelle MyFamily |
 | **Ouverture du calendrier** | immédiat | ce qui date de plus de cinq minutes est rafraîchi à l'ouverture de l'écran |
-| **Passage programmé** | 15 minutes — **1 jour sur le forfait Hobby** | le filet : notification perdue, canal expiré, déploiement en cours |
+| **Passage programmé** | une fois par jour | le filet : notification perdue, canal expiré, déploiement en cours |
 | **Bouton « Synchroniser »** | immédiat | forcer un passage, et voir le compte rendu |
 
 Leur état réel est affiché sur **Plus → Google Agenda**, ligne par ligne. Un
@@ -171,29 +171,36 @@ et la synchronisation se fait à l'ouverture du calendrier.
 
 #### Passage programmé
 
-Déclaré dans `vercel.json` et appelé par Vercel toutes les quinze minutes :
+Déclaré dans `vercel.json` et appelé par Vercel :
 
 ```json
-{ "crons": [{ "path": "/api/google/cron", "schedule": "*/15 * * * *" }] }
+{ "crons": [{ "path": "/api/google/cron", "schedule": "0 4 * * *" }] }
 ```
+
+**Cette planification quotidienne n'est pas un choix, c'est une contrainte du
+forfait.** Sur Hobby, Vercel ne se contente pas d'ignorer une cadence plus
+fine : il **refuse le déploiement**, avec le message *« Hobby accounts are
+limited to daily cron jobs. This cron expression would run more than once per
+day. »* Un `*/15 * * * *` ne ralentit donc pas l'application, il l'empêche de
+partir en production — c'est arrivé, et c'est ce qui a mis la CI au rouge.
+
+Pour repasser à un quart d'heure après un passage au forfait Pro, il suffit de
+changer cette seule ligne : l'écran Google Agenda lit la planification dans
+`vercel.json` et annonce la cadence réelle, sans qu'on ait à la recopier
+ailleurs. Comptez aussi que Hobby n'assure pas l'heure exacte — un `0 4 * * *`
+part entre 4 h 00 et 4 h 59 UTC.
 
 `CRON_SECRET` est **obligatoire**. Vercel la présente en en-tête
 d'autorisation ; sans elle, la route refuse de s'exécuter plutôt que de rester
 ouverte à qui connaît son adresse. À déclarer dans les variables
 d'environnement du projet Vercel, puis à redéployer.
 
-> Le plan **Hobby** de Vercel limite la fréquence des crons à **un
-> déclenchement par jour** : la planification plus fine ci-dessus est acceptée
-> mais pas honorée. Gardez-la telle quelle — elle tournera une fois par jour,
-> et repassera à quinze minutes le jour où le projet change de forfait, sans
-> rien à modifier.
->
-> Ce que cela change vraiment est plus petit qu'il n'y paraît, **à condition
-> que les notifications Google fonctionnent** : elles couvrent la seconde, et
-> l'ouverture du calendrier couvre le moment où l'on regarde. Il reste alors au
-> cron deux missions, qui s'accommodent très bien d'un passage quotidien :
-> renouveler les canaux avant échéance (d'où la marge de 48 heures) et
-> rattraper un calendrier dont le canal est mort.
+> Ce qu'un seul passage par jour change est plus petit qu'il n'y paraît, **à
+> condition que les notifications Google fonctionnent** : elles couvrent la
+> seconde, et l'ouverture du calendrier couvre le moment où l'on regarde. Il
+> reste alors au cron deux missions, qui s'accommodent très bien d'un passage
+> quotidien : renouveler les canaux avant échéance (d'où la marge de 48 heures)
+> et rattraper un calendrier dont le canal est mort.
 >
 > Si en revanche les notifications **ne** fonctionnent pas — domaine non
 > vérifié — alors un changement fait dans Google Agenda peut attendre jusqu'à

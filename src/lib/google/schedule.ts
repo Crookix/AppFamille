@@ -170,6 +170,62 @@ export function selectCalendarsForCron<T extends SchedulableCalendar>(
 }
 
 /* -------------------------------------------------------------------------- */
+/* Cadence annoncée                                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Traduit une expression cron en français, pour l'écran Google Agenda.
+ *
+ * Cette fonction existe à cause d'une panne : `vercel.json` demandait un
+ * passage toutes les quinze minutes, l'écran l'annonçait, et le forfait Hobby
+ * **refusait le déploiement** — « Hobby accounts are limited to daily cron
+ * jobs ». L'écran aurait donc affiché une cadence que rien ne produisait, ce
+ * qui est exactement ce que ce projet s'interdit.
+ *
+ * La planification est désormais lue dans `vercel.json` et traduite ici : il
+ * n'y a plus qu'une seule source, et changer de forfait ne demande de toucher
+ * qu'à elle.
+ *
+ * Seules les formes réellement employées sont reconnues. Pour tout le reste —
+ * un jour du mois, un jour de la semaine — on affiche l'expression telle
+ * quelle plutôt que d'inventer une phrase : annoncer « toutes les heures » à
+ * côté d'une planification qu'on n'a pas comprise serait pire que de ne pas
+ * traduire du tout.
+ */
+export function describeCronSchedule(expression: string | null | undefined): string {
+  if (!expression) return 'non planifié';
+
+  const parts = expression.trim().split(/\s+/);
+  if (parts.length !== 5) return `selon « ${expression} »`;
+
+  const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+  const tousLesJours = dayOfMonth === '*' && month === '*' && dayOfWeek === '*';
+
+  if (tousLesJours) {
+    const parMinutes = /^\*\/(\d+)$/.exec(minute);
+    if (parMinutes && hour === '*') {
+      return `toutes les ${parMinutes[1]} minutes`;
+    }
+
+    const parHeures = /^\*\/(\d+)$/.exec(hour);
+    if (parHeures && minute === '0') {
+      return `toutes les ${parHeures[1]} heures`;
+    }
+
+    if (minute === '0' && hour === '*') return 'toutes les heures';
+
+    if (/^\d+$/.test(minute) && /^\d+$/.test(hour)) {
+      const h = Number(hour);
+      const m = Number(minute);
+      const heure = m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
+      return `une fois par jour, vers ${heure} UTC`;
+    }
+  }
+
+  return `selon « ${expression} »`;
+}
+
+/* -------------------------------------------------------------------------- */
 /* Canaux de notification                                                     */
 /* -------------------------------------------------------------------------- */
 
