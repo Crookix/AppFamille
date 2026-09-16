@@ -124,7 +124,7 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
 
 ## 2. Schéma, politiques et conseillers Supabase — **RÉEL**
 
-- **Les 40 tables** de `public` portent la RLS active — vérifié par requête sur
+- **Les 43 tables** de `public` portent la RLS active — vérifié par requête sur
   `pg_class`, pas par relecture des migrations. Deux d'entre elles,
   `google_credentials` et `_tribu_migrations`, ont la RLS active **et aucune
   politique** : elles sont donc invisibles à `anon` comme à `authenticated`.
@@ -162,6 +162,24 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
     évite la réévaluation ligne à ligne.
   - Seuls sept *unused index* concernent la reco : les tables viennent d'être
     créées et sont vides. Le signalement disparaîtra à l'usage.
+- **Relancés à nouveau après `0019`**, le 16 septembre 2026, relevé pris
+  **avant** l'application pour n'avoir à lire que ce qui est nouveau :
+  - *sécurité* — strictement identique : deux `rls_enabled_no_policy`, dix
+    fonctions `SECURITY DEFINER`. `google_watch_channels` n'ajoute rien,
+    précisément parce qu'elle porte une politique de lecture au lieu d'être
+    laissée sans aucune. Une troisième table muette aurait été indéfendable :
+    les deux qui le sont le sont pour une raison qu'on peut énoncer.
+  - *performance* — aucune clé étrangère sans index : `household_id` a le
+    sien, `google_calendar_ref` est couvert par sa contrainte d'unicité.
+    Aucun `auth_rls_initplan` non plus, la politique passant par
+    `is_household_member()`.
+  - Deux *unused index* de plus, sur une table créée cinq minutes plus tôt et
+    vide. Ils disparaîtront au premier canal ouvert.
+- **La politique a été éprouvée sur la base réelle avec un identifiant
+  Clerk.** C'est le contrôle qui compte ici : les comptes du projet portent des
+  identifiants **non-UUID**, et `auth.uid()` aurait levé `22P02` en faisant
+  tomber la politique entière au lieu de refuser l'accès. Une lecture sous le
+  rôle `authenticated`, avec le `sub` d'un membre réel, répond sans erreur.
 - **L'effacement des comptes a été audité par requête, pas par relecture.** La
   liste des colonnes `text` du schéma portant un identifiant de compte
   (`%user%` ou `%_by`) a été comparée aux instructions réellement exécutées par
@@ -434,11 +452,14 @@ l'intégration sont dans [`GOOGLE.md`](GOOGLE.md).
 | Migration `0016` appliquée en production | Empreinte du SQL enregistré = celle du fichier testé | **conforme** |
 | Fidélité des migrations `0014`/`0015` reconstituées | Empreinte MD5 du corps = celle du journal Supabase | **exacte** |
 | Conseillers Supabase après `0016` | Service réel | **aucun signalement nouveau dû à la reco** |
+| Conseillers Supabase après `0019` | Service réel, relevé pris avant/après | **sécurité inchangée ; 2 *unused index* sur une table vide** |
+| Migration `0019` appliquée en production | Colonnes, index et politique comparés à la base testée | **identiques** |
+| Politique `0019` face à un identifiant Clerk (non-UUID) | Base réelle, rôle `authenticated` | **lit sans lever `22P02`** |
 | Invitations : expiration, révocation, rejeu, jeton inventé | Base réelle | **conforme** |
 | Élévation de privilège dans son propre foyer | Base réelle | **bloquée** |
 | Jetons Google invisibles au navigateur | Base réelle | **conforme** |
 | Conseillers de sécurité Supabase | Service réel | **2 signalements, tous deux assumés et expliqués** |
-| Récurrences, ingrédients, gardes, Google, exports, recos, check-lists, grille horaire | Tests unitaires | **139/139** |
+| Récurrences, ingrédients, gardes, Google, exports, recos, check-lists, grille horaire, planification des synchronisations | Tests unitaires | **155/155** |
 | Types et compilation | `tsc` et `next build` | **sans erreur** |
 | Parcours en navigateur, reco | Playwright sur pile Supabase locale | **6/6** (bureau et mobile) |
 | Parcours en navigateur, le reste | Playwright sur pile Supabase locale | **13/19 — 1 défaut produit corrigé, 7 specs réparées, 1 écart cahier des charges / produit trouvé** |

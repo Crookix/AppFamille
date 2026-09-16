@@ -25,12 +25,16 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 9 — Reco (films, séries, théâtre, cadeaux) | Terminée | — *confirmée en navigateur, bureau et mobile* |
 | 10 — Check-lists (valise, sac de piscine…) | Terminée | — *confirmée en navigateur, bureau et mobile* |
 
-Le dépôt compte dix-neuf migrations, `0001` à `0019`. Les dix-huit premières
-sont appliquées sur le projet `tribu-foyer`, qui porte 42 tables, toutes avec
-la RLS active. **`0019` — les canaux de notification Google — reste à
-appliquer** : elle est rejouée depuis une base vide et vérifiée (étanchéité,
-effacement), mais `npm run db:push` n'a pas encore été lancé sur le projet
-réel.
+Le dépôt compte dix-neuf migrations, `0001` à `0019`, **toutes appliquées sur
+le projet `tribu-foyer`**, qui porte 43 tables, toutes avec la RLS active.
+
+`0019` — les canaux de notification Google — a été appliquée le 16 septembre
+2026 par le connecteur Supabase, faute de `SUPABASE_DB_URL` dans
+l'environnement d'où elle partait. La ligne a donc été ajoutée **à la main**
+dans `_tribu_migrations`, sans quoi le prochain `npm run db:push` l'aurait
+rejouée et se serait arrêté en erreur. Ce que la base porte a été comparé à ce
+qui avait été testé : mêmes onze colonnes dans le même ordre, mêmes cinq index
+au caractère près, même politique unique de lecture.
 
 `0016` (la reco) et `0018` (les check-lists) ont été appliquées le 14 septembre 2026. Le SQL
 enregistré par Supabase a la même empreinte MD5
