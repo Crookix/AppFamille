@@ -130,7 +130,7 @@ rapide au plus lent :
 | --- | --- | --- |
 | **Notification de Google** | quelques secondes | un calendrier observé a changé ; c'est Google qui appelle MyFamily |
 | **Ouverture du calendrier** | immédiat | ce qui date de plus de cinq minutes est rafraîchi à l'ouverture de l'écran |
-| **Passage programmé** | 15 minutes | le filet : notification perdue, canal expiré, déploiement en cours |
+| **Passage programmé** | 15 minutes — **1 jour sur le forfait Hobby** | le filet : notification perdue, canal expiré, déploiement en cours |
 | **Bouton « Synchroniser »** | immédiat | forcer un passage, et voir le compte rendu |
 
 Leur état réel est affiché sur **Plus → Google Agenda**, ligne par ligne. Un
@@ -155,7 +155,10 @@ change. Trois conditions, toutes vérifiables sur l'écran Google Agenda :
 
 Un canal dure quelques jours et Google en fixe lui-même le terme — c'est cette
 date-là qui est enregistrée, jamais celle qu'on a demandée. Le passage
-programmé les renouvelle 24 heures avant échéance.
+programmé les renouvelle **48 heures** avant échéance, et cette marge est
+calée sur le pire cas : à un seul passage par jour (forfait Hobby), un canal
+est ainsi vu deux fois avant son terme. Une marge de 24 heures laissait mourir
+les canaux dans l'intervalle, sans que rien ne le dise.
 
 Chaque notification est vérifiée avant d'être suivie d'effet : identifiant de
 canal, condensat du jeton de vérification (comparé en temps constant) et
@@ -179,11 +182,23 @@ d'autorisation ; sans elle, la route refuse de s'exécuter plutôt que de rester
 ouverte à qui connaît son adresse. À déclarer dans les variables
 d'environnement du projet Vercel, puis à redéployer.
 
-> Le plan **Hobby** de Vercel limite les crons à **un déclenchement par jour**
-> et ignore les planifications plus fines. Sur Hobby, gardez la déclaration
-> telle quelle — elle tournera une fois par jour — et comptez sur les
-> notifications Google et l'ouverture du calendrier, qui, elles, ne dépendent
-> d'aucun plan.
+> Le plan **Hobby** de Vercel limite la fréquence des crons à **un
+> déclenchement par jour** : la planification plus fine ci-dessus est acceptée
+> mais pas honorée. Gardez-la telle quelle — elle tournera une fois par jour,
+> et repassera à quinze minutes le jour où le projet change de forfait, sans
+> rien à modifier.
+>
+> Ce que cela change vraiment est plus petit qu'il n'y paraît, **à condition
+> que les notifications Google fonctionnent** : elles couvrent la seconde, et
+> l'ouverture du calendrier couvre le moment où l'on regarde. Il reste alors au
+> cron deux missions, qui s'accommodent très bien d'un passage quotidien :
+> renouveler les canaux avant échéance (d'où la marge de 48 heures) et
+> rattraper un calendrier dont le canal est mort.
+>
+> Si en revanche les notifications **ne** fonctionnent pas — domaine non
+> vérifié — alors un changement fait dans Google Agenda peut attendre jusqu'à
+> l'ouverture suivante du calendrier, ou jusqu'au passage quotidien. C'est le
+> cas où la vérification du domaine cesse d'être un détail.
 
 Un passage est borné : vingt calendriers au plus, quarante-cinq secondes au
 plus. Les calendriers sont servis **du plus ancien au plus récent**, celui qui

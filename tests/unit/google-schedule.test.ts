@@ -150,6 +150,24 @@ describe('needsChannelRenewal', () => {
     expect(needsChannelRenewal(dans5j, NOW)).toBe(false);
   });
 
+  it('voit venir un canal deux fois, même à un seul passage par jour', () => {
+    // Le cas qui a imposé la marge de 48 h : sur le forfait Hobby de Vercel,
+    // le cron ne passe qu'une fois par jour. À 24 h de marge, un canal auquel
+    // il reste 23 h n'était vu qu'au passage suivant — après son expiration.
+    const expiration = new Date(NOW.getTime() + 47 * 3600_000).toISOString();
+
+    // La veille, il reste 71 h : rien à faire, et c'est bien ainsi.
+    const veille = new Date(NOW.getTime() - 24 * 3600_000);
+    expect(needsChannelRenewal(expiration, veille)).toBe(false);
+
+    // Aujourd'hui, 47 h : première occasion.
+    expect(needsChannelRenewal(expiration, NOW)).toBe(true);
+
+    // Demain, 23 h : seconde occasion, toujours avant le terme.
+    const lendemain = new Date(NOW.getTime() + 24 * 3600_000);
+    expect(needsChannelRenewal(expiration, lendemain)).toBe(true);
+  });
+
   it('renouvelle un canal déjà expiré', () => {
     const hier = new Date(NOW.getTime() - 24 * 3600_000).toISOString();
     expect(needsChannelRenewal(hier, NOW)).toBe(true);

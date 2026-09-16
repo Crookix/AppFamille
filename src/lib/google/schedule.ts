@@ -67,8 +67,22 @@ export const OPEN_SCREEN_STALE_MINUTES = 5;
  */
 export const WATCH_TTL_SECONDS = 604_800; // 7 jours
 
-/** Marge de renouvellement d'un canal, en heures. */
-export const WATCH_RENEWAL_MARGIN_HOURS = 24;
+/**
+ * Marge de renouvellement d'un canal, en heures.
+ *
+ * Quarante-huit et non vingt-quatre, et c'est le forfait Vercel qui l'impose.
+ * Sur le plan **Hobby**, le passage programmé n'a lieu qu'une fois par jour :
+ * avec une marge de vingt-quatre heures, un canal auquel il reste vingt-trois
+ * heures de vie n'est vu qu'au passage suivant — soit jusqu'à un jour plus
+ * tard, donc après son expiration. Le canal mourait dans l'intervalle, et les
+ * notifications s'arrêtaient sans que rien ne le dise.
+ *
+ * À quarante-huit heures, un canal est vu au moins deux fois avant son terme,
+ * même à raison d'un seul passage par jour. La contrepartie — réinscrire un
+ * peu plus tôt que nécessaire — ne coûte qu'une requête par canal et par
+ * semaine.
+ */
+export const WATCH_RENEWAL_MARGIN_HOURS = 48;
 
 /* -------------------------------------------------------------------------- */
 /* Outils                                                                     */
