@@ -1,0 +1,46 @@
+-- ---------------------------------------------------------------------------
+-- 0020 — Reco : deux genres de plus, la lecture et les sorties
+--
+-- POURQUOI
+-- --------
+-- La reco est livrée avec cinq genres, dont « autre » qui devait servir de
+-- porte de sortie pour un livre ou un restaurant. À l'usage, la porte de
+-- sortie ne suffit pas : « autre » ne se filtre pas, ne se compte pas à part,
+-- et son vocabulaire reste générique — on y range « à découvrir » et « fait »
+-- là où l'on voudrait lire « à lire » et « lu ». Un livre passé au foyer et
+-- une sortie du dimanche sont deux envies aussi courantes qu'un film ; elles
+-- méritent leur onglet.
+--
+-- Deux valeurs suffisent : `lecture` couvre livre, BD et podcast (ce que l'on
+-- consomme seul, à son rythme), `sortie` couvre musée, exposition,
+-- restaurant, balade (ce que l'on fait ensemble, un jour donné). Découper
+-- plus finement aurait multiplié les onglets sans aider à choisir — et la
+-- rangée doit rester lisible sur un téléphone.
+--
+-- CE QUI A ÉTÉ ÉCARTÉ
+-- -------------------
+-- Une table de genres définis par le foyer aurait permis à chacun ses
+-- rubriques, au prix d'une jointure sur chaque lecture et d'un vocabulaire
+-- (« vu », « lu », « offert ») que le foyer aurait dû saisir lui-même. Le
+-- type énuméré reste le bon outil tant que les genres sont peu nombreux et
+-- communs à tous.
+--
+-- PRÉCAUTION
+-- ----------
+-- `alter type … add value` s'exécute bien dans une transaction depuis
+-- PostgreSQL 12 — ce que fait `db:push`, un fichier par transaction — mais la
+-- valeur ajoutée **ne peut pas être utilisée avant que la transaction ne soit
+-- validée**. C'est pourquoi ce fichier n'ajoute que les valeurs : aucune
+-- insertion, aucun `check`, aucun index partiel ne les nomme ici. C'était
+-- déjà la raison d'être du « autre » de la migration 0016.
+--
+-- `if not exists` rend le fichier rejouable : si la valeur a été ajoutée à la
+-- main sur le projet avant que ce fichier n'existe, `db:push` ne s'arrête pas
+-- en erreur.
+--
+-- La position dans le type suit l'ordre des onglets à l'écran, pour qu'un
+-- `order by kind` écrit un jour en SQL donne le même ordre que l'interface.
+-- ---------------------------------------------------------------------------
+
+alter type public.reco_kind add value if not exists 'lecture' after 'serie';
+alter type public.reco_kind add value if not exists 'sortie'  after 'theatre';

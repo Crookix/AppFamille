@@ -3,11 +3,13 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  BookOpen,
   Drama,
   ExternalLink,
   Film,
   Gift,
   Heart,
+  MapPin,
   Pencil,
   Plus,
   Search,
@@ -48,7 +50,9 @@ import type { HouseholdMemberRow, RecoKind } from '@/lib/database.types';
 const KIND_ICONS: Record<RecoKind, React.ElementType> = {
   film: Film,
   serie: Tv,
+  lecture: BookOpen,
   theatre: Drama,
+  sortie: MapPin,
   cadeau: Gift,
   autre: Sparkles,
 };
@@ -58,7 +62,7 @@ type Tab = RecoKind | 'tout';
 /**
  * Le mur des recommandations du foyer.
  *
- * Un seul écran pour les cinq genres, filtré par onglets : ce que l'on cherche
+ * Un seul écran pour les sept genres, filtré par onglets : ce que l'on cherche
  * un soir de semaine, c'est « qu'est-ce qu'on regarde », pas « ouvrons la
  * rubrique films ». Ce qui est déjà vu reste consultable, mais replié : une
  * liste où les envies se mêlent aux souvenirs ne sert plus à choisir.
@@ -186,7 +190,8 @@ export function RecoBoard({ initial }: { initial: RecommendationWithWants[] }) {
         <div>
           <h1 className="text-xl font-extrabold tracking-tight">Reco</h1>
           <p className="mt-0.5 text-sm text-muted">
-            Ce que la famille se recommande : films, séries, théâtre, idées cadeaux.
+            Ce que la famille se recommande : films, séries, lectures, sorties,
+            idées cadeaux.
           </p>
         </div>
         <Button size="sm" onClick={() => setCreating(true)} className="shrink-0">
@@ -195,12 +200,15 @@ export function RecoBoard({ initial }: { initial: RecommendationWithWants[] }) {
         </Button>
       </div>
 
-      {/* Onglets : défilement horizontal pour tenir à 375 px sans rétrécir
-          les cibles tactiles. */}
+      {/* Onglets : ils reviennent à la ligne plutôt que de défiler. Huit
+          onglets ne tiennent pas sur une ligne à 375 px, et ce qui défile
+          n'existe pas — un genre qu'il faut aller chercher hors de l'écran ne
+          sera jamais ouvert. Quelques lignes de plus coûtent moins cher qu'une
+          rubrique invisible. */}
       <div
         role="tablist"
         aria-label="Genre de recommandation"
-        className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1"
+        className="mb-3 flex flex-wrap gap-1.5"
       >
         {tabs.map(({ key, label, count }) => (
           <button
@@ -209,7 +217,7 @@ export function RecoBoard({ initial }: { initial: RecommendationWithWants[] }) {
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={cn(
-              'flex h-10 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors',
+              'flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors',
               tab === key
                 ? 'bg-brand-500 text-white'
                 : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)] hover:text-[var(--fg)]',
@@ -271,7 +279,7 @@ export function RecoBoard({ initial }: { initial: RecommendationWithWants[] }) {
           }
           description={
             recos.length === 0
-              ? 'Notez un film à voir, une série, une pièce de théâtre ou une idée cadeau : tout le foyer la retrouvera ici.'
+              ? 'Notez un film à voir, un livre, une sortie du dimanche ou une idée cadeau : tout le foyer la retrouvera ici.'
               : 'Changez d’onglet, ou affichez ce qui est déjà fait.'
           }
           action={

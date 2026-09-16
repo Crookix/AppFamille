@@ -53,6 +53,29 @@ describe('vocabulaire des genres', () => {
     expect(recoStatusLabel('cadeau', 'fait')).toBe('Offert');
     expect(recoStatusLabel('cadeau', 'idee')).toBe('Idée');
     expect(recoStatusLabel('theatre', 'en_cours')).toBe('Places prises');
+    // On ne « voit » pas un livre et on ne « fait » pas une exposition sans
+    // l'avoir prévue : c'est tout l'intérêt de sortir ces deux genres d'« autre ».
+    expect(recoStatusLabel('lecture', 'idee')).toBe('À lire');
+    expect(recoStatusLabel('lecture', 'fait')).toBe('Lu');
+    expect(recoStatusLabel('sortie', 'idee')).toBe('À faire');
+    expect(recoStatusLabel('sortie', 'en_cours')).toBe('Prévue');
+  });
+
+  it('nomme les sept genres, sans doublon de clé ni de libellé', () => {
+    // Deux genres qui partagent une clé se recouvriraient dans `recoKind` ;
+    // deux qui partagent un libellé donneraient deux onglets indiscernables.
+    expect(RECO_KINDS).toHaveLength(7);
+    expect(new Set(RECO_KINDS.map((k) => k.key)).size).toBe(7);
+    expect(new Set(RECO_KINDS.map((k) => k.plural)).size).toBe(7);
+    expect(RECO_KINDS.map((k) => k.key)).toEqual([
+      'film',
+      'serie',
+      'lecture',
+      'theatre',
+      'sortie',
+      'cadeau',
+      'autre',
+    ]);
   });
 
   it('retombe sur « autre » pour un genre inconnu', () => {
@@ -65,9 +88,11 @@ describe('vocabulaire des genres', () => {
   it('ne réserve les champs cadeau qu’aux cadeaux', () => {
     expect(isGift('cadeau')).toBe(true);
     expect(isGift('film')).toBe(false);
+    expect(isGift('lecture')).toBe(false);
+    expect(isGift('sortie')).toBe(false);
   });
 
-  it('donne un libellé d’état aux cinq genres', () => {
+  it('donne un libellé d’état aux sept genres', () => {
     for (const kind of RECO_KINDS) {
       for (const status of ['idee', 'en_cours', 'fait'] as const) {
         expect(recoStatusLabel(kind.key, status).length).toBeGreaterThan(0);
@@ -233,6 +258,21 @@ describe('compteurs par genre', () => {
     expect(counts.film).toBe(2);
     expect(counts.cadeau).toBe(1);
     expect(counts.serie).toBe(0);
+  });
+
+  it('compte à part la lecture et les sorties', () => {
+    // Avant la migration 0020, ces deux-là tombaient dans « autre » : le
+    // compteur du fourre-tout gonflait sans qu'on sache de quoi il était fait.
+    const counts = countOpenByKind([
+      reco({ kind: 'lecture' }),
+      reco({ kind: 'lecture', status: 'fait' }),
+      reco({ kind: 'sortie' }),
+      reco({ kind: 'autre' }),
+    ]);
+
+    expect(counts.lecture).toBe(1);
+    expect(counts.sortie).toBe(1);
+    expect(counts.autre).toBe(1);
   });
 
   it('renvoie une entrée pour chaque genre, même vide', () => {

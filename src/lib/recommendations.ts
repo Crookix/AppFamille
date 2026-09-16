@@ -2,10 +2,11 @@
  * Vocabulaire et tri des recommandations du foyer.
  *
  * La base ne connaît que trois états (`idee`, `en_cours`, `fait`) pour les
- * cinq genres. C'est ici que chaque genre retrouve ses mots : on ne dit pas
- * « fait » d'un film, on dit « vu » ; une idée cadeau n'est pas « en cours »,
- * elle est « réservée ». Un enum par genre aurait multiplié les colonnes et
- * les filtres pour un gain nul côté données.
+ * sept genres. C'est ici que chaque genre retrouve ses mots : on ne dit pas
+ * « fait » d'un film, on dit « vu » ; on ne dit pas « vu » d'un livre, on dit
+ * « lu » ; une idée cadeau n'est pas « en cours », elle est « réservée ». Un
+ * enum par genre aurait multiplié les colonnes et les filtres pour un gain
+ * nul côté données.
  *
  * Tout ce fichier est pur : aucune dépendance à Supabase, à React ou à la
  * requête en cours. C'est ce qui le rend testable directement.
@@ -31,7 +32,12 @@ export type RecoKindMeta = {
 
 /**
  * L'ordre de ce tableau est celui des onglets à l'écran : les deux genres les
- * plus courants d'abord, « autre » en dernier puisqu'il sert de fourre-tout.
+ * plus courants d'abord, puis ce qui se lit, puis ce qui se sort, enfin le
+ * cadeau — le seul à ouvrir des champs à lui. « Autre » reste en dernier
+ * puisqu'il sert de fourre-tout.
+ *
+ * Cet ordre est aussi celui du type `reco_kind` en base (migration 0020) :
+ * un `order by kind` écrit un jour en SQL donnera le même résultat.
  */
 export const RECO_KINDS: readonly RecoKindMeta[] = [
   {
@@ -53,6 +59,17 @@ export const RECO_KINDS: readonly RecoKindMeta[] = [
     statuses: { idee: 'À voir', en_cours: 'En cours', fait: 'Terminée' },
   },
   {
+    key: 'lecture',
+    label: 'Lecture',
+    plural: 'Lectures',
+    authorLabel: 'Autrice ou auteur',
+    authorPlaceholder: 'Annie Ernaux',
+    titlePlaceholder: 'Les Années',
+    // Un livre commencé est « en cours » au sens propre : c'est le seul genre
+    // où l'état intermédiaire décrit vraiment ce que l'on fait.
+    statuses: { idee: 'À lire', en_cours: 'En cours', fait: 'Lu' },
+  },
+  {
     key: 'theatre',
     label: 'Théâtre',
     plural: 'Théâtre',
@@ -60,6 +77,17 @@ export const RECO_KINDS: readonly RecoKindMeta[] = [
     authorPlaceholder: 'Théâtre de la Ville',
     titlePlaceholder: 'Le Malade imaginaire',
     statuses: { idee: 'À voir', en_cours: 'Places prises', fait: 'Vu' },
+  },
+  {
+    key: 'sortie',
+    label: 'Sortie',
+    plural: 'Sorties',
+    authorLabel: 'Où',
+    authorPlaceholder: 'Muséum, Paris 5e',
+    titlePlaceholder: 'Grande galerie de l’évolution',
+    // Une sortie se prépare : entre l'envie et le souvenir, il y a la date
+    // retenue. « Prévue » dit cela mieux qu'« en cours ».
+    statuses: { idee: 'À faire', en_cours: 'Prévue', fait: 'Fait' },
   },
   {
     key: 'cadeau',
@@ -75,7 +103,7 @@ export const RECO_KINDS: readonly RecoKindMeta[] = [
     label: 'Autre',
     plural: 'Autres',
     authorLabel: 'De qui, ou où',
-    authorPlaceholder: 'Restaurant, livre, podcast…',
+    authorPlaceholder: 'Un jeu, une adresse…',
     titlePlaceholder: 'Une envie à garder',
     statuses: { idee: 'À découvrir', en_cours: 'En cours', fait: 'Fait' },
   },

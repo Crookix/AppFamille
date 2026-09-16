@@ -173,6 +173,28 @@ ou en collant le fichier dans l'éditeur SQL de Supabase.
     sien, `google_calendar_ref` est couvert par sa contrainte d'unicité.
     Aucun `auth_rls_initplan` non plus, la politique passant par
     `is_household_member()`.
+- **Relancés après `0020`**, le 16 septembre 2026, et les deux scripts rejoués
+  sur la base réelle dans la foulée :
+  - *sécurité* — **strictement inchangé** : deux `rls_enabled_no_policy`
+    (`google_credentials`, `_tribu_migrations`) et dix fonctions
+    `SECURITY DEFINER` appelables. C'était attendu : `0020` n'ajoute ni table,
+    ni colonne, ni politique, ni fonction — seulement deux étiquettes à un type
+    énuméré.
+  - *performance* — rien de nouveau imputable à `0020` non plus. Les
+    signalements du jour sont ceux de l'espace nounou et des tables anciennes :
+    sept clés étrangères `*_by` sans index (`childcare_declarations`,
+    `childcare_sessions`, `nanny_accesses`, `shopping_items`,
+    `task_completions`, `tasks`), dix-neuf `auth_rls_initplan` sur les
+    politiques nominatives (profil, Google, notifications, accès nounou), neuf
+    paires de politiques permissives nées du double regard « foyer » /
+    « nounou », et vingt-cinq index encore inutilisés. Aucun ne concerne
+    `recommendations` autrement que par les index déjà relevés après `0016`.
+  - `isolation.sql` sur le projet réel : **70/70, ÉTANCHE**, zéro faille. Le
+    script est enveloppé dans `begin … rollback` ; il a été vérifié après coup
+    qu'aucun compte, foyer ni nounou de test n'avait subsisté, et que les dix
+    fiches de reco existantes étaient intactes.
+  - `effacement.sql` sur le projet réel : **19 colonnes examinées, 0 oubliée,
+    EFFACEMENT COMPLET**.
   - Deux *unused index* de plus, sur une table créée cinq minutes plus tôt et
     vide. Ils disparaîtront au premier canal ouvert.
 - **La politique a été éprouvée sur la base réelle avec un identifiant
@@ -211,7 +233,7 @@ c'est le propre de ces tests, et c'est aussi leur limite.
 | `tests/unit/google-mapping.test.ts` | 20 | Conversion Google ↔ MyFamily, empreintes de comparaison, droit d'écriture par agenda |
 | `tests/unit/exports.test.ts` | 3 | Nom de fichier d'export : ligatures, accents, séparateurs |
 | `tests/unit/checklists.test.ts` | 14 | Avancement, ordre stable sous le doigt, lecture d'une liste collée (puces, numéros, doublons) |
-| `tests/unit/recommendations.test.ts` | 25 | Vocabulaire par genre, complétion et filtrage des liens, prix à la française, recherche sans accent ni ligature, ordre d'affichage |
+| `tests/unit/recommendations.test.ts` | 27 | Vocabulaire des sept genres, complétion et filtrage des liens, prix à la française, recherche sans accent ni ligature, ordre d'affichage |
 
 `npm test`
 

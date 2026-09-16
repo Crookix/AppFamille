@@ -330,19 +330,24 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 
 ---
 
-## 8. Reco — films, séries, théâtre, idées cadeaux — *fait, vérifié en navigateur*
+## 8. Reco — films, séries, lectures, sorties, idées cadeaux — *fait, vérifié en navigateur*
 
 ### Ce que ça fait
 
 - Un espace partagé pour ce que la famille se recommande : **films, séries,
-  théâtre, idées cadeaux**, et un genre « autre » pour le reste (un livre, un
-  restaurant, un podcast).
+  lectures, théâtre, sorties, idées cadeaux**, et un genre « autre » pour ce
+  qui n'entre nulle part.
+- « Lecture » couvre le livre, la BD, le podcast — ce qu'on prend à son rythme.
+  « Sortie » couvre le musée, l'exposition, le restaurant, la balade — ce qu'on
+  fait ensemble, un jour donné. Les deux vivaient dans « autre » jusqu'à la
+  migration `0020` : un fourre-tout ne se filtre pas, et son vocabulaire ne dit
+  ni « à lire » ni « prévue ».
 - Chaque fiche porte un titre, qui la recommande, **pourquoi**, un lien, et une
   note sur cinq étoiles. C'est le « pourquoi » qui distingue une recommandation
   d'une simple liste de titres.
-- Les mots suivent le genre : un film se marque « Vu », un cadeau « Offert »,
-  une place de théâtre passe par « Places prises ». La base, elle, n'a que
-  trois états.
+- Les mots suivent le genre : un film se marque « Vu », un livre « Lu », un
+  cadeau « Offert » ; une place de théâtre passe par « Places prises », une
+  sortie par « Prévue ». La base, elle, n'a que trois états.
 - **Les envies** : chaque membre peut dire « moi aussi ». Les avatars montrent
   d'un coup d'œil si l'on est seul à vouloir, ou si toute la maison attend.
   Personne ne peut déclarer une envie à la place d'un autre.
@@ -366,6 +371,8 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
 | 9.8 | Saisir un prix « 25,50 € » | Enregistré comme 25,50, réaffiché « 25,50 € » |
 | 8.9 | Chercher « oeuvre » | Trouve « Une Œuvre majeure » |
 | 8.10 | Un adulte ajoute une reco | L'autre la voit apparaître sans recharger |
+| 8.11 | Ajouter un livre, puis une sortie | Le livre se marque « Lu », la sortie « Fait » et passe par « Prévue » |
+| 8.12 | Afficher la reco à 375 px | Les huit onglets sont tous visibles à l'écran, sans défilement horizontal |
 
 ---
 

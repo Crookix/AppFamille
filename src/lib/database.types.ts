@@ -65,7 +65,14 @@ export type MealSlot = 'petit_dejeuner' | 'dejeuner' | 'diner';
 export type ChildcareStatus = 'prevue' | 'a_confirmer' | 'confirmee' | 'annulee';
 export type PaymentStatus = 'a_payer' | 'paye';
 
-export type RecoKind = 'film' | 'serie' | 'theatre' | 'cadeau' | 'autre';
+export type RecoKind =
+  | 'film'
+  | 'serie'
+  | 'lecture'
+  | 'theatre'
+  | 'sortie'
+  | 'cadeau'
+  | 'autre';
 export type RecoStatus = 'idee' | 'en_cours' | 'fait';
 
 export type NotificationKind =
