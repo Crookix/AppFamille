@@ -76,6 +76,13 @@ Le domaine de la deuxième URI doit être **servi par le projet Vercel** (Settin
 › Domains) et être exactement celui de `NEXT_PUBLIC_SITE_URL`. Ces trois valeurs
 — URI Google, variable, domaine Vercel — ne tolèrent aucun écart.
 
+Pendant que vous y êtes, **vérifiez le domaine** (*Google Auth Platform →
+Vérification du domaine*, ou Search Console). Ce n'est pas nécessaire pour
+autoriser un agenda, mais c'est indispensable pour que Google accepte de
+prévenir MyFamily quand un calendrier change — voir
+[Notifications de Google](#notifications-de-google). Sans cette étape, tout
+fonctionne, mais l'agenda ne se met à jour qu'aux passages programmés.
+
 ## 4. Renseigner les variables
 
 Dans `.env.local` en développement, et dans les variables d'environnement de
@@ -93,6 +100,9 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
 
 # Doit correspondre au domaine déclaré dans l'URI de redirection
 NEXT_PUBLIC_SITE_URL=https://VOTRE-DOMAINE
+
+# Autorise la synchronisation programmée (voir « Mise à jour automatique »)
+CRON_SECRET=$(openssl rand -base64 32)
 ```
 
 `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY` et `SUPABASE_SERVICE_ROLE_KEY`
@@ -107,6 +117,131 @@ n'apparaissent ni dans le navigateur ni dans les journaux.
 ---
 
 ## Ce que fait la synchronisation
+
+### Quand elle se déclenche
+
+La synchronisation a longtemps été **entièrement manuelle** : tant que personne
+n'appuyait sur « Synchroniser », un rendez-vous ajouté depuis Google Agenda
+n'existait pas dans MyFamily, et un événement créé dans MyFamily ne remontait
+pas chez Google. Ce n'est plus le cas. Quatre déclencheurs coexistent, du plus
+rapide au plus lent :
+
+| Déclencheur | Délai | Ce qu'il couvre |
+| --- | --- | --- |
+| **Notification de Google** | quelques secondes | un calendrier observé a changé ; c'est Google qui appelle MyFamily |
+| **Ouverture du calendrier** | immédiat | ce qui date de plus de cinq minutes est rafraîchi à l'ouverture de l'écran |
+| **Passage programmé** | une fois par jour | le filet : notification perdue, canal expiré, déploiement en cours |
+| **Bouton « Synchroniser »** | immédiat | forcer un passage, et voir le compte rendu |
+
+Leur état réel est affiché sur **Plus → Google Agenda**, ligne par ligne. Un
+déclencheur indisponible le dit et explique pourquoi : rien n'est présenté
+comme actif s'il ne l'est pas.
+
+#### Notifications de Google
+
+Google appelle `POST /api/google/notifications` dès qu'un calendrier observé
+change. Trois conditions, toutes vérifiables sur l'écran Google Agenda :
+
+1. `NEXT_PUBLIC_SITE_URL` est une **adresse publique en HTTPS**. Ni
+   `localhost`, ni `http`, ni une adresse IP : Google vérifie que l'adresse
+   répond avant d'ouvrir le canal.
+2. Le **domaine est vérifié** dans la console Google Cloud
+   (*Google Auth Platform → Vérification du domaine*, ou Search Console). Sans
+   cette étape, Google refuse l'inscription avec
+   `WebHook callback must be HTTPS` ou `unauthorizedWebhookCallbackChannelUrl`,
+   même si l'adresse est parfaitement joignable.
+3. Le calendrier est **coché** dans MyFamily. Cocher la case demande le canal
+   dans la foulée ; la décocher le referme.
+
+Un canal dure quelques jours et Google en fixe lui-même le terme — c'est cette
+date-là qui est enregistrée, jamais celle qu'on a demandée. Le passage
+programmé les renouvelle **48 heures** avant échéance, et cette marge est
+calée sur le pire cas : à un seul passage par jour (forfait Hobby), un canal
+est ainsi vu deux fois avant son terme. Une marge de 24 heures laissait mourir
+les canaux dans l'intervalle, sans que rien ne le dise.
+
+Chaque notification est vérifiée avant d'être suivie d'effet : identifiant de
+canal, condensat du jeton de vérification (comparé en temps constant) et
+identifiant de ressource doivent concorder tous les trois. L'URL est publique,
+c'est le jeton qui fait foi — et la base ne contient que son condensat, jamais
+le jeton lui-même.
+
+En développement local, rien de tout cela n'est possible : l'écran l'annonce,
+et la synchronisation se fait à l'ouverture du calendrier.
+
+#### Passage programmé
+
+Déclaré dans `vercel.json` et appelé par Vercel :
+
+```json
+{ "crons": [{ "path": "/api/google/cron", "schedule": "0 4 * * *" }] }
+```
+
+**Cette planification quotidienne n'est pas un choix, c'est une contrainte du
+forfait.** Sur Hobby, Vercel ne se contente pas d'ignorer une cadence plus
+fine : il **refuse le déploiement**, avec le message *« Hobby accounts are
+limited to daily cron jobs. This cron expression would run more than once per
+day. »* Un `*/15 * * * *` ne ralentit donc pas l'application, il l'empêche de
+partir en production — c'est arrivé, et c'est ce qui a mis la CI au rouge.
+
+Pour repasser à un quart d'heure après un passage au forfait Pro, il suffit de
+changer cette seule ligne : l'écran Google Agenda lit la planification dans
+`vercel.json` et annonce la cadence réelle, sans qu'on ait à la recopier
+ailleurs. Comptez aussi que Hobby n'assure pas l'heure exacte — un `0 4 * * *`
+part entre 4 h 00 et 4 h 59 UTC.
+
+`CRON_SECRET` est **obligatoire**, et la variable doit porter exactement ce
+nom : c'est celui que Vercel reconnaît pour l'envoyer automatiquement en
+en-tête `Authorization: Bearer …` à chaque invocation. Une valeur aléatoire
+d'au moins seize caractères — `openssl rand -base64 32` fait l'affaire. À
+déclarer dans les variables d'environnement du projet Vercel, puis à
+redéployer.
+
+Sans elle, la route refuse de s'exécuter plutôt que de rester ouverte à qui
+connaît son adresse. Ce n'est pas qu'une question de filet : **le passage
+programmé est aussi le seul mécanisme qui renouvelle les canaux de
+notification**. Sans lui, les canaux expirent au bout de quelques jours et
+personne ne les rouvre — les notifications Google s'arrêtent alors
+définitivement, et il ne reste que la synchronisation à l'ouverture du
+calendrier. L'écran Google Agenda le dit, calendrier par calendrier, plutôt que
+de promettre un passage qui ne viendrait jamais.
+
+Deux comportements documentés par Vercel, dont le code tient compte :
+une invocation manquée **n'est pas rejouée** (la rotation du plus ancien au
+plus récent rattrape le tour suivant), et une exécution peut être **invoquée
+deux fois** — d'où la garde qui saute un calendrier dont la campagne est déjà
+en route, sans quoi deux campagnes concurrentes créeraient un doublon visible.
+
+> Ce qu'un seul passage par jour change est plus petit qu'il n'y paraît, **à
+> condition que les notifications Google fonctionnent** : elles couvrent la
+> seconde, et l'ouverture du calendrier couvre le moment où l'on regarde. Il
+> reste alors au cron deux missions, qui s'accommodent très bien d'un passage
+> quotidien : renouveler les canaux avant échéance (d'où la marge de 48 heures)
+> et rattraper un calendrier dont le canal est mort.
+>
+> Si en revanche les notifications **ne** fonctionnent pas — domaine non
+> vérifié — alors un changement fait dans Google Agenda peut attendre jusqu'à
+> l'ouverture suivante du calendrier, ou jusqu'au passage quotidien. C'est le
+> cas où la vérification du domaine cesse d'être un détail.
+
+Un passage est borné : vingt calendriers au plus, quarante-cinq secondes au
+plus. Les calendriers sont servis **du plus ancien au plus récent**, celui qui
+n'a jamais été synchronisé d'abord ; au-delà du budget, les laissés-pour-compte
+d'un passage sont les premiers servis au suivant. Un calendrier en erreur
+attend une heure avant qu'on réessaie : sans ce recul, un seul compte dont
+l'accès a été révoqué consommerait tout le budget à chaque passage.
+
+#### Ouverture du calendrier
+
+L'écran Calendrier demande au serveur de synchroniser ce qui date de plus de
+cinq minutes. C'est le serveur qui tranche, pas le navigateur : deux onglets
+ouverts ne peuvent donc pas se contredire.
+
+Rien ne s'affiche — ni « en cours », ni « réussi ». Une synchronisation
+d'arrière-plan qui annoncerait sa réussite violerait la règle la plus stricte
+de l'intégration. Les échecs, eux, restent visibles sur l'écran Google Agenda,
+avec leur cause. Et l'écran ne se rafraîchit que si quelque chose a
+effectivement changé.
 
 ### Deux choses distinctes
 
@@ -228,3 +363,7 @@ cocher explicite, jamais un effet de bord.
 | « L'autorisation a été révoquée ou a expiré » | accès retiré depuis le compte Google | réautoriser depuis l'écran Google Agenda |
 | « TOKEN_ENCRYPTION_KEY absente ou invalide » | clé manquante ou pas 32 octets | `openssl rand -base64 32` |
 | `Access blocked: app not verified` | application en mode Test | ajouter l'adresse dans **Utilisateurs tests** |
+| « Notifications Google : … WebHook callback must be HTTPS » | le domaine de `NEXT_PUBLIC_SITE_URL` n'est pas vérifié dans Google Cloud | vérifier le domaine, puis attendre le prochain passage programmé |
+| « Notifications indisponibles ici » sur l'écran Google Agenda | `NEXT_PUBLIC_SITE_URL` est en `http`, pointe sur `localhost` ou sur une adresse IP | normal en développement ; en production, corriger la variable |
+| « Passage régulier — désactivé » | `CRON_SECRET` absente des variables Vercel | la renseigner, puis redéployer |
+| L'agenda ne se met à jour qu'au clic | migration `0019` non appliquée, ou aucun calendrier coché | `npm run db:push`, puis cocher un calendrier |

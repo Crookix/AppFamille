@@ -6,9 +6,13 @@ import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   ArrowLeft,
+  BellOff,
+  BellRing,
   CalendarCheck,
   CheckCircle2,
+  Clock,
   Link2Off,
+  MonitorSmartphone,
   RefreshCw,
   ShieldQuestion,
   Unplug,
@@ -26,6 +30,7 @@ import type {
   GoogleCalendarRow,
   GoogleShareMode,
   GoogleSyncRunRow,
+  GoogleWatchChannelRow,
 } from '@/lib/database.types';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -55,6 +60,10 @@ export function GoogleSettings({
   account,
   calendars,
   runs,
+  channels,
+  pushSupported,
+  scheduledSyncConfigured,
+  scheduleLabel,
   initialError,
   justConnected,
 }: {
@@ -64,6 +73,10 @@ export function GoogleSettings({
   account: GoogleAccountRow | null;
   calendars: GoogleCalendarRow[];
   runs: GoogleSyncRunRow[];
+  channels: GoogleWatchChannelRow[];
+  pushSupported: boolean;
+  scheduledSyncConfigured: boolean;
+  scheduleLabel: string;
   initialError?: string | null;
   justConnected?: boolean;
 }) {
@@ -82,6 +95,19 @@ export function GoogleSettings({
 
   const selected = calendars.filter((c) => c.is_selected);
   const lastRun = runs[0] ?? null;
+
+  const channelsByCalendar = React.useMemo(
+    () => new Map(channels.map((channel) => [channel.google_calendar_ref, channel])),
+    [channels],
+  );
+
+  // La plus proche échéance de canal : c'est elle qui dit jusqu'à quand Google
+  // s'est engagé à prévenir MyFamily.
+  const nextRenewal = channels
+    .map((channel) => channel.expires_at)
+    .filter((value): value is string => Boolean(value))
+    .sort()[0] ?? null;
+
   const writable = calendars.filter(
     (c) => c.access_role === 'owner' || c.access_role === 'writer',
   );
@@ -119,6 +145,14 @@ export function GoogleSettings({
 
       if (!response.ok) {
         setError(payload.error ?? 'La synchronisation a échoué.');
+        return;
+      }
+
+      // Une campagne était déjà en route — déclenchée par Google, par le
+      // passage programmé, ou par un autre onglet. Annoncer « déjà à jour »
+      // serait faux : elle n'a pas fini.
+      if (payload.skipped === 'en_cours') {
+        toast.toast('Une synchronisation est déjà en cours.', { tone: 'info' });
         return;
       }
 
@@ -283,6 +317,19 @@ export function GoogleSettings({
         </div>
       </Card>
 
+      {account?.calendar_authorized ? (
+        <AutomationCard
+          pushSupported={pushSupported}
+          scheduledSyncConfigured={scheduledSyncConfigured}
+          scheduleLabel={scheduleLabel}
+          selectedCount={selected.length}
+          watchedCount={
+            selected.filter((c) => channelsByCalendar.has(c.id)).length
+          }
+          nextRenewal={nextRenewal}
+        />
+      ) : null}
+
       {(!encryptionConfigured || !serviceKeyPresent) && account?.calendar_authorized ? (
         <div className="mb-4">
           <SetupChecklist
@@ -352,6 +399,30 @@ export function GoogleSettings({
 
                     {calendar.is_selected ? (
                       <div className="mt-3 space-y-2 border-t border-[var(--line)] pt-3">
+                        <p className="flex items-start gap-1.5 text-xs text-muted">
+                          {channelsByCalendar.has(calendar.id) ? (
+                            <>
+                              <BellRing
+                                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sage-700"
+                                aria-hidden
+                              />
+                              Google prévient MyFamily dès que ce calendrier change.
+                            </>
+                          ) : (
+                            <>
+                              <BellOff className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                              {!pushSupported
+                                ? "Notifications indisponibles ici : ce calendrier se met à jour à l'ouverture du calendrier."
+                                : scheduledSyncConfigured
+                                  ? 'Notifications pas encore actives : elles seront demandées au prochain passage programmé.'
+                                  : // Sans passage programmé, ce « prochain passage » ne viendrait
+                                    // jamais : le dire serait une promesse en l'air, et c'est
+                                    // exactement ce qu'on ne fait pas ici.
+                                    'Notifications pas encore actives, et rien ne les demandera : le passage programmé est désactivé (CRON_SECRET manquante).'}
+                            </>
+                          )}
+                        </p>
+
                         <Field
                           label="Ce que le foyer voit"
                           hint="s'applique aux événements importés"
@@ -504,6 +575,102 @@ export function GoogleSettings({
         </div>
       </Sheet>
     </Shell>
+  );
+}
+
+/** Première lettre en capitale, la cadence arrivant en milieu de phrase ailleurs. */
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * Ce qui met l'agenda à jour sans qu'on le demande.
+ *
+ * Trois déclencheurs, trois lignes, et pour chacune son état réel. Écrire
+ * « synchronisation automatique activée » sans dire lequel des trois
+ * fonctionne ne servirait à rien le jour où l'agenda cesse de se mettre à
+ * jour — et c'est le seul jour où l'on vient lire cet écran.
+ */
+function AutomationCard({
+  pushSupported,
+  scheduledSyncConfigured,
+  scheduleLabel,
+  selectedCount,
+  watchedCount,
+  nextRenewal,
+}: {
+  pushSupported: boolean;
+  scheduledSyncConfigured: boolean;
+  scheduleLabel: string;
+  selectedCount: number;
+  watchedCount: number;
+  nextRenewal: string | null;
+}) {
+  const lines: { icon: React.ReactNode; title: string; detail: string; active: boolean }[] = [
+    {
+      icon: <BellRing className="h-4 w-4" aria-hidden />,
+      title: 'Notifications de Google',
+      active: pushSupported && watchedCount > 0,
+      detail: !pushSupported
+        ? "Indisponibles : Google exige une adresse publique en HTTPS, et NEXT_PUBLIC_SITE_URL n'en est pas une."
+        : selectedCount === 0
+          ? 'Aucun calendrier coché : il n’y a rien à observer.'
+          : watchedCount === 0
+            ? "Aucun canal ouvert pour l'instant. Le prochain passage automatique en demandera un."
+            : `${watchedCount} calendrier(s) sur ${selectedCount} observé(s)${
+                nextRenewal
+                  ? ` — engagement de Google jusqu'au ${formatDayLong(
+                      nextRenewal.slice(0, 10),
+                    )}, renouvelé avant échéance`
+                  : ''
+              }.`,
+    },
+    {
+      icon: <Clock className="h-4 w-4" aria-hidden />,
+      title: 'Passage régulier',
+      active: scheduledSyncConfigured,
+      detail: scheduledSyncConfigured
+        ? `${capitalize(scheduleLabel)}, en filet : une notification perdue ou un canal expiré est rattrapé là.`
+        : "Désactivé : CRON_SECRET n'est pas renseignée. Sans elle, la route programmée refuse de s'exécuter plutôt que de rester ouverte.",
+    },
+    {
+      icon: <MonitorSmartphone className="h-4 w-4" aria-hidden />,
+      title: "À l'ouverture du calendrier",
+      active: true,
+      detail:
+        'Ouvrir le calendrier rafraîchit ce qui date de plus de cinq minutes, sans rien afficher si rien n’a changé.',
+    },
+  ];
+
+  return (
+    <Card className="mb-4">
+      <h2 className="mb-1 font-bold">Mise à jour automatique</h2>
+      <p className="mb-3 text-sm text-muted">
+        Le bouton « Synchroniser » reste là pour forcer un passage, mais il n'est
+        plus indispensable.
+      </p>
+
+      <ul className="space-y-2.5">
+        {lines.map((line) => (
+          <li key={line.title} className="flex items-start gap-2.5 text-sm">
+            <span
+              className={cn(
+                'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+                line.active
+                  ? 'bg-sage-100 text-sage-700'
+                  : 'bg-[var(--bg-subtle)] text-muted',
+              )}
+            >
+              {line.icon}
+            </span>
+            <span className="min-w-0">
+              <span className="font-semibold">{line.title}</span>
+              <span className="block text-xs text-muted">{line.detail}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 

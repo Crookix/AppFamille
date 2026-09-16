@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { decryptToken } from '@/lib/google/crypto';
 import { revokeToken } from '@/lib/google/oauth';
+import { GoogleCalendarClient } from '@/lib/google/client';
+import { stopWatchChannel } from '@/lib/google/watch';
 
 /**
  * Déconnecte l'agenda Google.
@@ -48,6 +50,22 @@ export async function POST(request: NextRequest) {
       .select('refresh_token_enc, access_token_enc')
       .eq('google_account_id', account.id)
       .maybeSingle();
+
+    // Les canaux de notification se ferment AVANT la révocation : une fois le
+    // jeton révoqué, `channels.stop` n'a plus de quoi s'authentifier et les
+    // canaux resteraient ouverts jusqu'à leur expiration, à frapper une route
+    // qui ne saurait plus quoi en faire.
+    const { data: watched } = await admin
+      .from('google_calendars')
+      .select('id')
+      .eq('google_account_id', account.id);
+
+    if ((watched ?? []).length > 0) {
+      const client = new GoogleCalendarClient(admin, account.id);
+      for (const calendar of watched ?? []) {
+        await stopWatchChannel(admin, client, calendar.id);
+      }
+    }
 
     const token = credentials?.refresh_token_enc ?? credentials?.access_token_enc;
     if (token) {

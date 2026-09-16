@@ -32,7 +32,7 @@ vérifications dans [`docs/TESTS.md`](docs/TESTS.md), l'intégration Google dans
 | `npm run test:watch` | Les mêmes, en continu |
 | `npm run test:e2e` | Parcours navigateur Playwright — demande une application qui tourne |
 | `npm run db:push` | Applique les migrations SQL manquantes sur la base Supabase |
-| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 67 vérifications |
+| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 70 vérifications |
 | `psql "$SUPABASE_DB_URL" -f supabase/tests/effacement.sql` | Ce que la suppression d'un compte laisserait derrière |
 
 `npm run db:push` lit `SUPABASE_DB_URL` dans `.env.local`, applique les fichiers
@@ -70,7 +70,8 @@ fonctionne sauf la synchronisation d'agenda, qui s'annonce comme non configurée
 src/
   app/
     (app)/            écrans connectés (accueil, calendrier, listes, repas, reco, plus)
-    api/google/       connexion, retour d'autorisation, synchronisation, révocation
+    api/google/       connexion, retour d'autorisation, synchronisation,
+                      passage programmé, notifications entrantes, révocation
     auth/callback/    retour d'authentification Supabase
     bienvenue/        création ou choix du foyer
     connexion/        lien magique Supabase, ou Clerk s'il est configuré
@@ -79,7 +80,8 @@ src/
   lib/
     actions/          Server Actions — tout ce qui écrit passe par là
     data/             lectures composées, appelées par les Server Components
-    google/           OAuth, client API, correspondance et synchronisation
+    google/           OAuth, client API, correspondance, synchronisation,
+                      planification des passages et canaux de notification
     supabase/         quatre clients : navigateur, serveur, middleware, admin
     auth.ts           utilisateur connecté (Clerk ou Supabase), foyer actif
     clerk.ts          détection de Clerk, domaine de l'instance
@@ -116,12 +118,16 @@ vient plus des cookies, et un client mal outillé partirait en anonyme — la RL
 ne renverrait rien et l'écran s'afficherait vide, sans erreur. C'est le genre de
 panne qu'on met une heure à diagnostiquer.
 
-`admin.ts` est réservé aux routes Google (`connect`, `callback`, `sync`,
-`disconnect`), qui agissent pour le compte d'un utilisateur absent et écrivent
-les jetons. Le foyer de démonstration, lui, n'en a pas besoin : il est créé avec
-les droits ordinaires de la personne connectée, RLS comprise. **Toute nouvelle
-utilisation doit être justifiée par un commentaire et précédée d'un contrôle
-d'appartenance explicite.**
+`admin.ts` est réservé aux routes Google (`connect`, `callback`, `sync`, `cron`,
+`notifications`, `disconnect`), qui agissent pour le compte d'un utilisateur
+absent et écrivent les jetons, et à `updateGoogleCalendarAction`, qui ouvre ou
+referme un canal de notification juste après avoir vérifié l'appartenance au
+foyer. `cron` et `notifications` n'ont **aucune** session en face : leur
+légitimité vient d'un secret présenté en en-tête pour l'un, d'un jeton de canal
+haché pour l'autre. Le foyer de démonstration, lui, n'en a pas besoin : il est
+créé avec les droits ordinaires de la personne connectée, RLS comprise. **Toute
+nouvelle utilisation doit être justifiée par un commentaire et précédée d'un
+contrôle d'appartenance explicite.**
 
 ---
 
@@ -369,6 +375,25 @@ une relecture attentive.
   lisible. Et la barre de navigation n'appartient qu'aux **destinations** :
   tant que « Plus » y occupait une place sur cinq, chaque fonctionnalité
   nouvelle tombait dans le tiroir.
+- **Sur le forfait Hobby de Vercel, un cron trop fréquent ne ralentit pas
+  l'application : il l'empêche de se déployer.** `vercel.json` demandait
+  `*/15 * * * *` ; Vercel a refusé le déploiement — *« Hobby accounts are
+  limited to daily cron jobs »* — et la pull request est passée au rouge alors
+  que **les deux travaux de la CI étaient verts**. C'est là que se trouvait le
+  piège : la CI GitHub ne voit pas les crons, elle compile et joue les tests,
+  qui n'avaient aucune raison d'échouer. Le rouge venait d'un *commit status*
+  Vercel, pas d'un *check run* GitHub — deux choses distinctes, et il faut
+  regarder les deux avant de conclure. Corollaire : un plafond de plateforme se
+  vérifie sur la page de tarification avant d'écrire la valeur, pas après.
+- **Une cadence affichée ne se recopie pas à la main.** L'écran Google Agenda
+  annonçait « toutes les quinze minutes » pendant que le forfait refusait cette
+  cadence : l'interface aurait menti sans rien pour la contredire. La
+  planification est désormais **lue dans `vercel.json`** et traduite par
+  `describeCronSchedule()` — une seule source, et changer de forfait ne demande
+  de toucher qu'à une ligne.
+- **`*/` referme un commentaire de bloc.** Une expression cron citée dans un
+  `/** … */` casse la compilation, avec une erreur (`Unexpected "*"`) qui
+  désigne le commentaire et non la vraie cause.
 - **« Redeploy » sur Vercel rejoue le déploiement existant, pas le dernier
   commit.** Quand un webhook GitHub est manqué, le bouton reconstruit
   l'ancienne version sans rien signaler. Vérifier le SHA du déploiement avant
