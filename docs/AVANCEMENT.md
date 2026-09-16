@@ -22,23 +22,27 @@ Les huit étapes prévues sont écrites, compilées et intégrées, et une neuvi
 | 6 — Google Agenda | Écrite | **Demande une configuration externe** — voir plus bas |
 | 7 — Notifications, PWA, mode démo | Terminée | Confirmer sur un vrai téléphone |
 | 8 — Vérifications | Terminée | Aligner 11 parcours Playwright sur l'interface réelle |
-| 9 — Reco (films, séries, lectures, théâtre, sorties, cadeaux) | Terminée | **`0020` reste à appliquer** — voir plus bas |
+| 9 — Reco (films, séries, lectures, théâtre, sorties, cadeaux) | Terminée | — *`0020` appliquée le 16 septembre 2026* |
 | 10 — Check-lists (valise, sac de piscine…) | Terminée | — *confirmée en navigateur, bureau et mobile* |
 
-Le dépôt compte vingt migrations, `0001` à `0020`. Les dix-neuf premières sont
-appliquées sur le projet `tribu-foyer`, qui porte 43 tables, toutes avec la RLS
-active.
+Le dépôt compte vingt migrations, `0001` à `0020`, **toutes appliquées sur le
+projet `tribu-foyer`**, qui porte 43 tables, toutes avec la RLS active.
 
-`0020` — les genres « lecture » et « sortie » de la reco — **n'est pas encore
-appliquée**. Elle a été rejouée en local depuis une base vide, à la suite des
-dix-neuf autres : `isolation.sql` conclut ÉTANCHE (70/70) et `effacement.sql`
-EFFACEMENT COMPLET (19 colonnes). Elle n'attend qu'un `npm run db:push`.
-Tant qu'elle n'a pas tourné, l'interface propose les deux genres mais la base
-refuse la ligne : **appliquer avant de déployer**, préproduction comprise,
-puisque les déploiements de prévisualisation Vercel visent la même base.
-Ajouter une valeur à un type énuméré ne se défait pas — PostgreSQL ne sait pas
-retirer une étiquette —, c'est la seule raison pour laquelle elle a été laissée
-en attente plutôt qu'appliquée dans la foulée.
+`0020` — les genres « lecture » et « sortie » de la reco — a été appliquée le
+16 septembre 2026, elle aussi par le connecteur Supabase faute de
+`SUPABASE_DB_URL` dans l'environnement d'où elle partait. La ligne a donc été
+ajoutée **à la main** dans `_tribu_migrations`. Le SQL enregistré par Supabase
+a la même empreinte MD5 (`02032511d6d9dee449aa3f4ab52da6a1`) que le fichier du
+dépôt : ce qui a tourné en production est, à l'octet près, ce qui avait été
+rejoué en local. Le type porte bien ses sept valeurs, dans l'ordre des onglets
+(`film < serie < lecture < theatre < sortie < cadeau < autre`), et les deux
+nouvelles se lisent depuis une transaction ultérieure — ce que la restriction
+`alter type … add value` rendait incertain jusqu'à validation.
+
+Ajouter une valeur à un type énuméré ne se défait pas : PostgreSQL ne sait pas
+retirer une étiquette. Un retour en arrière demanderait de reconstruire le type
+et de réécrire la colonne. C'est pourquoi l'application a été faite sur demande
+explicite, et non dans la foulée de l'écriture.
 
 `0019` — les canaux de notification Google — a été appliquée le 16 septembre
 2026 par le connecteur Supabase, faute de `SUPABASE_DB_URL` dans
