@@ -7,7 +7,7 @@ import { normalizeRecoUrl } from '@/lib/recommendations';
 import { fail, humanizeDbError, ok, requireActiveHousehold } from './_helpers';
 
 const recoSchema = z.object({
-  kind: z.enum(['film', 'serie', 'theatre', 'cadeau', 'autre']),
+  kind: z.enum(['film', 'serie', 'lecture', 'theatre', 'sortie', 'cadeau', 'autre']),
   title: z.string().trim().min(1, 'Le titre est obligatoire.').max(200),
   author: z.string().trim().max(120).nullable().optional(),
   note: z.string().trim().max(2000).nullable().optional(),

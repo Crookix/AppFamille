@@ -6,7 +6,7 @@ import { RecoBoard } from '@/components/reco/reco-board';
 export const metadata: Metadata = { title: 'Reco' };
 
 /**
- * Les envies du foyer : films, séries, théâtre, idées cadeaux.
+ * Les envies du foyer : films, séries, lectures, théâtre, sorties, idées cadeaux.
  */
 export default async function RecoPage() {
   const { household } = await requireHousehold();

@@ -211,7 +211,7 @@ c'est le propre de ces tests, et c'est aussi leur limite.
 | `tests/unit/google-mapping.test.ts` | 20 | Conversion Google ↔ MyFamily, empreintes de comparaison, droit d'écriture par agenda |
 | `tests/unit/exports.test.ts` | 3 | Nom de fichier d'export : ligatures, accents, séparateurs |
 | `tests/unit/checklists.test.ts` | 14 | Avancement, ordre stable sous le doigt, lecture d'une liste collée (puces, numéros, doublons) |
-| `tests/unit/recommendations.test.ts` | 25 | Vocabulaire par genre, complétion et filtrage des liens, prix à la française, recherche sans accent ni ligature, ordre d'affichage |
+| `tests/unit/recommendations.test.ts` | 27 | Vocabulaire des sept genres, complétion et filtrage des liens, prix à la française, recherche sans accent ni ligature, ordre d'affichage |
 
 `npm test`
 
