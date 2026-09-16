@@ -101,13 +101,26 @@ export async function POST(request: NextRequest) {
   if (due.length === 0) {
     return NextResponse.json({
       ok: true,
-      skipped: true,
+      skipped: 'a_jour',
       outcomes: [],
       totals: EMPTY_TOTALS,
     });
   }
 
   const outcomes = await syncCalendars(admin, due);
+
+  // Rien n'a été entamé alors qu'il y avait à faire : une campagne était déjà
+  // en route. « Déjà à jour » serait faux, et c'est le genre de petit mensonge
+  // qui fait douter de tout le reste.
+  if (outcomes.length === 0) {
+    return NextResponse.json({
+      ok: true,
+      skipped: 'en_cours',
+      outcomes: [],
+      totals: EMPTY_TOTALS,
+    });
+  }
+
   const failed = outcomes.filter((o) => o.status === 'echec');
 
   return NextResponse.json(

@@ -118,6 +118,15 @@ export function googleSyncReadiness(): Readiness {
  * préavis à l'expiration de son temps : mieux vaut s'arrêter soi-même entre
  * deux calendriers, en laissant chacun cohérent, que d'être coupé au milieu
  * d'une campagne.
+ *
+ * Un calendrier déjà en cours de campagne est **sauté**. Quatre déclencheurs
+ * peuvent partir en même temps, et Vercel avertit qu'une exécution programmée
+ * est parfois invoquée deux fois. Deux campagnes simultanées sur le même
+ * calendrier ne se contentent pas de gaspiller : elles lisent la même page
+ * d'événements avant que l'une n'ait écrit sa correspondance, insèrent chacune
+ * l'événement, et **un seul des deux liens passe** — l'index unique refuse le
+ * second. L'événement orphelin, lui, reste : un doublon visible dans le
+ * calendrier du foyer, exactement ce que ce module promet d'empêcher.
  */
 export async function syncCalendars(
   admin: SupabaseClient<Database>,
@@ -140,6 +149,8 @@ export async function syncCalendars(
       if (options.deadline !== undefined && Date.now() > options.deadline) {
         return outcomes;
       }
+      if (await isSyncInFlight(admin, calendar.id)) continue;
+
       outcomes.push(await syncCalendar(admin, client, calendar));
     }
   }
@@ -165,6 +176,14 @@ const IN_FLIGHT_TIMEOUT_MS = 2 * 60_000;
  * La borne de deux minutes est ce qui distingue « une campagne travaille » de
  * « une campagne a été interrompue et a laissé sa ligne en l'état ». Sans
  * elle, un seul plantage suffirait à bloquer un calendrier pour toujours.
+ *
+ * Ce n'est pas un verrou : deux campagnes qui démarrent à la même
+ * milliseconde se verront mutuellement « libres ». C'est assumé. Un vrai
+ * verrou en base — un index unique sur les campagnes en cours — fermerait
+ * cette fenêtre, mais bloquerait le calendrier pour de bon au premier
+ * plantage, faute de savoir qu'une ligne est périmée. On préfère une fenêtre
+ * de quelques millisecondes qui se referme seule à un verrou qui demande une
+ * intervention.
  */
 export async function isSyncInFlight(
   admin: SupabaseClient<Database>,

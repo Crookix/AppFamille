@@ -190,10 +190,27 @@ changer cette seule ligne : l'écran Google Agenda lit la planification dans
 ailleurs. Comptez aussi que Hobby n'assure pas l'heure exacte — un `0 4 * * *`
 part entre 4 h 00 et 4 h 59 UTC.
 
-`CRON_SECRET` est **obligatoire**. Vercel la présente en en-tête
-d'autorisation ; sans elle, la route refuse de s'exécuter plutôt que de rester
-ouverte à qui connaît son adresse. À déclarer dans les variables
-d'environnement du projet Vercel, puis à redéployer.
+`CRON_SECRET` est **obligatoire**, et la variable doit porter exactement ce
+nom : c'est celui que Vercel reconnaît pour l'envoyer automatiquement en
+en-tête `Authorization: Bearer …` à chaque invocation. Une valeur aléatoire
+d'au moins seize caractères — `openssl rand -base64 32` fait l'affaire. À
+déclarer dans les variables d'environnement du projet Vercel, puis à
+redéployer.
+
+Sans elle, la route refuse de s'exécuter plutôt que de rester ouverte à qui
+connaît son adresse. Ce n'est pas qu'une question de filet : **le passage
+programmé est aussi le seul mécanisme qui renouvelle les canaux de
+notification**. Sans lui, les canaux expirent au bout de quelques jours et
+personne ne les rouvre — les notifications Google s'arrêtent alors
+définitivement, et il ne reste que la synchronisation à l'ouverture du
+calendrier. L'écran Google Agenda le dit, calendrier par calendrier, plutôt que
+de promettre un passage qui ne viendrait jamais.
+
+Deux comportements documentés par Vercel, dont le code tient compte :
+une invocation manquée **n'est pas rejouée** (la rotation du plus ancien au
+plus récent rattrape le tour suivant), et une exécution peut être **invoquée
+deux fois** — d'où la garde qui saute un calendrier dont la campagne est déjà
+en route, sans quoi deux campagnes concurrentes créeraient un doublon visible.
 
 > Ce qu'un seul passage par jour change est plus petit qu'il n'y paraît, **à
 > condition que les notifications Google fonctionnent** : elles couvrent la

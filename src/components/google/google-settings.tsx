@@ -148,6 +148,14 @@ export function GoogleSettings({
         return;
       }
 
+      // Une campagne était déjà en route — déclenchée par Google, par le
+      // passage programmé, ou par un autre onglet. Annoncer « déjà à jour »
+      // serait faux : elle n'a pas fini.
+      if (payload.skipped === 'en_cours') {
+        toast.toast('Une synchronisation est déjà en cours.', { tone: 'info' });
+        return;
+      }
+
       const { imported, updated, exported, deleted, conflicts } = payload.totals;
 
       if (!payload.ok) {
@@ -403,9 +411,14 @@ export function GoogleSettings({
                           ) : (
                             <>
                               <BellOff className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                              {pushSupported
-                                ? 'Notifications pas encore actives : elles seront demandées au prochain passage automatique.'
-                                : 'Notifications indisponibles ici : ce calendrier se met à jour aux passages automatiques.'}
+                              {!pushSupported
+                                ? "Notifications indisponibles ici : ce calendrier se met à jour à l'ouverture du calendrier."
+                                : scheduledSyncConfigured
+                                  ? 'Notifications pas encore actives : elles seront demandées au prochain passage programmé.'
+                                  : // Sans passage programmé, ce « prochain passage » ne viendrait
+                                    // jamais : le dire serait une promesse en l'air, et c'est
+                                    // exactement ce qu'on ne fait pas ici.
+                                    'Notifications pas encore actives, et rien ne les demandera : le passage programmé est désactivé (CRON_SECRET manquante).'}
                             </>
                           )}
                         </p>
