@@ -138,6 +138,15 @@ export function QuickShoppingSheet({
     onClose();
   }
 
+  /* Toucher « Ajouter » ou une habitude ne doit pas retirer le focus au champ :
+     sur téléphone, le clavier se refermerait, et le rappeler par `focus()`
+     après l'envoi ne fonctionne pas sur iOS, qui exige un geste de la
+     personne. On empêche donc le bouton de prendre le focus ; le clic, lui,
+     part normalement. */
+  function keepKeyboard(event: React.MouseEvent) {
+    event.preventDefault();
+  }
+
   const suggestedAisle = label.trim() ? guessAisle(label) : null;
 
   return (
@@ -168,7 +177,7 @@ export function QuickShoppingSheet({
             placeholder="Lait, pain, tomates…"
             maxLength={120}
             data-autofocus
-            enterKeyHint="done"
+            enterKeyHint="enter"
           />
         </Field>
 
@@ -224,7 +233,13 @@ export function QuickShoppingSheet({
           </Field>
         ) : null}
 
-        <Button type="submit" className="w-full" loading={pending} disabled={!label.trim()}>
+        <Button
+          type="submit"
+          className="w-full"
+          loading={pending}
+          disabled={!label.trim()}
+          onMouseDown={keepKeyboard}
+        >
           {pending ? null : <Plus className="h-4 w-4" aria-hidden />}
           Ajouter
         </Button>
@@ -251,6 +266,7 @@ export function QuickShoppingSheet({
                 key={item.id}
                 type="button"
                 disabled={pending}
+                onMouseDown={keepKeyboard}
                 onClick={() => add(item.label, item.unit, item.aisle)}
                 className="h-9 rounded-full bg-[var(--bg-subtle)] px-3.5 text-sm font-semibold text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)] disabled:opacity-50"
               >

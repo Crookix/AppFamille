@@ -35,6 +35,15 @@ export function Sheet({
   const titleId = React.useId();
   const descId = React.useId();
 
+  // `onClose` est souvent une fonction recréée à chaque rendu. S'il figurait
+  // dans les dépendances de l'effet ci-dessous, chaque frappe ou chaque ajout
+  // relancerait l'effet : le focus repartirait vers l'élément d'origine puis
+  // reviendrait au premier champ — et sur téléphone, le clavier se refermerait.
+  const onCloseRef = React.useRef(onClose);
+  React.useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   React.useEffect(() => setMounted(true), []);
 
   React.useEffect(() => {
@@ -47,7 +56,7 @@ export function Sheet({
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== 'Tab' || !panelRef.current) return;
@@ -84,7 +93,7 @@ export function Sheet({
       window.clearTimeout(timer);
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!mounted || !open) return null;
 
