@@ -13,6 +13,7 @@ import {
   ListChecks,
   ListPlus,
   RefreshCw,
+  Settings,
   Sparkles,
   Trash2,
   UserPlus,
@@ -26,15 +27,10 @@ import {
   deleteNotificationAction,
   markAllNotificationsReadAction,
   markNotificationReadAction,
-  updateNotificationPreferencesAction,
 } from '@/lib/actions/notifications';
 import { cn } from '@/lib/utils';
 import { formatRelativeDay, formatTime } from '@/lib/datetime';
-import type {
-  NotificationKind,
-  NotificationPreferenceRow,
-  NotificationRow,
-} from '@/lib/database.types';
+import type { NotificationKind, NotificationRow } from '@/lib/database.types';
 
 const ICONS: Record<NotificationKind, React.ElementType> = {
   tache_attribuee: ListChecks,
@@ -49,64 +45,13 @@ const ICONS: Record<NotificationKind, React.ElementType> = {
   liste_ajout: ListPlus,
 };
 
-const PREFERENCE_FIELDS = [
-  {
-    key: 'tasks_assigned' as const,
-    field: 'tasksAssigned' as const,
-    label: 'Une tâche m’est attribuée',
-  },
-  {
-    key: 'tasks_completed' as const,
-    field: 'tasksCompleted' as const,
-    label: 'Une tâche est terminée par quelqu’un',
-  },
-  {
-    key: 'events_changed' as const,
-    field: 'eventsChanged' as const,
-    label: 'Un événement est ajouté ou modifié',
-  },
-  {
-    key: 'event_reminders' as const,
-    field: 'eventReminders' as const,
-    label: 'Rappels avant un événement',
-  },
-  {
-    key: 'childcare_to_confirm' as const,
-    field: 'childcareToConfirm' as const,
-    label: 'Une garde attend ses heures',
-  },
-  {
-    key: 'reco_added' as const,
-    field: 'recoAdded' as const,
-    label: 'Quelqu’un ajoute une reco',
-  },
-  {
-    key: 'list_items_added' as const,
-    field: 'listItemsAdded' as const,
-    label: 'Quelqu’un ajoute à une liste (courses, tâches, check-lists)',
-  },
-  {
-    key: 'google_sync_errors' as const,
-    field: 'googleSyncErrors' as const,
-    label: 'La synchronisation Google échoue',
-  },
-];
-
-export function NotificationCenter({
-  notifications,
-  preferences,
-}: {
-  notifications: NotificationRow[];
-  preferences: NotificationPreferenceRow | null;
-}) {
+export function NotificationCenter({ notifications }: { notifications: NotificationRow[] }) {
   const router = useRouter();
   const toast = useToast();
   const supabase = useSupabase();
   const { household, me } = useHousehold();
 
   const [items, setItems] = React.useState(notifications);
-  const [prefs, setPrefs] = React.useState(preferences);
-  const [saving, setSaving] = React.useState<string | null>(null);
 
   React.useEffect(() => setItems(notifications), [notifications]);
 
@@ -178,25 +123,6 @@ export function NotificationCenter({
   async function remove(notificationId: string) {
     setItems((current) => current.filter((n) => n.id !== notificationId));
     await deleteNotificationAction(notificationId);
-    router.refresh();
-  }
-
-  async function togglePreference(
-    field: (typeof PREFERENCE_FIELDS)[number]['field'],
-    key: (typeof PREFERENCE_FIELDS)[number]['key'],
-    value: boolean,
-  ) {
-    setSaving(key);
-    setPrefs((current) => (current ? { ...current, [key]: value } : current));
-
-    const result = await updateNotificationPreferencesAction({ [field]: value });
-    setSaving(null);
-
-    if (!result.ok) {
-      setPrefs((current) => (current ? { ...current, [key]: !value } : current));
-      toast.error(result.error);
-      return;
-    }
     router.refresh();
   }
 
@@ -303,37 +229,13 @@ export function NotificationCenter({
         </Card>
       )}
 
-      <section className="mt-6">
-        <h2 className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted">
-          Me prévenir quand…
-        </h2>
-        <Card className="divide-y divide-[var(--line)] p-0">
-          {PREFERENCE_FIELDS.map(({ key, field, label }) => {
-            // Sans ligne de préférences, tout est activé : le réglage est un
-            // retrait, pas une adhésion.
-            const checked = prefs ? prefs[key] : key !== 'tasks_completed';
-
-            return (
-              <label
-                key={key}
-                className="flex cursor-pointer items-center gap-3 px-4 py-3"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  disabled={saving === key}
-                  onChange={(e) => togglePreference(field, key, e.target.checked)}
-                  className="h-4.5 w-4.5 shrink-0 accent-[var(--color-brand-500)]"
-                />
-                <span className="min-w-0 flex-1 text-sm font-semibold">{label}</span>
-              </label>
-            );
-          })}
-        </Card>
-        <p className="mt-2 px-1 text-xs text-muted">
-          Ces réglages sont personnels : ils n'affectent pas l'autre adulte du foyer.
-        </p>
-      </section>
+      <Link
+        href="/plus/parametres#notifications"
+        className="mt-6 flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline"
+      >
+        <Settings className="h-4 w-4" aria-hidden />
+        Choisir les notifications que je reçois
+      </Link>
     </div>
   );
 }

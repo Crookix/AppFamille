@@ -310,7 +310,7 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
   et **ajout sur une liste** (courses, tâches, check-lists) par un autre
   adulte. Les ajouts rapprochés d'une même personne sont regroupés en une
   notification (« a ajouté 3 articles »).
-- Préférences par type de notification, par personne.
+- Préférences par type de notification, par personne, dans **Plus → Paramètres** (l'écran Notifications y renvoie par un lien).
 - **PWA installable** : manifeste, icônes, service worker, écran hors connexion.
 - Thème clair, sombre, ou automatique.
 - Mode démonstration : charge un foyer d'exemple complet pour faire le tour du
