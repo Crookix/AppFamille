@@ -10,7 +10,7 @@ import {
 } from './helpers';
 
 /**
- * Parcours 8 — les recommandations du foyer.
+ * Parcours 8 — les recommandations du foyer (un genre = une liste simple).
  *
  * Ce qui mérite d'être vérifié en navigateur n'est pas l'enregistrement, que
  * les tests unitaires couvrent déjà, mais deux promesses de l'écran : le
@@ -32,66 +32,33 @@ test.describe('Reco', () => {
     await deleteUser(admin, user);
   });
 
-  test('un film s’ajoute, se déclare en envie, puis se marque « Vu »', async ({
+  test('un genre ouvre sa liste, où un film s’ajoute et se coche « Vu »', async ({
     page,
     admin,
   }) => {
     await signIn(page, admin, user);
     await createHousehold(page, `Reco ${Date.now()}`, 'Camille');
 
+    // L'accueil ne montre que les genres ; un appui ouvre la seule liste.
     await page.goto('/reco');
-    await page.getByRole('button', { name: 'Ajouter', exact: true }).first().click();
+    await page.getByRole('link', { name: /Films/ }).click();
+    await expect(page.getByRole('heading', { name: 'Films' })).toBeVisible();
 
-    await page.getByRole('radio', { name: 'Film', exact: true }).click();
-    await page.getByLabel(/Quoi ?/).fill('Petite maman');
-    await page.getByLabel(/Pourquoi/).fill('Court et bouleversant.');
-    await page.getByRole('button', { name: /^Ajouter$/ }).last().click();
+    await page.getByLabel(/Ajouter à la liste/).fill('Petite maman');
+    await page.getByLabel(/Ajouter à la liste/).press('Enter');
+    await expect(page.getByText('Petite maman')).toBeVisible();
 
-    const fiche = page.getByText('Petite maman');
-    await expect(fiche).toBeVisible();
-
-    // Le vocabulaire du film, pas celui de la base.
-    await expect(page.getByText('À voir').first()).toBeVisible();
-
-    await page.getByRole('button', { name: /Moi aussi j’ai envie|envie/i }).first().click();
-    await expect(page.getByRole('button', { name: /plus envie/i }).first()).toBeVisible();
-
-    await page.getByRole('button', { name: 'Vu', exact: true }).first().click();
-    await expect(page.getByText('Vu').first()).toBeVisible();
+    // Le vocabulaire du film, pas celui de la base : « Vu », pas « fait ».
+    await page.getByRole('checkbox', { name: /Vu : Petite maman/ }).click();
+    await expect(page.getByRole('button', { name: /Vu \(1\)/ })).toBeVisible();
   });
 
-  test('une idée cadeau demande pour qui, et se marque « Offert »', async ({
-    page,
-    admin,
-  }) => {
+  test('une liste ne montre que son genre', async ({ page, admin }) => {
     await signIn(page, admin, user);
-    await page.goto('/reco');
+    await page.goto('/reco?genre=cadeau');
 
-    await page.getByRole('button', { name: 'Ajouter', exact: true }).first().click();
-    await page.getByRole('radio', { name: 'Idée cadeau' }).click();
-
-    // Les champs du cadeau n'existent que pour un cadeau.
-    await expect(page.getByText('Pour qui ?')).toBeVisible();
-
-    await page.getByLabel(/Quoi ?/).fill('Microscope pour enfant');
-    await page.getByLabel(/Destinataire/).fill('Mamie');
-    await page.getByLabel(/Occasion/).fill('Noël');
-    await page.getByLabel(/Prix/).fill('25,50');
-    await page.getByRole('button', { name: /^Ajouter$/ }).last().click();
-
-    await expect(page.getByText('Microscope pour enfant')).toBeVisible();
-    await expect(page.getByText(/Pour Mamie/)).toBeVisible();
-    await expect(page.getByText(/25,50/)).toBeVisible();
-    // « Idée », pas « À voir » : le libellé suit le genre.
-    await expect(page.getByText('Idée').first()).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Offert', exact: true })).toBeVisible();
-  });
-
-  test('les onglets filtrent par genre', async ({ page, admin }) => {
-    await signIn(page, admin, user);
-    await page.goto('/reco');
-
-    await page.getByRole('tab', { name: /Idées cadeaux/ }).click();
+    await page.getByLabel(/Ajouter à la liste/).fill('Microscope pour enfant');
+    await page.getByLabel(/Ajouter à la liste/).press('Enter');
     await expect(page.getByText('Microscope pour enfant')).toBeVisible();
     await expect(page.getByText('Petite maman')).toHaveCount(0);
   });
