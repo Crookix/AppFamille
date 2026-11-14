@@ -2,33 +2,28 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Star } from 'lucide-react';
 import { Sheet } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { ErrorNote, Field, Input, Select, Textarea } from '@/components/ui/primitives';
+import { ErrorNote, Field, Input, Textarea } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/toast';
-import { useHousehold } from '@/components/providers/household-provider';
 import {
   createRecommendationAction,
   updateRecommendationAction,
 } from '@/lib/actions/recommendations';
-import {
-  RECO_KINDS,
-  isGift,
-  parseRecoPrice,
-  recoKind,
-  recoStatusLabel,
-} from '@/lib/recommendations';
+import { RECO_KINDS, recoKind } from '@/lib/recommendations';
 import { cn } from '@/lib/utils';
-import type { RecoKind, RecoStatus, RecommendationRow } from '@/lib/database.types';
+import type { RecoKind, RecommendationRow } from '@/lib/database.types';
 
 /**
- * Formulaire d'une recommandation.
+ * Formulaire d'une recommandation : un titre, un petit mot, c'est tout.
  *
- * Le genre se choisit en premier, parce qu'il commande le reste : le libellé
- * du second champ change, et les champs du cadeau n'apparaissent que pour un
- * cadeau. Poser la question dans l'autre sens obligerait à afficher en
- * permanence « destinataire » et « prix » à quelqu'un qui note un film.
+ * Le genre ne se choisit qu'à la création (en modification, on est déjà dans
+ * la liste du genre). L'état « vu » se coche dans la liste ; la note, le lien,
+ * l'auteur, le destinataire et le prix ne sont plus saisis ici.
+ *
+ * En modification on n'envoie que le titre et le mot : l'action de mise à jour
+ * ne touche pas aux champs absents, donc ce qui avait été saisi avant
+ * (lien, note, prix d'un cadeau…) reste intact en base.
  */
 export function RecoSheet({
   open,
@@ -45,92 +40,39 @@ export function RecoSheet({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const { children } = useHousehold();
 
   const isEditing = Boolean(reco);
 
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [showMore, setShowMore] = React.useState(false);
-
   const [kind, setKind] = React.useState<RecoKind>(defaultKind);
-  const [status, setStatus] = React.useState<RecoStatus>('idee');
   const [title, setTitle] = React.useState('');
-  const [author, setAuthor] = React.useState('');
   const [note, setNote] = React.useState('');
-  const [url, setUrl] = React.useState('');
-  const [rating, setRating] = React.useState<number | null>(null);
-  const [recipientLabel, setRecipientLabel] = React.useState('');
-  const [recipientChildId, setRecipientChildId] = React.useState<string | null>(null);
-  const [occasion, setOccasion] = React.useState('');
-  const [price, setPrice] = React.useState('');
 
   React.useEffect(() => {
     if (!open) return;
-
-    if (reco) {
-      setKind(reco.kind);
-      setStatus(reco.status);
-      setTitle(reco.title);
-      setAuthor(reco.author ?? '');
-      setNote(reco.note ?? '');
-      setUrl(reco.url ?? '');
-      setRating(reco.rating);
-      setRecipientLabel(reco.recipient_label ?? '');
-      setRecipientChildId(reco.recipient_child_id);
-      setOccasion(reco.occasion ?? '');
-      setPrice(reco.price === null ? '' : String(reco.price).replace('.', ','));
-      setShowMore(Boolean(reco.url || reco.rating || reco.author));
-    } else {
-      setKind(defaultKind);
-      setStatus('idee');
-      setTitle('');
-      setAuthor('');
-      setNote('');
-      setUrl('');
-      setRating(null);
-      setRecipientLabel('');
-      setRecipientChildId(null);
-      setOccasion('');
-      setPrice('');
-      setShowMore(false);
-    }
+    setKind(reco?.kind ?? defaultKind);
+    setTitle(reco?.title ?? '');
+    setNote(reco?.note ?? '');
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reco?.id, defaultKind]);
 
   const meta = recoKind(kind);
-  const gift = isGift(kind);
 
   async function submit(formEvent: React.FormEvent) {
     formEvent.preventDefault();
     setError(null);
 
     if (!title.trim()) {
-      setError('Donnez un titre à cette recommandation.');
+      setError('Donnez un titre.');
       return;
     }
 
     setPending(true);
-
-    const payload = {
-      kind,
-      status,
-      title: title.trim(),
-      author,
-      note,
-      url,
-      rating,
-      recipientLabel,
-      recipientChildId,
-      occasion,
-      price: parseRecoPrice(price),
-    };
-
     const result = reco
-      ? await updateRecommendationAction(reco.id, payload)
-      : await createRecommendationAction(payload);
-
+      ? await updateRecommendationAction(reco.id, { title: title.trim(), note })
+      : await createRecommendationAction({ kind, title: title.trim(), note });
     setPending(false);
 
     if (!result.ok) {
@@ -138,7 +80,7 @@ export function RecoSheet({
       return;
     }
 
-    toast.success(isEditing ? 'Recommandation modifiée.' : 'Recommandation ajoutée.');
+    toast.success(isEditing ? 'Modifié.' : 'Ajouté.');
     onSaved?.();
     onClose();
     router.refresh();
@@ -148,7 +90,7 @@ export function RecoSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={isEditing ? 'Modifier la reco' : 'Nouvelle reco'}
+      title={isEditing ? meta.label : 'Nouvelle reco'}
       footer={
         <div className="flex gap-2 pb-1">
           <Button variant="outline" className="flex-1" onClick={onClose} disabled={pending}>
@@ -161,9 +103,8 @@ export function RecoSheet({
       }
     >
       <form onSubmit={submit} className="space-y-5">
-        <fieldset>
-          <legend className="mb-2 text-sm font-semibold">De quoi s'agit-il ?</legend>
-          <div className="flex flex-wrap gap-2">
+        {!isEditing ? (
+          <div role="radiogroup" aria-label="Genre" className="flex flex-wrap gap-2">
             {RECO_KINDS.map((choice) => {
               const selected = kind === choice.key;
               return (
@@ -185,7 +126,7 @@ export function RecoSheet({
               );
             })}
           </div>
-        </fieldset>
+        ) : null}
 
         <Field label="Quoi ?" required>
           <Input
@@ -198,173 +139,18 @@ export function RecoSheet({
           />
         </Field>
 
-        <Field label="Pourquoi vous le recommandez" hint="facultatif">
+        <Field label="Un mot" hint="facultatif">
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Un mot pour donner envie…"
+            placeholder="Pourquoi, où, avec qui…"
             maxLength={2000}
             rows={2}
           />
         </Field>
 
-        {gift ? (
-          <div className="space-y-5 rounded-2xl border border-[var(--line)] p-3.5">
-            <p className="text-sm font-semibold">Pour qui ?</p>
-
-            {children.length > 0 ? (
-              <Field label="Un enfant du foyer" hint="facultatif">
-                <Select
-                  value={recipientChildId ?? ''}
-                  onChange={(e) => setRecipientChildId(e.target.value || null)}
-                >
-                  <option value="">Quelqu'un d'autre</option>
-                  {children.map((child) => (
-                    <option key={child.id} value={child.id}>
-                      {child.first_name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            ) : null}
-
-            {!recipientChildId ? (
-              <Field label="Destinataire" hint="facultatif">
-                <Input
-                  value={recipientLabel}
-                  onChange={(e) => setRecipientLabel(e.target.value)}
-                  placeholder="Mamie, un ami de Léa…"
-                  maxLength={80}
-                />
-              </Field>
-            ) : null}
-
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Occasion" hint="facultatif">
-                <Input
-                  value={occasion}
-                  onChange={(e) => setOccasion(e.target.value)}
-                  placeholder="Noël"
-                  maxLength={80}
-                />
-              </Field>
-              <Field label="Prix" hint="facultatif">
-                <Input
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="25,00"
-                  inputMode="decimal"
-                  maxLength={12}
-                />
-              </Field>
-            </div>
-          </div>
-        ) : null}
-
-        {isEditing ? (
-          <Field label="Où en êtes-vous ?">
-            <Select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as RecoStatus)}
-            >
-              <option value="idee">{recoStatusLabel(kind, 'idee')}</option>
-              <option value="en_cours">{recoStatusLabel(kind, 'en_cours')}</option>
-              <option value="fait">{recoStatusLabel(kind, 'fait')}</option>
-            </Select>
-          </Field>
-        ) : null}
-
-        {!showMore ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            onClick={() => setShowMore(true)}
-          >
-            {meta.authorLabel}, lien, note…
-          </Button>
-        ) : (
-          <div className="space-y-5 border-t border-[var(--line)] pt-5">
-            <Field label={meta.authorLabel} hint="facultatif">
-              <Input
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder={meta.authorPlaceholder}
-                maxLength={120}
-              />
-            </Field>
-
-            <Field label="Lien" hint="facultatif">
-              <Input
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="allocine.fr/film/…"
-                inputMode="url"
-                maxLength={2000}
-              />
-            </Field>
-
-            <RatingPicker value={rating} onChange={setRating} />
-          </div>
-        )}
-
         {error ? <ErrorNote>{error}</ErrorNote> : null}
       </form>
     </Sheet>
-  );
-}
-
-/**
- * Note sur cinq étoiles.
- *
- * Appuyer une seconde fois sur l'étoile déjà choisie efface la note : sans
- * cela, une note posée par erreur serait impossible à retirer, puisqu'il n'y a
- * pas de « zéro étoile » à viser.
- */
-function RatingPicker({
-  value,
-  onChange,
-}: {
-  value: number | null;
-  onChange: (next: number | null) => void;
-}) {
-  return (
-    <div>
-      <span className="mb-2 block text-sm font-semibold">
-        Votre note <span className="text-xs font-normal text-muted">facultatif</span>
-      </span>
-      <div className="flex items-center gap-1" role="group" aria-label="Note sur cinq">
-        {[1, 2, 3, 4, 5].map((star) => {
-          const active = (value ?? 0) >= star;
-          return (
-            <button
-              key={star}
-              type="button"
-              aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
-              aria-pressed={active}
-              onClick={() => onChange(value === star ? null : star)}
-              className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-[var(--bg-subtle)]"
-            >
-              <Star
-                className={cn(
-                  'h-5 w-5',
-                  active ? 'fill-honey-500 text-honey-500' : 'text-[var(--line)]',
-                )}
-                aria-hidden
-              />
-            </button>
-          );
-        })}
-        {value !== null ? (
-          <button
-            type="button"
-            onClick={() => onChange(null)}
-            className="ml-1 text-sm font-semibold text-muted hover:text-[var(--fg)]"
-          >
-            Effacer
-          </button>
-        ) : null}
-      </div>
-    </div>
   );
 }
