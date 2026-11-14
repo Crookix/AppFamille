@@ -32,7 +32,7 @@ vérifications dans [`docs/TESTS.md`](docs/TESTS.md), l'intégration Google dans
 | `npm run test:watch` | Les mêmes, en continu |
 | `npm run test:e2e` | Parcours navigateur Playwright — demande une application qui tourne |
 | `npm run db:push` | Applique les migrations SQL manquantes sur la base Supabase |
-| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 70 vérifications |
+| `psql "$SUPABASE_DB_URL" -f supabase/tests/isolation.sql` | Étanchéité entre foyers — 76 vérifications |
 | `psql "$SUPABASE_DB_URL" -f supabase/tests/effacement.sql` | Ce que la suppression d'un compte laisserait derrière |
 
 `npm run db:push` lit `SUPABASE_DB_URL` dans `.env.local`, applique les fichiers

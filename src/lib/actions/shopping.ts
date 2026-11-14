@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, ShopAisle } from '@/lib/database.types';
 import { guessAisle, normalizeLabel, parseUnit } from '@/lib/ingredients';
 import { fail, humanizeDbError, ok, requireActiveHousehold } from './_helpers';
+import { notifyAddition } from './_notify';
 
 const AISLES = [
   'fruits_legumes',
@@ -113,6 +114,21 @@ export async function addShoppingItemAction(input: ShoppingItemInput) {
   if (error || !data) return fail(humanizeDbError(error));
 
   await rememberFrequentItem(supabase, household.id, item.label.trim(), labelKey, unit, aisle);
+
+  const { data: list } = await supabase
+    .from('shopping_lists')
+    .select('name')
+    .eq('id', listId)
+    .maybeSingle();
+  const listName = list?.name ?? 'Courses';
+  await notifyAddition(supabase, {
+    householdId: household.id,
+    kind: 'liste_ajout',
+    title: `Ajout sur « ${listName} »`,
+    body: `${member.display_name} a ajouté « ${item.label.trim()} ».`,
+    bodyMany: `${member.display_name} a ajouté {n} articles à « ${listName} ».`,
+    link: `/listes?onglet=courses&liste=${listId}`,
+  });
 
   revalidatePath('/');
   revalidatePath('/listes');

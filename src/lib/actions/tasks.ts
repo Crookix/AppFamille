@@ -6,6 +6,7 @@ import { RRule } from 'rrule';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
 import { fail, humanizeDbError, ok, requireActiveHousehold } from './_helpers';
+import { notifyAddition } from './_notify';
 
 const taskSchema = z.object({
   title: z.string().trim().min(1, 'Le titre est obligatoire.').max(200),
@@ -71,6 +72,19 @@ export async function createTaskAction(input: TaskInput) {
   if (error || !data) return fail(humanizeDbError(error));
 
   await notifyAssignee(supabase, household.id, member, data.id, data.title, data.assignee_id);
+
+  // Une sous-tâche n'est pas un ajout à la liste : elle précise une tâche
+  // que le foyer a déjà vue passer.
+  if (!task.parentTaskId) {
+    await notifyAddition(supabase, {
+      householdId: household.id,
+      kind: 'liste_ajout',
+      title: 'Ajout sur « Tâches »',
+      body: `${member.display_name} a ajouté « ${data.title} ».`,
+      bodyMany: `${member.display_name} a ajouté {n} tâches.`,
+      link: '/listes?onglet=taches',
+    });
+  }
 
   revalidatePath('/');
   revalidatePath('/listes');

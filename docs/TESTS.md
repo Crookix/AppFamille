@@ -47,13 +47,13 @@ pas une imitation de la sécurité, c'est la sécurité elle-même.
 - lire les canaux de notification Google d'un autre foyer, ou en inscrire un
   chez lui.
 
-**Résultat : 70 vérifications, 70 conformes.**
+**Résultat : 76 vérifications, 76 conformes.**
 
 Deux exécutions, sur deux bases différentes :
 
 - **36 vérifications contre la base Supabase réelle**, avant l'arrivée de la
   reco. C'est la mesure de référence historique.
-- **70 vérifications contre un PostgreSQL 16 local**, après l'ajout des six
+- **76 vérifications contre un PostgreSQL 16 local**, dont six sur `notify_household` (`0022` : regroupement, auteur exclu, réglage respecté, foyer étranger, type et lien forgés), après l'ajout des six
   points portant sur `recommendations`, des vingt de l'espace nounou, des
   cinq des check-lists et des trois portant sur les canaux de notification
   Google (`0019`). Les migrations du dépôt y sont rejouées depuis une

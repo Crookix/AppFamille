@@ -5,6 +5,8 @@ import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { normalizeRecoUrl } from '@/lib/recommendations';
 import { fail, humanizeDbError, ok, requireActiveHousehold } from './_helpers';
+import { notifyAddition } from './_notify';
+import { recoKind } from '@/lib/recommendations';
 
 const recoSchema = z.object({
   kind: z.enum(['film', 'serie', 'lecture', 'theatre', 'sortie', 'cadeau', 'autre']),
@@ -91,6 +93,16 @@ export async function createRecommendationAction(input: RecommendationInput) {
     .single();
 
   if (error || !data) return fail(humanizeDbError(error));
+
+  const genre = recoKind(reco.kind);
+  await notifyAddition(supabase, {
+    householdId: household.id,
+    kind: 'reco_ajoutee',
+    title: `Nouvelle reco : ${genre.label.toLowerCase()}`,
+    body: `${member.display_name} a ajouté « ${reco.title} ».`,
+    bodyMany: `${member.display_name} a ajouté {n} éléments à « ${genre.plural} ».`,
+    link: `/reco?genre=${reco.kind}`,
+  });
 
   revalidatePath('/reco');
   return ok({ id: data.id });

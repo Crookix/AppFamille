@@ -73,6 +73,8 @@ const preferencesSchema = z.object({
   eventReminders: z.boolean().optional(),
   childcareToConfirm: z.boolean().optional(),
   googleSyncErrors: z.boolean().optional(),
+  recoAdded: z.boolean().optional(),
+  listItemsAdded: z.boolean().optional(),
 });
 
 /**
@@ -99,6 +101,8 @@ export async function updateNotificationPreferencesAction(
   if (p.eventReminders !== undefined) patch.event_reminders = p.eventReminders;
   if (p.childcareToConfirm !== undefined) patch.childcare_to_confirm = p.childcareToConfirm;
   if (p.googleSyncErrors !== undefined) patch.google_sync_errors = p.googleSyncErrors;
+  if (p.recoAdded !== undefined) patch.reco_added = p.recoAdded;
+  if (p.listItemsAdded !== undefined) patch.list_items_added = p.listItemsAdded;
 
   if (Object.keys(patch).length === 0) return ok();
 

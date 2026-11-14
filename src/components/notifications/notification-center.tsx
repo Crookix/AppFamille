@@ -11,7 +11,9 @@ import {
   CalendarClock,
   CheckCheck,
   ListChecks,
+  ListPlus,
   RefreshCw,
+  Sparkles,
   Trash2,
   UserPlus,
 } from 'lucide-react';
@@ -43,6 +45,8 @@ const ICONS: Record<NotificationKind, React.ElementType> = {
   garde_a_confirmer: Baby,
   invitation_acceptee: UserPlus,
   sync_google: RefreshCw,
+  reco_ajoutee: Sparkles,
+  liste_ajout: ListPlus,
 };
 
 const PREFERENCE_FIELDS = [
@@ -70,6 +74,16 @@ const PREFERENCE_FIELDS = [
     key: 'childcare_to_confirm' as const,
     field: 'childcareToConfirm' as const,
     label: 'Une garde attend ses heures',
+  },
+  {
+    key: 'reco_added' as const,
+    field: 'recoAdded' as const,
+    label: 'Quelqu’un ajoute une reco',
+  },
+  {
+    key: 'list_items_added' as const,
+    field: 'listItemsAdded' as const,
+    label: 'Quelqu’un ajoute à une liste (courses, tâches, check-lists)',
   },
   {
     key: 'google_sync_errors' as const,
@@ -111,6 +125,21 @@ export function NotificationCenter({
         },
         (payload) => {
           setItems((current) => [payload.new as NotificationRow, ...current]);
+        },
+      )
+      // Les ajouts rapprochés sont regroupés en mettant à jour la notification
+      // existante : sans cet écouteur, « a ajouté 3 articles » resterait à 1.
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${me.user_id}`,
+        },
+        (payload) => {
+          const next = payload.new as NotificationRow;
+          setItems((current) => [next, ...current.filter((n) => n.id !== next.id)]);
         },
       )
       .subscribe();

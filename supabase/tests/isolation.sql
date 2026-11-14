@@ -888,6 +888,112 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Notifications d'ajout (0021, 0022) — notify_household
+--
+-- Camille est seule dans le foyer A : on y inscrit Sam, qui coupera ensuite
+-- le réglage. Sans destinataire réel, « personne n'a été notifié » ne
+-- prouverait rien — d'où les témoins.
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  a uuid := (select valeur from _t where cle='foyer_a')::uuid;
+  v_camille text := (select valeur from _t where cle='camille');
+  v_alex    text := (select valeur from _t where cle='alex');
+  v_sam     text := gen_random_uuid()::text;
+  n integer;
+begin
+  insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
+                          email_confirmed_at, created_at, updated_at,
+                          raw_app_meta_data, raw_user_meta_data)
+  values (v_sam::uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+          'verif.sam@myfamily.test', extensions.crypt('VerifTribu!2026', extensions.gen_salt('bf')),
+          now(), now(), now(), '{"provider":"email","providers":["email"]}'::jsonb,
+          '{"full_name":"Sam"}'::jsonb);
+  insert into public.household_members (household_id, user_id, role, display_name, color)
+  values (a, v_sam, 'adulte', 'Sam', 'sauge');
+  insert into _t values ('sam', v_sam);
+
+  -- Camille ajoute deux fois de suite : une seule notification pour Sam.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_camille, 'role','authenticated')::text, true);
+  set local role authenticated;
+
+  perform public.notify_household(a, 'liste_ajout', 'Ajout sur « Courses »',
+    'Camille a ajouté « Lait ».', 'Camille a ajouté {n} articles.', '/listes?onglet=courses', 1);
+  perform public.notify_household(a, 'liste_ajout', 'Ajout sur « Courses »',
+    'Camille a ajouté « Pain ».', 'Camille a ajouté {n} articles.', '/listes?onglet=courses', 1);
+
+  reset role;
+  select count(*) into n from public.notifications
+   where household_id = a and user_id = v_sam and kind = 'liste_ajout' and group_count = 2
+     and body = 'Camille a ajouté 2 articles.';
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Notifications', 'TÉMOIN — deux ajouts rapprochés donnent une notification groupée pour Sam',
+            n || ' ligne(s)', case when n=1 then 'OK' else 'FAILLE' end);
+
+  select count(*) into n from public.notifications
+   where household_id = a and user_id = v_camille and kind = 'liste_ajout';
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Notifications', 'L''auteur ne se notifie pas lui-même', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  -- Sam coupe le réglage : Camille ajoute une reco, Sam ne reçoit rien.
+  insert into public.notification_preferences (household_id, user_id, reco_added)
+  values (a, v_sam, false);
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_camille, 'role','authenticated')::text, true);
+  set local role authenticated;
+  perform public.notify_household(a, 'reco_ajoutee', 'Nouvelle reco', 'Camille a ajouté « Film ».',
+    'Camille a ajouté {n} éléments.', '/reco?genre=film', 1);
+  reset role;
+
+  select count(*) into n from public.notifications
+   where household_id = a and user_id = v_sam and kind = 'reco_ajoutee';
+  insert into _r (domaine, tentative, observe, verdict)
+    values ('Notifications', 'Un réglage coupé est respecté', n || ' ligne(s)',
+            case when n=0 then 'OK' else 'FAILLE' end);
+
+  -- Alex (foyer B) ne peut pas notifier le foyer A.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alex, 'role','authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.notify_household(a, 'liste_ajout', 'Intrusion', 'x', 'x', null, 1);
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Notifications', 'Notifier le foyer A depuis le foyer B', 'accepté', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Notifications', 'Notifier le foyer A depuis le foyer B', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- Un membre ne fabrique pas un autre type de notification.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_camille, 'role','authenticated')::text, true);
+  begin
+    perform public.notify_household(a, 'garde_a_confirmer', 'Faux', 'x', 'x', null, 1);
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Notifications', 'Forger une notification « garde à confirmer »', 'accepté', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Notifications', 'Forger une notification « garde à confirmer »', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  -- Un lien extérieur n'a rien à faire dans une alerte.
+  begin
+    perform public.notify_household(a, 'liste_ajout', 'Lien', 'x', 'x', 'https://exemple.test', 1);
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Notifications', 'Glisser un lien extérieur dans une notification', 'accepté', 'FAILLE');
+  exception when others then
+    insert into _r (domaine, tentative, observe, verdict)
+      values ('Notifications', 'Glisser un lien extérieur dans une notification', 'refusé ('||sqlstate||')', 'OK');
+  end;
+
+  reset role;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Résultat
 -- ---------------------------------------------------------------------------
 

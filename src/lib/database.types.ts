@@ -83,7 +83,9 @@ export type NotificationKind =
   | 'rappel'
   | 'garde_a_confirmer'
   | 'invitation_acceptee'
-  | 'sync_google';
+  | 'sync_google'
+  | 'reco_ajoutee'
+  | 'liste_ajout';
 
 // --- Lignes -----------------------------------------------------------------
 
@@ -624,6 +626,8 @@ export type NotificationRow = {
   link: string | null;
   actor_user_id: string | null;
   read_at: string | null;
+  /** Nombre d'ajouts regroupés dans cette notification. */
+  group_count: number;
   created_at: string;
 };
 
@@ -637,6 +641,8 @@ export type NotificationPreferenceRow = {
   event_reminders: boolean;
   childcare_to_confirm: boolean;
   google_sync_errors: boolean;
+  reco_added: boolean;
+  list_items_added: boolean;
   push_enabled: boolean;
   created_at: string;
   updated_at: string;
@@ -753,6 +759,18 @@ export type Database = {
       };
     };
     Functions: {
+      notify_household: {
+        Args: {
+          p_household_id: string;
+          p_kind: 'reco_ajoutee' | 'liste_ajout';
+          p_title: string;
+          p_body: string;
+          p_body_many: string;
+          p_link: string | null;
+          p_count?: number;
+        };
+        Returns: undefined;
+      };
       create_household: {
         Args: { p_name: string; p_display_name?: string | null; p_timezone?: string };
         Returns: string;

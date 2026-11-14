@@ -306,7 +306,10 @@ Le détail (mise en place, portées, comportement en cas d'erreur) est dans
   repas et notifications s'actualisent chez l'un quand l'autre modifie quelque
   chose, sans rechargement.
 - Notifications dans l'application : invitation acceptée, tâche qui vous est
-  attribuée, événement à venir, séance de garde à confirmer.
+  attribuée, événement à venir, séance de garde à confirmer, **reco ajoutée**
+  et **ajout sur une liste** (courses, tâches, check-lists) par un autre
+  adulte. Les ajouts rapprochés d'une même personne sont regroupés en une
+  notification (« a ajouté 3 articles »).
 - Préférences par type de notification, par personne.
 - **PWA installable** : manifeste, icônes, service worker, écran hors connexion.
 - Thème clair, sombre, ou automatique.
