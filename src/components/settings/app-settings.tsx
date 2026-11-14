@@ -24,16 +24,20 @@ import { useSignOut } from '@/components/providers/use-supabase';
 import { useHousehold } from '@/components/providers/household-provider';
 import { switchHouseholdAction, updateMyMemberAction } from '@/lib/actions/household';
 import { deleteDemoHouseholdAction, loadDemoHouseholdAction } from '@/lib/actions/demo';
+import { NotificationPreferences } from '@/components/notifications/notification-preferences';
 import { MEMBER_COLORS, cn } from '@/lib/utils';
+import type { NotificationPreferenceRow } from '@/lib/database.types';
 
 type Theme = 'auto' | 'light' | 'dark';
 
 export function AppSettings({
   email,
   demoEnabled,
+  notificationPreferences,
 }: {
   email: string | null;
   demoEnabled: boolean;
+  notificationPreferences: NotificationPreferenceRow | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -184,6 +188,14 @@ export function AppSettings({
           </Button>
         </div>
       </Card>
+
+      {/* --- Notifications -------------------------------------------------- */}
+      <section id="notifications" className="mb-4 scroll-mt-4">
+        <h2 className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted">
+          Me prévenir quand…
+        </h2>
+        <NotificationPreferences preferences={notificationPreferences} />
+      </section>
 
       {/* --- Apparence ------------------------------------------------------ */}
       <section className="mb-4">

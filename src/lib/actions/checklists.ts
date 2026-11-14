@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { parseChecklistDraft } from '@/lib/checklists';
 import { fail, humanizeDbError, ok, requireActiveHousehold } from './_helpers';
+import { notifyAddition } from './_notify';
 
 const checklistSchema = z.object({
   name: z.string().trim().min(1, 'Donnez un nom à cette check-list.').max(80),
@@ -191,11 +192,11 @@ export async function addChecklistItemsAction(checklistId: string, texte: string
   const active = await requireActiveHousehold();
   if (!active.ok) return active;
 
-  const { supabase, household } = active.data;
+  const { supabase, household, member } = active.data;
 
   const { data: liste } = await supabase
     .from('checklists')
-    .select('id')
+    .select('id, name')
     .eq('id', checklistId)
     .eq('household_id', household.id)
     .maybeSingle();
@@ -222,6 +223,19 @@ export async function addChecklistItemsAction(checklistId: string, texte: string
   );
 
   if (error) return fail(humanizeDbError(error));
+
+  await notifyAddition(supabase, {
+    householdId: household.id,
+    kind: 'liste_ajout',
+    title: `Ajout sur « ${liste.name} »`,
+    body:
+      points.length === 1
+        ? `${member.display_name} a ajouté « ${points[0]} ».`
+        : `${member.display_name} a ajouté ${points.length} points.`,
+    bodyMany: `${member.display_name} a ajouté {n} points à « ${liste.name} ».`,
+    link: '/listes?onglet=checklists',
+    count: points.length,
+  });
 
   revalidatePath('/listes');
   return ok({ ajoutes: points.length });
