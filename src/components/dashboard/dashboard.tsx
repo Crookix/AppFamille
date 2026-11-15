@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   Baby,
+  Check,
   ChevronRight,
   Plus,
   ShoppingBasket,
@@ -14,6 +15,7 @@ import {
 import { Card, CardTitle, CheckCircle, EmptyState } from '@/components/ui/primitives';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
+import { SwipeRow } from '@/components/ui/swipe-row';
 import { useToast } from '@/components/ui/toast';
 import { useHousehold } from '@/components/providers/household-provider';
 import { EventCard } from '@/components/calendar/event-card';
@@ -93,7 +95,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
         <p className="text-[0.9375rem] font-semibold text-muted first-letter:uppercase">
           {formatDayLong(data.today)}
         </p>
-        <h1 className="mt-1 text-balance text-[2.25rem] font-extrabold leading-[1.05] tracking-[-0.03em]">
+        <h1 className="mt-1 text-balance text-[2.25rem] font-bold leading-[1.05] tracking-[-0.03em]">
           {greeting}, {me.display_name.split(' ')[0]}
         </h1>
         <p className="mt-3 text-[1.0625rem] leading-snug text-muted">{summary}</p>
@@ -162,8 +164,16 @@ export function Dashboard({ data }: { data: DashboardData }) {
               const leavingNow = leaving.includes(task.id);
 
               return (
-                <div
+                <SwipeRow
                   key={task.id}
+                  onSwipeRight={{
+                    label: 'Terminer',
+                    icon: <Check className="h-5 w-5" aria-hidden />,
+                    tone: 'ok',
+                    onTrigger: () => completeTask(task.id),
+                  }}
+                >
+                <div
                   className={cn(
                     'relative flex items-center gap-1 py-1 pl-2 pr-4',
                     'transition-[opacity,transform] duration-200 ease-out',
@@ -202,6 +212,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
                     </span>
                   )}
                 </div>
+                </SwipeRow>
               );
             })}
           </Card>
@@ -385,7 +396,7 @@ function Section({
   return (
     <section className="reveal" style={stagger(index)}>
       <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
-        <h2 className="text-[1.375rem] font-extrabold tracking-[-0.02em]">{title}</h2>
+        <h2 className="text-[1.375rem] font-bold tracking-[-0.02em]">{title}</h2>
         {action}
       </div>
       {children}
@@ -406,9 +417,9 @@ function SectionLink({ href, children }: { href: string; children: React.ReactNo
 }
 
 /**
- * Pastille d'icône : la catégorie se reconnaît avant d'être lue. La teinte
- * vient de `currentColor` (14 %), donc elle suit les thèmes clair et sombre
- * sans variante dédiée.
+ * Pastille d'icône, comme dans les Réglages d'iOS : un carré arrondi de
+ * couleur pleine, un pictogramme blanc. La catégorie se reconnaît avant
+ * d'être lue. Les trois fonds portent le blanc à 4,5:1 ou plus.
  */
 function IconTile({
   tone,
@@ -417,20 +428,15 @@ function IconTile({
   tone: 'brand' | 'sage' | 'notice';
   children: React.ReactNode;
 }) {
-  const color =
-    tone === 'brand'
-      ? 'text-[var(--accent-text)]'
-      : tone === 'sage'
-        ? 'text-[var(--sage-text)]'
-        : 'text-[var(--notice-fg)]';
+  const background =
+    tone === 'brand' ? 'bg-brand-500' : tone === 'sage' ? 'bg-sage-500' : 'bg-[#b85200]';
 
   return (
     <span
       aria-hidden
       className={cn(
-        'flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem]',
-        'bg-[color-mix(in_srgb,currentColor_14%,transparent)]',
-        color,
+        'flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.7rem] text-white',
+        background,
       )}
     >
       {children}

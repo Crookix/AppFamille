@@ -58,7 +58,7 @@ export function NanniesManager({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Nounous et gardes</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Nounous et gardes</h1>
         {nannies.length > 0 ? (
           <Button size="sm" onClick={() => setPlanning(true)}>
             <Plus className="h-4 w-4" aria-hidden />

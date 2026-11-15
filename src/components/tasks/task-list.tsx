@@ -2,8 +2,9 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ListChecks, Plus, Repeat } from 'lucide-react';
+import { Check, ListChecks, Plus, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SwipeRow } from '@/components/ui/swipe-row';
 import { Badge, Card, CheckCircle, EmptyState } from '@/components/ui/primitives';
 import { Sheet } from '@/components/ui/sheet';
 import { useToast } from '@/components/ui/toast';
@@ -222,7 +223,16 @@ export function TaskList({
             const doneSubtasks = taskSubtasks.filter((s) => s.status === 'termine').length;
 
             return (
-              <div key={task.id} className="flex items-center gap-1 py-0.5 pl-1 pr-2">
+              <SwipeRow
+                key={task.id}
+                onSwipeRight={{
+                  label: task.status === 'termine' ? 'Rouvrir' : 'Terminer',
+                  icon: <Check className="h-5 w-5" aria-hidden />,
+                  tone: 'ok',
+                  onTrigger: () => toggle(task),
+                }}
+              >
+              <div className="flex items-center gap-1 py-0.5 pl-1 pr-2">
                 <CheckCircle
                   checked={task.status === 'termine'}
                   onChange={() => toggle(task)}
@@ -284,6 +294,7 @@ export function TaskList({
                   </button>
                 )}
               </div>
+              </SwipeRow>
             );
           })}
         </Card>

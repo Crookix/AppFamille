@@ -141,7 +141,7 @@ export function HouseholdSettings({
         Plus
       </Link>
 
-      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Le foyer</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Le foyer</h1>
 
       {/* --- Nom ---------------------------------------------------------- */}
       <Card className="mb-4">

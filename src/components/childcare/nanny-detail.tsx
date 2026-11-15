@@ -81,7 +81,7 @@ export function NannyDetail({
       <div className="flex items-center gap-4">
         <Avatar name={nanny.name} color={nanny.color} size="lg" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">{nanny.name}</h1>
+          <h1 className="truncate text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">{nanny.name}</h1>
           <p className="text-sm text-muted">
             {currentRate
               ? `${formatEuros(Number(currentRate.hourly_rate))}/h actuellement`

@@ -46,7 +46,7 @@ export function ChildrenManager({ archived }: { archived: ChildRow[] }) {
 
   return (
     <div>
-      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Enfants</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Enfants</h1>
 
       {children.length === 0 ? (
         <EmptyState

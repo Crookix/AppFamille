@@ -684,7 +684,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <ArrowLeft className="h-4 w-4" aria-hidden />
         Plus
       </Link>
-      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Google Agenda</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Google Agenda</h1>
       {children}
     </div>
   );

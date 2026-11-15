@@ -198,7 +198,7 @@ export function OnboardingFlow({
 
       {step === 1 ? (
         <form onSubmit={submitHousehold} className="surface rounded-[var(--radius-xl2)] p-5">
-          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Créons votre foyer</h1>
+          <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Créons votre foyer</h1>
           <p className="mt-1 text-sm text-muted">
             Deux informations suffisent pour commencer.
           </p>
@@ -262,7 +262,7 @@ export function OnboardingFlow({
 
       {step === 2 ? (
         <div className="surface rounded-[var(--radius-xl2)] p-5">
-          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Vos enfants</h1>
+          <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Vos enfants</h1>
           <p className="mt-1 text-sm text-muted">
             Ils n'ont pas besoin de compte. Vous pourrez les associer aux événements,
             aux repas et aux gardes. C'est modifiable à tout moment.
@@ -349,7 +349,7 @@ export function OnboardingFlow({
 
       {step === 3 ? (
         <div className="surface rounded-[var(--radius-xl2)] p-5">
-          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Invitez l'autre adulte</h1>
+          <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Invitez l'autre adulte</h1>
           <p className="mt-1 text-sm text-muted">
             Chacun garde son propre compte ; tout ce qui est partagé se synchronise entre vous.
           </p>

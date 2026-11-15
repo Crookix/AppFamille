@@ -46,7 +46,7 @@ export function ListsTabs({
 
   return (
     <div>
-      <h1 className="mb-3 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Listes</h1>
+      <h1 className="mb-3 text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Listes</h1>
 
       <div
         role="tablist"
@@ -77,7 +77,7 @@ export function ListsTabs({
             className={cn(
               'flex tap h-10 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[0.8rem] font-semibold transition-colors',
               tab === key
-                ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-sm'
+                ? 'bg-[var(--bg-segment)] text-[var(--fg)] shadow-sm'
                 : 'text-[var(--fg-muted)]',
             )}
           >

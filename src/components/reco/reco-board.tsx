@@ -109,7 +109,7 @@ function Accueil({
   return (
     <div>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Reco</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Reco</h1>
         <Button size="sm" onClick={() => setCreating(true)}>
           <Plus className="h-4 w-4" aria-hidden />
           Ajouter
@@ -244,7 +244,7 @@ function Genre({
         >
           <ChevronLeft className="h-6 w-6" aria-hidden />
         </Link>
-        <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">{meta.plural}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">{meta.plural}</h1>
       </div>
 
       <form onSubmit={add} className="mb-4 flex gap-2">

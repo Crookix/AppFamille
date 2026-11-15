@@ -63,7 +63,7 @@ export default async function InvitationPage({
   if (!user) {
     return (
       <Shell>
-        <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Vous êtes invité·e</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Vous êtes invité·e</h1>
         <p className="mt-2 text-sm text-muted">
           Connectez-vous ou créez votre compte pour rejoindre ce foyer. Vous reviendrez
           ici automatiquement.
@@ -91,7 +91,7 @@ export default async function InvitationPage({
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-alert-100 text-[var(--alert-text)]">
           {refusal.icon}
         </div>
-        <h1 className="text-lg font-extrabold tracking-tight">{refusal.title}</h1>
+        <h1 className="text-lg font-bold tracking-tight">{refusal.title}</h1>
         <p className="mt-2 text-sm text-muted">{refusal.body}</p>
         <Link
           href="/"

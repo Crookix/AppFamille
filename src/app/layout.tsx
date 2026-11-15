@@ -1,16 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import { Nunito } from 'next/font/google';
 import { ToastProvider } from '@/components/ui/toast';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { ServiceWorker } from '@/components/pwa/service-worker';
 import './globals.css';
-
-const nunito = Nunito({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-nunito',
-  weight: ['400', '600', '700', '800'],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -41,24 +33,21 @@ export const viewport: Viewport = {
   initialScale: 1,
   // Le zoom reste autorisé : le bloquer nuit à l'accessibilité.
   maximumScale: 5,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#faf6f0' },
-    { media: '(prefers-color-scheme: dark)', color: '#1f1d1b' },
-  ],
+  themeColor: '#f2f2f7',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={nunito.variable} suppressHydrationWarning>
+    <html lang="fr" data-theme="light" suppressHydrationWarning>
       <head>
         {/*
-          Applique le thème mémorisé AVANT le premier rendu. Sans ce script,
+          Applique le thème mémorisé AVANT le premier rendu (le clair, sans choix). Sans ce script,
           l'écran s'afficherait une fraction de seconde en clair avant de
           basculer en sombre.
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('tribu-theme');if(t&&t!=='auto')document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('tribu-theme');if(t==='auto')document.documentElement.removeAttribute('data-theme');else if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
           }}
         />
       </head>

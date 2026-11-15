@@ -99,11 +99,11 @@ export function MealPlanner({
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">
+      <div className="mb-3 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+        <h1 className="text-balance text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">
           Semaine du {formatDayLong(monday, { withYear: false })}
         </h1>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="-ml-2 flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="iconSm"

@@ -1,6 +1,9 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { useHousehold } from '@/components/providers/household-provider';
 
@@ -22,12 +25,58 @@ import { useHousehold } from '@/components/providers/household-provider';
  */
 export function AppHeader({ unread }: { unread: number }) {
   const { household, me } = useHousehold();
+  const pathname = usePathname();
+
+  // Comme la barre de titre d'iOS : le grand titre de l'écran défile avec lui ;
+  // quand il a disparu, un titre court prend sa place au centre de la barre,
+  // et un filet fin la sépare du contenu qui passe dessous.
+  const [title, setTitle] = React.useState<string | null>(null);
+  const [collapsed, setCollapsed] = React.useState(false);
+
+  React.useEffect(() => {
+    const heading = document.querySelector('main h1');
+    setCollapsed(false);
+    setTitle(null);
+    if (!heading) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const gone = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+        if (gone) setTitle(heading.textContent?.trim() || null);
+        setCollapsed(gone);
+      },
+      // La barre mesure environ 56 px : le titre est « parti » dès qu'elle le recouvre.
+      { rootMargin: '-56px 0px 0px 0px' },
+    );
+    observer.observe(heading);
+    return () => observer.disconnect();
+  }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-30 bg-[var(--bg)] md:hidden">
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-1.5">
-        <p className="min-w-0 truncate text-sm font-semibold text-[var(--fg-muted)]">
+    <header
+      className={cn(
+        'sticky top-0 z-30 border-b bg-[color-mix(in_srgb,var(--bg)_80%,transparent)] backdrop-blur-xl backdrop-saturate-150 transition-[border-color] md:hidden',
+        collapsed ? 'border-[var(--line)]' : 'border-transparent',
+      )}
+    >
+      <div className="relative mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-1.5">
+        <p
+          className={cn(
+            'min-w-0 truncate text-sm font-semibold text-[var(--fg-muted)] transition-opacity duration-150',
+            collapsed && 'opacity-0',
+          )}
+        >
           {household.name}
+        </p>
+
+        {/* Doublon de l'<h1> pour l'œil : masqué aux lecteurs d'écran. */}
+        <p
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute inset-x-20 truncate text-center text-[1.0625rem] font-semibold transition-opacity duration-150',
+            collapsed ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          {title}
         </p>
 
         <Link

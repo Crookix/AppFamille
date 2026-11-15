@@ -137,7 +137,7 @@ export function NotificationCenter({ notifications }: { notifications: Notificat
       </Link>
 
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Notifications</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Notifications</h1>
         {unread.length > 0 ? (
           <Button variant="ghost" size="sm" onClick={markAll}>
             <CheckCheck className="h-4 w-4" aria-hidden />

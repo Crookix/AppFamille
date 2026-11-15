@@ -29,7 +29,7 @@ export default function GlobalError({
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-alert-100 text-[var(--alert-text)]">
         <TriangleAlert className="h-8 w-8" aria-hidden />
       </div>
-      <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Quelque chose a coincé</h1>
+      <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Quelque chose a coincé</h1>
       <p className="mt-2 text-sm text-muted">
         L'affichage n'a pas abouti. Rien n'est perdu : réessayez, ou revenez à
         l'accueil.
