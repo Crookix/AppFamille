@@ -44,13 +44,13 @@ export function BottomNav({ householdName }: { householdName: string }) {
     <nav
       aria-label="Navigation principale"
       className={cn(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg-elevated)]',
+        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--bg-elevated)_80%,transparent)] backdrop-blur-xl backdrop-saturate-150',
         'safe-bottom pt-1.5',
         'md:inset-y-0 md:right-auto md:left-0 md:w-64 md:border-r md:border-t-0 md:px-3 md:py-6',
       )}
     >
       <div className="hidden px-3 pb-6 md:block">
-        <p className="text-xl font-extrabold tracking-tight">
+        <p className="text-xl font-bold tracking-tight">
           <span className="text-[var(--accent-text)]">MyFamily</span>
         </p>
         <p className="mt-0.5 truncate text-sm text-muted">{householdName}</p>
@@ -81,8 +81,8 @@ export function BottomNav({ householdName }: { householdName: string }) {
               >
                 <span
                   className={cn(
-                    'flex h-8 w-14 items-center justify-center rounded-full transition-colors md:h-auto md:w-auto',
-                    active ? 'bg-brand-100 md:bg-transparent' : '',
+                    'flex h-7 w-14 items-center justify-center md:h-auto md:w-auto',
+                    
                   )}
                 >
                   <Icon className="h-[1.3rem] w-[1.3rem]" strokeWidth={active ? 2.5 : 2} aria-hidden />

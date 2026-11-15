@@ -162,7 +162,7 @@ export function CalendarView({
     <div>
       {/* --- Entête ------------------------------------------------------- */}
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em] first-letter:uppercase">
+        <h1 className="truncate text-[1.75rem] leading-tight font-bold tracking-[-0.025em] first-letter:uppercase">
           {periodLabel}
         </h1>
         <div className="flex shrink-0 items-center gap-1">

@@ -2,90 +2,91 @@
 
 /* --------------------------------------------------------------------------
    MyFamily — identité visuelle
-   Chaleureuse, douce, lisible sur téléphone : fond blanc cassé tirant vers
-   l'abricot, cartes très arrondies, typographie ronde, couleurs sourdes.
+   Celle d'un iPhone : police système (SF Pro sur iPhone), fond « groupé »
+   gris très clair avec des cartes blanches, bleu système pour l'action,
+   séparateurs fins, aucune ombre portée. Thème clair par défaut.
+
+   Les noms `brand`, `sage`, `honey` et `alert` datent de la palette
+   terracotta : ils désignent désormais le bleu, le vert, l'orange et le
+   rouge du système. Les renommer toucherait une centaine de classes sans
+   rien changer à l'écran.
    -------------------------------------------------------------------------- */
 
 @theme {
-  --font-sans: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system,
-    "Segoe UI", Roboto, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro",
+    system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 
-  /* Sable — fonds et surfaces */
-  --color-sand-50: #fffcf8;
-  --color-sand-100: #fdf5ec;
-  --color-sand-200: #f3eadf;
-  --color-sand-300: #e6d8c7;
+  /* Gris du système — fonds et surfaces */
+  --color-sand-50: #ffffff;
+  --color-sand-100: #f2f2f7;
+  --color-sand-200: #e9e9ef;
+  --color-sand-300: #d1d1d6;
 
   /* Encre — textes */
-  --color-ink-900: #2f251d;
-  --color-ink-700: #5a4a3c;
-  --color-ink-500: #7d6b5b;
-  --color-ink-300: #bfae9c;
+  --color-ink-900: #000000;
+  --color-ink-700: #3a3a3c;
+  --color-ink-500: #636366;
+  --color-ink-300: #aeaeb2;
 
-  /* Terracotta — couleur principale.
-     500 porte le texte blanc des boutons : 5,0:1 (l'ancien #de6f47 n'en
-     faisait que 3,3). 400, 200, 100 et 50 sont des teintes de fond. */
-  --color-brand-50: #fdf1ed;
-  --color-brand-100: #fbdfd6;
-  --color-brand-200: #f2b9a3;
-  --color-brand-400: #e0785a;
-  --color-brand-500: #bc4b2b;
-  --color-brand-600: #a53f23;
-  --color-brand-700: #86321b;
+  /* Bleu système — couleur principale. 500 porte le texte blanc des
+     boutons (4,7:1) ; 50 à 200 sont des teintes de fond. */
+  --color-brand-50: #eaf3fd;
+  --color-brand-100: #d6e8fb;
+  --color-brand-200: #a8cff7;
+  --color-brand-400: #3d95f0;
+  --color-brand-500: #0071e3;
+  --color-brand-600: #0062c6;
+  --color-brand-700: #004e9e;
 
-  /* Sauge — secondaire. 500 porte une coche blanche, 700 un texte blanc. */
-  --color-sage-100: #e5f0e9;
-  --color-sage-300: #a8cdb6;
-  --color-sage-500: #4a8465;
-  --color-sage-700: #386149;
+  /* Vert système — succès. 500 porte une coche blanche, 700 un texte blanc. */
+  --color-sage-100: #e2f5e7;
+  --color-sage-300: #98d8a9;
+  --color-sage-500: #208038;
+  --color-sage-700: #17612a;
 
-  /* Miel — accent */
-  --color-honey-100: #fdf0d5;
-  --color-honey-300: #f6d38a;
-  --color-honey-500: #e9b04a;
-  --color-honey-700: #8a5a12;
+  /* Orange système — attention */
+  --color-honey-100: #fff2d5;
+  --color-honey-300: #ffd27a;
+  --color-honey-500: #ff9f0a;
+  --color-honey-700: #8a5200;
 
-  /* Rouge doux — retards, suppressions */
-  --color-alert-100: #fbe0dd;
-  --color-alert-500: #b83d32;
-  --color-alert-700: #8f2f27;
+  /* Rouge système — retards, suppressions */
+  --color-alert-100: #ffe4e1;
+  --color-alert-500: #d70015;
+  --color-alert-700: #a8000f;
 
-  --radius-xl2: 1.25rem;
-  --radius-xl3: 1.75rem;
+  --radius-xl2: 1rem;
+  --radius-xl3: 1.5rem;
 }
 
 /* --------------------------------------------------------------------------
    Jetons sémantiques : clair par défaut, redéfinis en sombre.
-
-   Le thème sombre n'est pas le clair inversé. Un fond presque noir légèrement
-   réchauffé, des cartes qui se détachent d'un cran, et des teintes d'accent
-   éclaircies : la terracotta qui porte un bouton en clair devient du texte
-   pâle en sombre, d'où les jetons `--*-text`.
    -------------------------------------------------------------------------- */
 :root {
-  --bg: #faf6f0;
+  --bg: #f2f2f7;
   --bg-elevated: #ffffff;
-  --bg-subtle: var(--color-sand-200);
-  --bg-hover: #ebe0d2;
-  --fg: var(--color-ink-900);
-  /* Texte secondaire : 6,5:1 sur le fond. */
-  --fg-muted: #66564a;
-  --line: #eadfd2;
-  /* Contour d'un champ de saisie : 3:1, le minimum pour un composant. */
-  --field-line: #a08b78;
+  --bg-subtle: #e9e9ef;
+  --bg-hover: #dedee5;
+  --fg: #000000;
+  /* Texte secondaire : 5,4:1 sur le fond, 6,0:1 sur une carte. */
+  --fg-muted: #636366;
+  --line: #d1d1d6;
+  /* Contour d'un champ. Celui d'iOS est plus discret encore ; on garde un
+     trait visible, mais on n'atteint pas les 3:1 des composants. */
+  --field-line: #c7c7cc;
   --ring: var(--color-brand-500);
-  --shadow-card: 0 0 0 0.5px rgb(52 41 31 / 0.05), 0 1px 2px rgb(52 41 31 / 0.04),
-    0 12px 32px -16px rgb(52 41 31 / 0.2);
+  /* Pas d'ombre : une carte blanche se détache seule du fond gris. */
+  --shadow-card: none;
 
   /* Couleurs de texte d'accent — toutes ≥ 4,5:1 sur leur surface. */
-  --accent-text: #a8412a;
-  --alert-text: #a03d33;
-  --sage-text: #3f7358;
-  --notice-bg: #fbefd3;
-  --notice-fg: #8a5a12;
+  --accent-text: #0062c6;
+  --alert-text: #c20014;
+  --sage-text: #1e7a35;
+  --notice-bg: #fff2d5;
+  --notice-fg: #8a5200;
 
-  /* Lueur chaude derrière le haut de l'écran. */
-  --glow: rgb(222 111 71 / 0.1);
+  /* Pas de lueur en clair. */
+  --glow: transparent;
 
   /* Courbe « iOS » : démarrage vif, arrivée douce. */
   --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
@@ -94,55 +95,49 @@
 
 :root:not([data-theme="light"]) {
   @media (prefers-color-scheme: dark) {
-    --bg: #1f1d1b;
-    --bg-elevated: #2c2825;
-    --bg-subtle: #373230;
-    --bg-hover: #433c37;
-    --fg: #faf3ec;
-    --fg-muted: #cbc0b6;
-    --line: #433c37;
-    --field-line: #84776e;
-    --ring: #ff9d78;
-    --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.3),
-      0 12px 32px -16px rgb(0 0 0 / 0.6);
-    --accent-text: #ff9d78;
-    --alert-text: #ff9a8f;
-    --sage-text: #9bd8b6;
-    --notice-bg: #44341a;
-    --notice-fg: #ffd58a;
-    --glow: rgb(235 115 75 / 0.2);
-    --color-brand-50: #3a2219;
-    --color-brand-100: #4a2b1f;
-    --color-sage-100: #25352c;
-    --color-honey-100: #44341a;
-    --color-alert-100: #472622;
+    --bg: #000000;
+    --bg-elevated: #1c1c1e;
+    --bg-subtle: #2c2c2e;
+    --bg-hover: #3a3a3c;
+    --fg: #ffffff;
+    --fg-muted: #aeaeb2;
+    --line: #38383a;
+    --field-line: #48484a;
+    --ring: #4da3ff;
+    --accent-text: #4da3ff;
+    --alert-text: #ff8a80;
+    --sage-text: #6fd08c;
+    --notice-bg: #3d2e0a;
+    --notice-fg: #ffc266;
+    --color-brand-50: #0f2a47;
+    --color-brand-100: #163a63;
+    --color-sage-100: #12331d;
+    --color-honey-100: #3d2e0a;
+    --color-alert-100: #471613;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #1f1d1b;
-  --bg-elevated: #2c2825;
-  --bg-subtle: #373230;
-  --bg-hover: #433c37;
-  --fg: #faf3ec;
-  --fg-muted: #cbc0b6;
-  --line: #433c37;
-  --field-line: #84776e;
-  --ring: #ff9d78;
-  --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.3),
-    0 12px 32px -16px rgb(0 0 0 / 0.6);
-  --accent-text: #ff9d78;
-  --alert-text: #ff9a8f;
-  --sage-text: #9bd8b6;
-  --notice-bg: #44341a;
-  --notice-fg: #ffd58a;
-  --glow: rgb(235 115 75 / 0.2);
-  --color-brand-50: #3a2219;
-  --color-brand-100: #4a2b1f;
-  --color-sage-100: #25352c;
-  --color-honey-100: #44341a;
-  --color-alert-100: #472622;
+  --bg: #000000;
+  --bg-elevated: #1c1c1e;
+  --bg-subtle: #2c2c2e;
+  --bg-hover: #3a3a3c;
+  --fg: #ffffff;
+  --fg-muted: #aeaeb2;
+  --line: #38383a;
+  --field-line: #48484a;
+  --ring: #4da3ff;
+  --accent-text: #4da3ff;
+  --alert-text: #ff8a80;
+  --sage-text: #6fd08c;
+  --notice-bg: #3d2e0a;
+  --notice-fg: #ffc266;
+  --color-brand-50: #0f2a47;
+  --color-brand-100: #163a63;
+  --color-sage-100: #12331d;
+  --color-honey-100: #3d2e0a;
+  --color-alert-100: #471613;
   color-scheme: dark;
 }
 
@@ -193,7 +188,7 @@
 
   ::selection {
     background: var(--color-brand-200);
-    color: var(--color-ink-900);
+    color: #000000;
   }
 }
 

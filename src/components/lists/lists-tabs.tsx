@@ -46,7 +46,7 @@ export function ListsTabs({
 
   return (
     <div>
-      <h1 className="mb-3 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Listes</h1>
+      <h1 className="mb-3 text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Listes</h1>
 
       <div
         role="tablist"

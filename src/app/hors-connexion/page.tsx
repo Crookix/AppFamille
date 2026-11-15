@@ -12,7 +12,7 @@ export default function HorsConnexionPage() {
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--fg-muted)]">
         <WifiOff className="h-8 w-8" aria-hidden />
       </div>
-      <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Pas de connexion</h1>
+      <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Pas de connexion</h1>
       <p className="mt-2 text-sm text-muted">
         MyFamily a besoin d'internet pour afficher les informations à jour du foyer —
         une course cochée par quelqu'un d'autre, un rendez-vous déplacé.

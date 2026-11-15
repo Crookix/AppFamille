@@ -200,7 +200,7 @@ export function MonthlySummary({
                 <p className="text-xs font-bold uppercase tracking-wide text-muted">
                   Heures prévues
                 </p>
-                <p className="text-lg font-extrabold">
+                <p className="text-lg font-bold">
                   {formatDuration(summary.scheduledMinutes)}
                 </p>
               </div>
@@ -208,7 +208,7 @@ export function MonthlySummary({
                 <p className="text-xs font-bold uppercase tracking-wide text-muted">
                   Heures confirmées
                 </p>
-                <p className="text-lg font-extrabold text-[var(--sage-text)]">
+                <p className="text-lg font-bold text-[var(--sage-text)]">
                   {formatDuration(summary.confirmedMinutes)}
                 </p>
               </div>
@@ -218,7 +218,7 @@ export function MonthlySummary({
               <p className="text-xs font-bold uppercase tracking-wide text-muted">
                 Montant estimé
               </p>
-              <p className="text-2xl font-extrabold">{formatEuros(summary.totalAmount)}</p>
+              <p className="text-2xl font-bold">{formatEuros(summary.totalAmount)}</p>
               <p className="text-sm text-muted">
                 {formatEuros(summary.hoursAmount)} d'heures
                 {summary.extrasTotal > 0

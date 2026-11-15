@@ -79,7 +79,7 @@ export default async function PlusPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Plus</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Plus</h1>
 
       <Card className="divide-y divide-[var(--line)] p-0">
         {entries.map(({ href, label, hint, icon: Icon }) => (

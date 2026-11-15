@@ -78,7 +78,7 @@ export function ChildProfile({
       <div className="flex items-center gap-4">
         <Avatar name={child.first_name} color={child.color} size="lg" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">
+          <h1 className="truncate text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">
             {child.first_name}
           </h1>
           <p className="text-sm text-muted">

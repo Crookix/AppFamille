@@ -43,7 +43,7 @@ export function SectionHeader({
 }) {
   return (
     <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
-      <h2 className="flex items-center gap-2 text-[1.375rem] font-extrabold tracking-[-0.02em]">
+      <h2 className="flex items-center gap-2 text-[1.375rem] font-bold tracking-[-0.02em]">
         {icon}
         {title}
       </h2>
@@ -57,10 +57,10 @@ export function SectionHeader({
 /* -------------------------------------------------------------------------- */
 
 const fieldBase =
-  'w-full rounded-2xl border border-[var(--field-line)] bg-[var(--bg-elevated)] px-4 ' +
+  'w-full rounded-xl border border-transparent bg-[var(--bg-subtle)] px-4 ' +
   'text-[16px] text-[var(--fg)] placeholder:text-[var(--fg-muted)] ' +
-  'transition-[border-color,box-shadow] ' +
-  'focus:border-[var(--ring)] focus:outline-none focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--ring)_28%,transparent)] ' +
+  'transition-[background-color,border-color,box-shadow] ' +
+  'focus:border-[var(--ring)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--ring)_25%,transparent)] ' +
   'disabled:opacity-60';
 // 16 px : en dessous, Safari iOS zoome automatiquement à la mise au point.
 

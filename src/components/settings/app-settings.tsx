@@ -47,7 +47,7 @@ export function AppSettings({
   const [displayName, setDisplayName] = React.useState(me.display_name);
   const [color, setColor] = React.useState(me.color);
   const [editingProfile, setEditingProfile] = React.useState(false);
-  const [theme, setTheme] = React.useState<Theme>('auto');
+  const [theme, setTheme] = React.useState<Theme>('light');
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [confirmDemo, setConfirmDemo] = React.useState(false);
@@ -63,7 +63,7 @@ export function AppSettings({
         applyTheme(stored);
       }
     } catch {
-      /* navigation privée ou stockage bloqué : on garde « auto » */
+      /* navigation privée ou stockage bloqué : on garde « clair » */
     }
   }, []);
 
@@ -170,7 +170,7 @@ export function AppSettings({
         Plus
       </Link>
 
-      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Paramètres</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">Paramètres</h1>
 
       {/* --- Profil --------------------------------------------------------- */}
       <Card className="mb-4">

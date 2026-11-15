@@ -100,7 +100,7 @@ export function MealPlanner({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">
+        <h1 className="truncate text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">
           Semaine du {formatDayLong(monday, { withYear: false })}
         </h1>
         <div className="flex shrink-0 items-center gap-1">

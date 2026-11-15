@@ -8,8 +8,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#faf6f0",
-  "theme_color": "#faf6f0",
+  "background_color": "#f2f2f7",
+  "theme_color": "#f2f2f7",
   "categories": ["lifestyle", "productivity"],
   "icons": [
     { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },

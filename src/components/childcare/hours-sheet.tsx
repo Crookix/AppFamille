@@ -241,7 +241,7 @@ export function HoursSheet({
         {previewMinutes !== null ? (
           <div className="rounded-2xl bg-sage-100 p-3.5 text-[var(--sage-text)]">
             <p className="text-xs font-bold uppercase tracking-wide">Réalisé</p>
-            <p className="mt-1 text-lg font-extrabold">
+            <p className="mt-1 text-lg font-bold">
               {formatDuration(previewMinutes)}
             </p>
             <p className="mt-0.5 text-sm">

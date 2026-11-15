@@ -29,7 +29,7 @@ export const clerkAppearanceClair = {
     colorDanger: '#c0392b',
     colorSuccess: '#4f7d52',
     borderRadius: RAYON,
-    fontFamily: 'var(--font-nunito), system-ui, sans-serif',
+    fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
     fontSize: '0.95rem',
   },
 } as const;

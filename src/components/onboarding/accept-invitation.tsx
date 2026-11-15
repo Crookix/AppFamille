@@ -47,7 +47,7 @@ export function AcceptInvitation({
         <Users className="h-7 w-7" aria-hidden />
       </div>
 
-      <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">
+      <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">
         Rejoindre {householdName}
       </h1>
       <p className="mt-2 text-sm text-muted">

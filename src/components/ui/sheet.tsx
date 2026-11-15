@@ -243,7 +243,7 @@ export function Sheet({
             aria-hidden
           />
           <div className="min-w-0 pt-1">
-            <h2 id={titleId} className="truncate text-[1.1875rem] font-extrabold tracking-tight">
+            <h2 id={titleId} className="truncate text-[1.1875rem] font-bold tracking-tight">
               {title}
             </h2>
             {description ? (
