@@ -56,14 +56,19 @@ export function MealPlanner({
   const [selectedMeals, setSelectedMeals] = React.useState<string[]>([]);
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [copyingWeek, setCopyingWeek] = React.useState(false);
-  /* Le petit-déjeuner est facultatif : il n'apparaît que si on le demande ou
-     s'il contient déjà quelque chose. */
+  /* La semaine montre les dîners. Le petit-déjeuner et le déjeuner sont
+     facultatifs : chacun n'apparaît que si on le demande ou s'il contient
+     déjà quelque chose — un repas déjà saisi ne disparaît jamais de l'écran. */
   const [showBreakfast, setShowBreakfast] = React.useState(
     meals.some((m) => m.slot === 'petit_dejeuner'),
   );
+  const [showLunch, setShowLunch] = React.useState(meals.some((m) => m.slot === 'dejeuner'));
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-  const visibleSlots = showBreakfast ? SLOTS : SLOTS.filter((s) => s !== 'petit_dejeuner');
+  const visibleSlots = SLOTS.filter(
+    (slot) =>
+      (slot !== 'petit_dejeuner' || showBreakfast) && (slot !== 'dejeuner' || showLunch),
+  );
 
   function mealAt(day: string, slot: MealSlot) {
     return meals.find((m) => m.meal_date === day && m.slot === slot) ?? null;
@@ -161,9 +166,16 @@ export function MealPlanner({
           <ShoppingBasket className="h-4 w-4" aria-hidden />
           {selecting ? 'Annuler la sélection' : 'Générer les courses'}
         </Button>
-        {!showBreakfast ? (
-          <Button variant="ghost" size="sm" onClick={() => setShowBreakfast(true)}>
-            + Petit-déjeuner
+        {!showBreakfast || !showLunch ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setShowBreakfast(true);
+              setShowLunch(true);
+            }}
+          >
+            + Autres repas
           </Button>
         ) : null}
       </div>
