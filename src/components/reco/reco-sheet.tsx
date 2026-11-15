@@ -10,7 +10,9 @@ import {
   createRecommendationAction,
   updateRecommendationAction,
 } from '@/lib/actions/recommendations';
-import { RECO_KINDS, recoKind } from '@/lib/recommendations';
+import { RECO_KINDS, isGift, recoKind } from '@/lib/recommendations';
+import { RecipientPicker, type Recipient } from '@/components/reco/recipient-picker';
+import { useHousehold } from '@/components/providers/household-provider';
 import { cn } from '@/lib/utils';
 import type { RecoKind, RecommendationRow } from '@/lib/database.types';
 
@@ -19,7 +21,8 @@ import type { RecoKind, RecommendationRow } from '@/lib/database.types';
  *
  * Le genre ne se choisit qu'à la création (en modification, on est déjà dans
  * la liste du genre). L'état « vu » se coche dans la liste ; la note, le lien,
- * l'auteur, le destinataire et le prix ne sont plus saisis ici.
+ * l'auteur et le prix ne sont plus saisis ici. Seul le destinataire d'une idée
+ * cadeau l'est : sans lui, une liste de cadeaux ne dit plus pour qui.
  *
  * En modification on n'envoie que le titre et le mot : l'action de mise à jour
  * ne touche pas aux champs absents, donc ce qui avait été saisi avant
@@ -40,6 +43,7 @@ export function RecoSheet({
 }) {
   const router = useRouter();
   const toast = useToast();
+  const { children } = useHousehold();
 
   const isEditing = Boolean(reco);
 
@@ -48,12 +52,17 @@ export function RecoSheet({
   const [kind, setKind] = React.useState<RecoKind>(defaultKind);
   const [title, setTitle] = React.useState('');
   const [note, setNote] = React.useState('');
+  const [recipient, setRecipient] = React.useState<Recipient | null>(null);
 
   React.useEffect(() => {
     if (!open) return;
     setKind(reco?.kind ?? defaultKind);
     setTitle(reco?.title ?? '');
     setNote(reco?.note ?? '');
+    // Le prénom de l'enfant d'abord (il suit un renommage), le libellé saisi sinon.
+    const childName = children.find((c) => c.id === reco?.recipient_child_id)?.first_name;
+    const label = childName ?? reco?.recipient_label ?? null;
+    setRecipient(label ? { label, childId: reco?.recipient_child_id ?? null } : null);
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reco?.id, defaultKind]);
@@ -70,9 +79,20 @@ export function RecoSheet({
     }
 
     setPending(true);
+    // Pour un cadeau, on envoie aussi le destinataire. À la modification on
+    // renvoie l'occasion et le prix déjà saisis : l'action remet à zéro les
+    // champs du cadeau qu'elle ne reçoit pas.
+    const giftFields = isGift(kind)
+      ? { recipientLabel: recipient?.label ?? null, recipientChildId: recipient?.childId ?? null }
+      : {};
     const result = reco
-      ? await updateRecommendationAction(reco.id, { title: title.trim(), note })
-      : await createRecommendationAction({ kind, title: title.trim(), note });
+      ? await updateRecommendationAction(reco.id, {
+          title: title.trim(),
+          note,
+          ...giftFields,
+          ...(isGift(kind) ? { occasion: reco.occasion, price: reco.price } : {}),
+        })
+      : await createRecommendationAction({ kind, title: title.trim(), note, ...giftFields });
     setPending(false);
 
     if (!result.ok) {
@@ -138,6 +158,8 @@ export function RecoSheet({
             data-autofocus
           />
         </Field>
+
+        {isGift(kind) ? <RecipientPicker value={recipient} onChange={setRecipient} /> : null}
 
         <Field label="Un mot" hint="facultatif">
           <Textarea
