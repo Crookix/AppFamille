@@ -60,10 +60,22 @@
   --bg-elevated: #ffffff;
   --bg-subtle: var(--color-sand-200);
   --fg: var(--color-ink-900);
-  --fg-muted: var(--color-ink-500);
+  /* Texte secondaire : 6,2:1 sur le fond (l'ancien ink-500 n'en faisait que 3,9). */
+  --fg-muted: #6a594b;
   --line: var(--color-sand-300);
   --ring: var(--color-brand-500);
-  --shadow-card: 0 1px 2px rgb(52 41 31 / 0.04), 0 8px 24px -12px rgb(52 41 31 / 0.16);
+  --shadow-card: 0 0 0 0.5px rgb(52 41 31 / 0.05), 0 1px 2px rgb(52 41 31 / 0.04),
+    0 12px 32px -16px rgb(52 41 31 / 0.2);
+
+  /* Jetons « prototype Accueil » — tous ≥ 4,5:1 sur leur surface. */
+  --accent-text: #b54627; /* lien et action d'accent sur fond clair */
+  --alert-text: #a03d33;
+  --sage-text: #3f7358;
+  --notice-bg: #fbefd3;
+  --notice-fg: #8a5a12;
+
+  /* Courbe « iOS » : démarrage vif, arrivée douce. */
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   color-scheme: light;
 }
 
@@ -75,7 +87,13 @@
     --fg: #f6ece1;
     --fg-muted: #b09b88;
     --line: #3b302a;
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
+      0 12px 32px -16px rgb(0 0 0 / 0.6);
+    --accent-text: #f29a78;
+    --alert-text: #f0867b;
+    --sage-text: #8ccba9;
+    --notice-bg: #3a2c14;
+    --notice-fg: #f2c879;
     color-scheme: dark;
   }
 }
@@ -87,7 +105,13 @@
   --fg: #f6ece1;
   --fg-muted: #b09b88;
   --line: #3b302a;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
+    0 12px 32px -16px rgb(0 0 0 / 0.6);
+  --accent-text: #f29a78;
+  --alert-text: #f0867b;
+  --sage-text: #8ccba9;
+  --notice-bg: #3a2c14;
+  --notice-fg: #f2c879;
   color-scheme: dark;
 }
 
@@ -156,6 +180,95 @@
 
   .animate-in-up {
     animation: myfamily-in-up 0.18s ease-out both;
+  }
+
+  /* Apparition en cascade d'un écran : une seule fois, à l'ouverture.
+     `--i` (0, 1, 2…) décale chaque bloc de 45 ms. transform + opacity
+     uniquement : rien qui touche à la mise en page. */
+  .reveal {
+    animation: myfamily-reveal 0.5s var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
+
+  /* Feuille modale. Sur téléphone elle monte du bas et y retourne ; sur
+     écran large elle apparaît au centre. `backwards` (et non `both`) à
+     l'entrée : une fois l'animation finie, le style en ligne reprend la main,
+     ce qui permet de la faire suivre le doigt pendant un glissement. */
+  .sheet-panel {
+    animation: myfamily-sheet-rise 0.38s var(--ease-out) backwards;
+  }
+  .sheet-panel[data-closing] {
+    animation: myfamily-sheet-drop 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  .sheet-backdrop {
+    animation: myfamily-fade-in 0.28s ease-out backwards;
+  }
+  .sheet-backdrop[data-closing] {
+    animation: myfamily-fade-out 0.22s ease-in forwards;
+  }
+  @media (min-width: 640px) {
+    .sheet-panel {
+      animation-name: myfamily-sheet-pop;
+    }
+    .sheet-panel[data-closing] {
+      animation-name: myfamily-sheet-shrink;
+    }
+  }
+}
+
+@keyframes myfamily-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes myfamily-sheet-rise {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes myfamily-sheet-drop {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes myfamily-sheet-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes myfamily-sheet-shrink {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes myfamily-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes myfamily-fade-out {
+  to {
+    opacity: 0;
   }
 }
 

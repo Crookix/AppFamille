@@ -163,7 +163,8 @@ export function CheckCircle({
     >
       <span
         className={cn(
-          'flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all',
+          'flex h-6 w-6 items-center justify-center rounded-full border-2',
+          'transition-[background-color,border-color,transform] active:scale-90',
           checked
             ? 'border-sage-500 bg-sage-500 text-white'
             : 'border-[var(--line)] bg-transparent',

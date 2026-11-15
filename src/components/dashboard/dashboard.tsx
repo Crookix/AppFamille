@@ -6,14 +6,12 @@ import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   Baby,
-  CalendarDays,
   ChevronRight,
-  ListChecks,
   Plus,
   ShoppingBasket,
   UtensilsCrossed,
 } from 'lucide-react';
-import { Card, CardTitle, CheckCircle, EmptyState, SectionHeader } from '@/components/ui/primitives';
+import { Card, CardTitle, CheckCircle, EmptyState } from '@/components/ui/primitives';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/toast';
@@ -24,7 +22,7 @@ import { QuickShoppingSheet } from '@/components/shopping/quick-shopping-sheet';
 import { TaskSheet } from '@/components/tasks/task-sheet';
 import { toggleTaskAction } from '@/lib/actions/tasks';
 import { formatDayLong, formatRelativeDay, formatTime, todayIn } from '@/lib/datetime';
-import { formatDuration } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils';
 import { scheduledMinutes } from '@/lib/childcare';
 import type { DashboardData } from '@/lib/data/dashboard';
 import type { SerializedOccurrence } from '@/lib/data/calendar';
@@ -41,21 +39,31 @@ export function Dashboard({ data }: { data: DashboardData }) {
   /* Les tâches cochées disparaissent immédiatement, sans attendre le serveur :
      cocher une tâche doit répondre au doigt. */
   const [optimisticDone, setOptimisticDone] = React.useState<string[]>([]);
+  /* Le temps d'un glissement (200 ms) la tâche cochée reste visible, cochée,
+     avant de quitter la liste : le geste a un effet que l'œil suit. */
+  const [leaving, setLeaving] = React.useState<string[]>([]);
 
   const hour = new Date().getHours();
   const greeting =
     hour < 6 ? 'Bonne nuit' : hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
   async function completeTask(taskId: string) {
-    setOptimisticDone((current) => [...current, taskId]);
+    setLeaving((current) => [...current, taskId]);
 
-    const result = await toggleTaskAction(taskId, true);
+    // L'écriture et le glissement partent ensemble : on n'attend que le plus long.
+    const [result] = await Promise.all([
+      toggleTaskAction(taskId, true),
+      new Promise((resolve) => window.setTimeout(resolve, 200)),
+    ]);
 
     if (!result.ok) {
-      setOptimisticDone((current) => current.filter((id) => id !== taskId));
+      setLeaving((current) => current.filter((id) => id !== taskId));
       toast.error(result.error);
       return;
     }
+
+    setOptimisticDone((current) => [...current, taskId]);
+    setLeaving((current) => current.filter((id) => id !== taskId));
 
     toast.success(
       result.data?.recurring ? 'Fait — reprogrammée pour la prochaine fois.' : 'Tâche terminée.',
@@ -76,27 +84,30 @@ export function Dashboard({ data }: { data: DashboardData }) {
   );
 
   const nannyName = data.nextChildcare?.nanny?.name ?? null;
+  const summary = buildSummary(data.todayEvents.length, pendingTasks.length, data.openItemCount);
 
   return (
-    <div className="space-y-6">
-      {/* --- Entête ------------------------------------------------------- */}
-      <header>
-        <p className="text-sm text-muted first-letter:uppercase">
+    <div className="space-y-9">
+      {/* --- Entête : le titre est le premier repère de l'écran ------------- */}
+      <header className="reveal pt-1" style={stagger(0)}>
+        <p className="text-[0.9375rem] font-semibold text-muted first-letter:uppercase">
           {formatDayLong(data.today)}
         </p>
-        <h1 className="text-2xl font-extrabold tracking-tight">
+        <h1 className="mt-1 text-balance text-[2.25rem] font-extrabold leading-[1.05] tracking-[-0.03em]">
           {greeting}, {me.display_name.split(' ')[0]}
         </h1>
+        <p className="mt-3 text-[1.0625rem] leading-snug text-muted">{summary}</p>
       </header>
 
       {/* --- Alerte : gardes à confirmer ---------------------------------- */}
       {data.childcareToConfirm > 0 ? (
         <Link
           href="/plus/nounous"
-          className="flex items-center gap-3 rounded-[var(--radius-xl2)] bg-honey-100 p-3.5 text-honey-700 transition-colors hover:bg-honey-300/50"
+          className="reveal flex min-h-14 items-center gap-3 rounded-[var(--radius-xl2)] bg-[var(--notice-bg)] px-4 py-3 text-[var(--notice-fg)] transition-transform active:scale-[0.99]"
+          style={stagger(1)}
         >
           <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
-          <span className="min-w-0 flex-1 text-sm font-semibold">
+          <span className="min-w-0 flex-1 text-[0.9375rem] font-semibold leading-snug">
             {data.childcareToConfirm === 1
               ? 'Une garde attend la saisie de ses heures.'
               : `${data.childcareToConfirm} gardes attendent la saisie de leurs heures.`}
@@ -106,98 +117,87 @@ export function Dashboard({ data }: { data: DashboardData }) {
       ) : null}
 
       {/* --- Aujourd'hui -------------------------------------------------- */}
-      <section>
-        <SectionHeader
-          title="Aujourd'hui"
-          icon={<CalendarDays className="h-3.5 w-3.5" aria-hidden />}
-          action={
-            <Link
-              href="/calendrier"
-              className="text-xs font-bold text-brand-600 underline underline-offset-2"
-            >
-              Le calendrier
-            </Link>
-          }
-        />
-
+      <Section
+        index={2}
+        title="Aujourd'hui"
+        action={<SectionLink href="/calendrier">Le calendrier</SectionLink>}
+      >
         {data.todayEvents.length === 0 ? (
-          <Card>
-            <p className="text-sm text-muted">
-              Rien de prévu aujourd'hui. Profitez-en.
-            </p>
+          <Card className="py-5">
+            <p className="text-[1.0625rem] text-muted">Rien de prévu aujourd'hui. Profitez-en.</p>
           </Card>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {data.todayEvents.map((item) => (
               <EventCard key={item.key} item={item} onOpen={setSelectedEvent} />
             ))}
           </div>
         )}
-      </section>
+      </Section>
 
       {/* --- Trajets des enfants ------------------------------------------ */}
-      <TransportSummary events={data.todayEvents} />
+      <TransportSummary events={data.todayEvents} index={3} />
 
       {/* --- Tâches -------------------------------------------------------- */}
-      <section>
-        <SectionHeader
-          title="À faire"
-          icon={<ListChecks className="h-3.5 w-3.5" aria-hidden />}
-          action={
-            <Link
-              href="/listes?onglet=taches"
-              className="text-xs font-bold text-brand-600 underline underline-offset-2"
-            >
-              Tout voir
-            </Link>
-          }
-        />
-
+      <Section
+        index={4}
+        title="À faire"
+        action={<SectionLink href="/listes?onglet=taches">Tout voir</SectionLink>}
+      >
         {pendingTasks.length === 0 ? (
-          <Card>
+          <Card className="py-3 pl-5 pr-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-muted">Rien en attente. Bravo.</p>
-              <Button variant="ghost" size="sm" onClick={() => setAddingTask(true)}>
+              <p className="text-[1.0625rem] text-muted">Rien en attente. Bravo.</p>
+              <Button variant="ghost" onClick={() => setAddingTask(true)}>
                 <Plus className="h-4 w-4" aria-hidden />
                 Ajouter
               </Button>
             </div>
           </Card>
         ) : (
-          <Card className="divide-y divide-[var(--line)] p-0">
-            {pendingTasks.slice(0, 6).map((task) => {
+          <Card className="overflow-hidden p-0">
+            {pendingTasks.slice(0, 6).map((task, index) => {
               const assignee = members.find((m) => m.id === task.assignee_id);
               const late = task.due_date !== null && task.due_date < data.today;
+              const leavingNow = leaving.includes(task.id);
 
               return (
-                <div key={task.id} className="flex items-center gap-1 py-1 pl-1 pr-3">
+                <div
+                  key={task.id}
+                  className={cn(
+                    'relative flex items-center gap-1 py-1 pl-2 pr-4',
+                    'transition-[opacity,transform] duration-200 ease-out',
+                    leavingNow && 'translate-x-3 opacity-0',
+                    // Filet inséré sous la case, comme une liste groupée d'iOS.
+                    index > 0 &&
+                      'before:absolute before:left-14 before:right-0 before:top-0 before:h-px before:bg-[var(--line)]',
+                  )}
+                >
                   <CheckCircle
-                    checked={false}
+                    checked={leavingNow}
                     onChange={() => completeTask(task.id)}
                     label={`Marquer « ${task.title} » comme terminée`}
                   />
-                  <div className="min-w-0 flex-1 py-1.5">
-                    <p className="truncate text-sm font-semibold">{task.title}</p>
-                    <p className="flex items-center gap-2 text-xs text-muted">
+                  <div className="min-w-0 flex-1 py-2">
+                    <p className="truncate text-[1.0625rem] font-semibold leading-tight">
+                      {task.title}
+                    </p>
+                    <p className="mt-0.5 text-[0.8125rem] text-muted">
                       {late ? (
-                        <span className="font-bold text-alert-500">
+                        <span className="font-bold text-[var(--alert-text)]">
                           En retard · {formatRelativeDay(task.due_date!, tz)}
                         </span>
                       ) : task.due_date ? (
-                        <span>{formatRelativeDay(task.due_date, tz)}</span>
+                        formatRelativeDay(task.due_date, tz)
                       ) : (
-                        <span>Sans date</span>
+                        'Sans date'
                       )}
                     </p>
                   </div>
                   {assignee ? (
-                    <Avatar
-                      name={assignee.display_name}
-                      color={assignee.color}
-                      size="sm"
-                    />
+                    <Avatar name={assignee.display_name} color={assignee.color} size="sm" />
                   ) : (
-                    <span className="rounded-full bg-[var(--bg-subtle)] px-2 py-0.5 text-[0.65rem] font-bold text-muted">
+                    <span className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-1 text-xs font-bold text-muted">
                       libre
                     </span>
                   )}
@@ -206,116 +206,121 @@ export function Dashboard({ data }: { data: DashboardData }) {
             })}
           </Card>
         )}
-      </section>
+      </Section>
 
       {/* --- Repas et courses --------------------------------------------- */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <section>
-          <SectionHeader
-            title="Ce soir on mange"
-            icon={<UtensilsCrossed className="h-3.5 w-3.5" aria-hidden />}
-          />
+      <div className="grid gap-9 sm:grid-cols-2 sm:gap-4">
+        <Section index={5} title="Ce soir on mange">
           <Link href="/repas" className="block">
-            <Card className="transition-transform active:scale-[0.99]">
-              {data.dinner ? (
-                <>
-                  <CardTitle>{data.dinner.title}</CardTitle>
-                  {data.lunch ? (
-                    <p className="mt-1 text-sm text-muted">
-                      Midi : {data.lunch.title}
-                    </p>
-                  ) : null}
-                </>
-              ) : (
-                <p className="text-sm text-muted">
-                  Rien de prévu. Touchez pour planifier la semaine.
-                </p>
-              )}
-            </Card>
-          </Link>
-        </section>
-
-        <section>
-          <SectionHeader
-            title="Courses"
-            icon={<ShoppingBasket className="h-3.5 w-3.5" aria-hidden />}
-            action={
-              <button
-                type="button"
-                onClick={() => setAddingItem(true)}
-                className="text-xs font-bold text-brand-600 underline underline-offset-2"
-              >
-                Ajouter
-              </button>
-            }
-          />
-          <Link href="/listes?onglet=courses" className="block">
-            <Card className="transition-transform active:scale-[0.99]">
-              {data.openItemCount === 0 ? (
-                <p className="text-sm text-muted">La liste est vide.</p>
-              ) : (
-                <>
-                  <CardTitle>
-                    {data.openItemCount} article{data.openItemCount > 1 ? 's' : ''} à acheter
-                  </CardTitle>
-                  <p className="mt-1 truncate text-sm text-muted">
-                    {data.openItems.map((item) => item.label).join(' · ')}
-                    {data.openItemCount > data.openItems.length ? '…' : ''}
+            <Card className="flex items-center gap-3.5 transition-transform active:scale-[0.99]">
+              <IconTile tone="notice">
+                <UtensilsCrossed className="h-5 w-5" aria-hidden />
+              </IconTile>
+              <div className="min-w-0 flex-1">
+                {data.dinner ? (
+                  <>
+                    <CardTitle className="truncate text-[1.0625rem]">{data.dinner.title}</CardTitle>
+                    {data.lunch ? (
+                      <p className="mt-0.5 truncate text-[0.9375rem] text-muted">
+                        Midi : {data.lunch.title}
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-[0.9375rem] leading-snug text-muted">
+                    Rien de prévu. Touchez pour planifier la semaine.
                   </p>
-                </>
-              )}
+                )}
+              </div>
             </Card>
           </Link>
-        </section>
+        </Section>
+
+        <Section
+          index={6}
+          title="Courses"
+          action={
+            <button
+              type="button"
+              onClick={() => setAddingItem(true)}
+              className="-my-2 inline-flex min-h-11 items-center px-1 text-[0.9375rem] font-semibold text-[var(--accent-text)] active:opacity-60"
+            >
+              Ajouter
+            </button>
+          }
+        >
+          <Link href="/listes?onglet=courses" className="block">
+            <Card className="flex items-center gap-3.5 transition-transform active:scale-[0.99]">
+              <IconTile tone="sage">
+                <ShoppingBasket className="h-5 w-5" aria-hidden />
+              </IconTile>
+              <div className="min-w-0 flex-1">
+                {data.openItemCount === 0 ? (
+                  <p className="text-[0.9375rem] text-muted">La liste est vide.</p>
+                ) : (
+                  <>
+                    <CardTitle className="text-[1.0625rem]">
+                      {data.openItemCount} article{data.openItemCount > 1 ? 's' : ''} à acheter
+                    </CardTitle>
+                    <p className="mt-0.5 truncate text-[0.9375rem] text-muted">
+                      {data.openItems.map((item) => item.label).join(' · ')}
+                      {data.openItemCount > data.openItems.length ? '…' : ''}
+                    </p>
+                  </>
+                )}
+              </div>
+            </Card>
+          </Link>
+        </Section>
       </div>
 
       {/* --- Prochaine garde ---------------------------------------------- */}
-      <section>
-        <SectionHeader
-          title="Prochaine garde"
-          icon={<Baby className="h-3.5 w-3.5" aria-hidden />}
-        />
+      <Section index={7} title="Prochaine garde">
         <Link href="/plus/nounous" className="block">
-          <Card className="transition-transform active:scale-[0.99]">
-            {data.nextChildcare ? (
-              <>
-                <CardTitle>
-                  {nannyName ?? 'Garde'} ·{' '}
-                  {formatRelativeDay(data.nextChildcare.scheduled_start.slice(0, 10), tz)}
-                </CardTitle>
-                <p className="mt-1 text-sm text-muted">
-                  {formatTime(data.nextChildcare.scheduled_start, tz)} –{' '}
-                  {formatTime(data.nextChildcare.scheduled_end, tz)} ·{' '}
-                  {formatDuration(
-                    scheduledMinutes(
-                      data.nextChildcare.scheduled_start,
-                      data.nextChildcare.scheduled_end,
-                    ),
-                  )}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-muted">Aucune garde planifiée.</p>
-            )}
+          <Card className="flex items-center gap-3.5 transition-transform active:scale-[0.99]">
+            <IconTile tone="brand">
+              <Baby className="h-5 w-5" aria-hidden />
+            </IconTile>
+            <div className="min-w-0 flex-1">
+              {data.nextChildcare ? (
+                <>
+                  <CardTitle className="text-[1.0625rem]">
+                    {nannyName ?? 'Garde'} ·{' '}
+                    {formatRelativeDay(data.nextChildcare.scheduled_start.slice(0, 10), tz)}
+                  </CardTitle>
+                  <p className="mt-0.5 text-[0.9375rem] text-muted">
+                    {formatTime(data.nextChildcare.scheduled_start, tz)} –{' '}
+                    {formatTime(data.nextChildcare.scheduled_end, tz)} ·{' '}
+                    {formatDuration(
+                      scheduledMinutes(
+                        data.nextChildcare.scheduled_start,
+                        data.nextChildcare.scheduled_end,
+                      ),
+                    )}
+                  </p>
+                </>
+              ) : (
+                <p className="text-[0.9375rem] text-muted">Aucune garde planifiée.</p>
+              )}
+            </div>
           </Card>
         </Link>
-      </section>
+      </Section>
 
       {/* --- Prochainement ------------------------------------------------- */}
       {data.upcomingEvents.length > 0 ? (
-        <section>
-          <SectionHeader title="Les jours suivants" />
-          <div className="space-y-2">
+        <Section index={8} title="Les jours suivants">
+          <div className="space-y-3">
             {data.upcomingEvents.map((item) => (
               <div key={item.key}>
-                <p className="mb-1 px-1 text-xs font-bold text-muted first-letter:uppercase">
+                <p className="mb-1.5 px-1 text-[0.8125rem] font-bold text-muted first-letter:uppercase">
                   {formatRelativeDay(item.startsAt.slice(0, 10), tz)}
                 </p>
                 <EventCard item={item} onOpen={setSelectedEvent} compact />
               </div>
             ))}
           </div>
-        </section>
+        </Section>
       ) : null}
 
       {children.length === 0 ? (
@@ -353,13 +358,105 @@ export function Dashboard({ data }: { data: DashboardData }) {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Briques de l'écran                                                         */
+/* -------------------------------------------------------------------------- */
+
+/** Décale l'apparition d'un bloc : voir `.reveal` dans globals.css. */
+function stagger(index: number): React.CSSProperties {
+  return { '--i': index } as React.CSSProperties;
+}
+
+/**
+ * Une section : un vrai titre (et non une étiquette en capitales), une action
+ * d'accent à droite, et son apparition dans la cascade.
+ */
+function Section({
+  index,
+  title,
+  action,
+  children,
+}: {
+  index: number;
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="reveal" style={stagger(index)}>
+      <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
+        <h2 className="text-[1.375rem] font-extrabold tracking-[-0.02em]">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function SectionLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      // Marge négative : la zone d'appui atteint 44 px sans écarter les titres.
+      className="-my-2 inline-flex min-h-11 items-center px-1 text-[0.9375rem] font-semibold text-[var(--accent-text)] active:opacity-60"
+    >
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * Pastille d'icône : la catégorie se reconnaît avant d'être lue. La teinte
+ * vient de `currentColor` (14 %), donc elle suit les thèmes clair et sombre
+ * sans variante dédiée.
+ */
+function IconTile({
+  tone,
+  children,
+}: {
+  tone: 'brand' | 'sage' | 'notice';
+  children: React.ReactNode;
+}) {
+  const color =
+    tone === 'brand'
+      ? 'text-[var(--accent-text)]'
+      : tone === 'sage'
+        ? 'text-[var(--sage-text)]'
+        : 'text-[var(--notice-fg)]';
+
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem]',
+        'bg-[color-mix(in_srgb,currentColor_14%,transparent)]',
+        color,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** « 2 événements, 3 tâches à faire et 8 articles à acheter. » */
+function buildSummary(events: number, tasks: number, items: number): string {
+  const parts: string[] = [];
+  if (events > 0) parts.push(`${events} événement${events > 1 ? 's' : ''}`);
+  if (tasks > 0) parts.push(`${tasks} tâche${tasks > 1 ? 's' : ''} à faire`);
+  if (items > 0) parts.push(`${items} article${items > 1 ? 's' : ''} à acheter`);
+
+  if (parts.length === 0) return 'Rien de prévu pour le moment.';
+  if (parts.length === 1) return `Aujourd'hui : ${parts[0]}.`;
+  return `Aujourd'hui : ${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}.`;
+}
+
 /**
  * Qui accompagne et qui récupère les enfants aujourd'hui.
  *
  * N'apparaît que si l'information existe : une carte vide « personne ne
  * conduit personne » n'apprend rien.
  */
-function TransportSummary({ events }: { events: SerializedOccurrence[] }) {
+function TransportSummary({ events, index }: { events: SerializedOccurrence[]; index: number }) {
   const { members, children } = useHousehold();
 
   const rows = events
@@ -378,11 +475,10 @@ function TransportSummary({ events }: { events: SerializedOccurrence[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <section>
-      <SectionHeader title="Trajets des enfants" />
-      <Card className="space-y-2.5">
+    <Section index={index} title="Trajets des enfants">
+      <Card className="space-y-3">
         {rows.map((row) => (
-          <div key={row.key} className="text-sm">
+          <div key={row.key} className="text-[0.9375rem]">
             <p className="font-semibold">
               {row.title}
               {row.childNames ? (
@@ -410,6 +506,6 @@ function TransportSummary({ events }: { events: SerializedOccurrence[] }) {
           </div>
         ))}
       </Card>
-    </section>
+    </Section>
   );
 }
