@@ -43,11 +43,11 @@ export function AcceptInvitation({
 
   return (
     <>
-      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-[var(--accent-text)]">
         <Users className="h-7 w-7" aria-hidden />
       </div>
 
-      <h1 className="text-xl font-extrabold tracking-tight">
+      <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">
         Rejoindre {householdName}
       </h1>
       <p className="mt-2 text-sm text-muted">

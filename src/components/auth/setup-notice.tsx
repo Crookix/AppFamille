@@ -9,7 +9,7 @@ import { AlertCircle } from 'lucide-react';
 export function SetupNotice() {
   return (
     <div className="surface rounded-[var(--radius-xl2)] p-5">
-      <div className="mb-3 flex items-center gap-2 text-honey-700">
+      <div className="mb-3 flex items-center gap-2 text-[var(--notice-fg)]">
         <AlertCircle className="h-5 w-5" aria-hidden />
         <h2 className="text-base font-bold">Installation à terminer</h2>
       </div>
@@ -20,14 +20,14 @@ export function SetupNotice() {
 
       <ol className="mt-3 space-y-2.5 text-sm">
         <li className="flex gap-2.5">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[0.7rem] font-bold text-brand-700">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[0.75rem] font-bold text-[var(--accent-text)]">
             1
           </span>
           <span>
             Créez un projet sur{' '}
             <a
               href="https://supabase.com/dashboard"
-              className="font-semibold text-brand-600 underline underline-offset-2"
+              className="font-semibold text-[var(--accent-text)] underline underline-offset-2"
               target="_blank"
               rel="noreferrer noopener"
             >
@@ -37,7 +37,7 @@ export function SetupNotice() {
           </span>
         </li>
         <li className="flex gap-2.5">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[0.7rem] font-bold text-brand-700">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[0.75rem] font-bold text-[var(--accent-text)]">
             2
           </span>
           <span>
@@ -46,7 +46,7 @@ export function SetupNotice() {
           </span>
         </li>
         <li className="flex gap-2.5">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[0.7rem] font-bold text-brand-700">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[0.75rem] font-bold text-[var(--accent-text)]">
             3
           </span>
           <span>

@@ -202,7 +202,7 @@ export function ShoppingList({
             <button
               type="button"
               onClick={() => setConfirmClear(true)}
-              className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 underline underline-offset-2"
+              className="inline-flex items-center gap-1 text-xs font-bold text-[var(--accent-text)] underline underline-offset-2"
             >
               <Eraser className="h-3 w-3" aria-hidden />
               Vider

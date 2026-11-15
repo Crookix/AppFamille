@@ -46,7 +46,7 @@ export function ListsTabs({
 
   return (
     <div>
-      <h1 className="mb-3 text-xl font-extrabold tracking-tight">Listes</h1>
+      <h1 className="mb-3 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Listes</h1>
 
       <div
         role="tablist"
@@ -75,7 +75,7 @@ export function ListsTabs({
             aria-selected={tab === key}
             onClick={() => switchTab(key)}
             className={cn(
-              'flex h-10 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[0.8rem] font-semibold transition-colors',
+              'flex tap h-10 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[0.8rem] font-semibold transition-colors',
               tab === key
                 ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-sm'
                 : 'text-[var(--fg-muted)]',
@@ -85,8 +85,8 @@ export function ListsTabs({
             {count > 0 ? (
               <span
                 className={cn(
-                  'text-[0.7rem] font-bold tabular-nums',
-                  tab === key ? 'text-brand-600' : 'text-[var(--fg-muted)]',
+                  'text-[0.75rem] font-bold tabular-nums',
+                  tab === key ? 'text-[var(--accent-text)]' : 'text-[var(--fg-muted)]',
                 )}
               >
                 {count}

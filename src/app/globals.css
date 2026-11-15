@@ -13,40 +13,42 @@
   /* Sable — fonds et surfaces */
   --color-sand-50: #fffcf8;
   --color-sand-100: #fdf5ec;
-  --color-sand-200: #f6e9da;
-  --color-sand-300: #ecd8c2;
+  --color-sand-200: #f3eadf;
+  --color-sand-300: #e6d8c7;
 
   /* Encre — textes */
-  --color-ink-900: #34291f;
+  --color-ink-900: #2f251d;
   --color-ink-700: #5a4a3c;
-  --color-ink-500: #8a7867;
+  --color-ink-500: #7d6b5b;
   --color-ink-300: #bfae9c;
 
-  /* Terracotta — couleur principale */
+  /* Terracotta — couleur principale.
+     500 porte le texte blanc des boutons : 5,0:1 (l'ancien #de6f47 n'en
+     faisait que 3,3). 400, 200, 100 et 50 sont des teintes de fond. */
   --color-brand-50: #fdf1ed;
   --color-brand-100: #fbdfd6;
-  --color-brand-200: #f6bda9;
-  --color-brand-400: #e88d6b;
-  --color-brand-500: #de6f47;
-  --color-brand-600: #c85a33;
-  --color-brand-700: #a4472a;
+  --color-brand-200: #f2b9a3;
+  --color-brand-400: #e0785a;
+  --color-brand-500: #bc4b2b;
+  --color-brand-600: #a53f23;
+  --color-brand-700: #86321b;
 
-  /* Sauge — couleur secondaire */
+  /* Sauge — secondaire. 500 porte une coche blanche, 700 un texte blanc. */
   --color-sage-100: #e5f0e9;
   --color-sage-300: #a8cdb6;
-  --color-sage-500: #6da887;
-  --color-sage-700: #467a5d;
+  --color-sage-500: #4a8465;
+  --color-sage-700: #386149;
 
   /* Miel — accent */
   --color-honey-100: #fdf0d5;
   --color-honey-300: #f6d38a;
   --color-honey-500: #e9b04a;
-  --color-honey-700: #b9822a;
+  --color-honey-700: #8a5a12;
 
   /* Rouge doux — retards, suppressions */
   --color-alert-100: #fbe0dd;
-  --color-alert-500: #d1584c;
-  --color-alert-700: #a03d33;
+  --color-alert-500: #b83d32;
+  --color-alert-700: #8f2f27;
 
   --radius-xl2: 1.25rem;
   --radius-xl3: 1.75rem;
@@ -54,25 +56,36 @@
 
 /* --------------------------------------------------------------------------
    Jetons sémantiques : clair par défaut, redéfinis en sombre.
+
+   Le thème sombre n'est pas le clair inversé. Un fond presque noir légèrement
+   réchauffé, des cartes qui se détachent d'un cran, et des teintes d'accent
+   éclaircies : la terracotta qui porte un bouton en clair devient du texte
+   pâle en sombre, d'où les jetons `--*-text`.
    -------------------------------------------------------------------------- */
 :root {
-  --bg: var(--color-sand-100);
+  --bg: #faf6f0;
   --bg-elevated: #ffffff;
   --bg-subtle: var(--color-sand-200);
+  --bg-hover: #ebe0d2;
   --fg: var(--color-ink-900);
-  /* Texte secondaire : 6,2:1 sur le fond (l'ancien ink-500 n'en faisait que 3,9). */
-  --fg-muted: #6a594b;
-  --line: var(--color-sand-300);
+  /* Texte secondaire : 6,5:1 sur le fond. */
+  --fg-muted: #66564a;
+  --line: #eadfd2;
+  /* Contour d'un champ de saisie : 3:1, le minimum pour un composant. */
+  --field-line: #a08b78;
   --ring: var(--color-brand-500);
   --shadow-card: 0 0 0 0.5px rgb(52 41 31 / 0.05), 0 1px 2px rgb(52 41 31 / 0.04),
     0 12px 32px -16px rgb(52 41 31 / 0.2);
 
-  /* Jetons « prototype Accueil » — tous ≥ 4,5:1 sur leur surface. */
-  --accent-text: #b54627; /* lien et action d'accent sur fond clair */
+  /* Couleurs de texte d'accent — toutes ≥ 4,5:1 sur leur surface. */
+  --accent-text: #a8412a;
   --alert-text: #a03d33;
   --sage-text: #3f7358;
   --notice-bg: #fbefd3;
   --notice-fg: #8a5a12;
+
+  /* Lueur chaude derrière le haut de l'écran. */
+  --glow: rgb(222 111 71 / 0.1);
 
   /* Courbe « iOS » : démarrage vif, arrivée douce. */
   --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
@@ -81,37 +94,55 @@
 
 :root:not([data-theme="light"]) {
   @media (prefers-color-scheme: dark) {
-    --bg: #1b1613;
-    --bg-elevated: #241d19;
-    --bg-subtle: #2e2621;
-    --fg: #f6ece1;
-    --fg-muted: #b09b88;
-    --line: #3b302a;
-    --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
+    --bg: #1f1d1b;
+    --bg-elevated: #2c2825;
+    --bg-subtle: #373230;
+    --bg-hover: #433c37;
+    --fg: #faf3ec;
+    --fg-muted: #cbc0b6;
+    --line: #433c37;
+    --field-line: #84776e;
+    --ring: #ff9d78;
+    --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.3),
       0 12px 32px -16px rgb(0 0 0 / 0.6);
-    --accent-text: #f29a78;
-    --alert-text: #f0867b;
-    --sage-text: #8ccba9;
-    --notice-bg: #3a2c14;
-    --notice-fg: #f2c879;
+    --accent-text: #ff9d78;
+    --alert-text: #ff9a8f;
+    --sage-text: #9bd8b6;
+    --notice-bg: #44341a;
+    --notice-fg: #ffd58a;
+    --glow: rgb(235 115 75 / 0.2);
+    --color-brand-50: #3a2219;
+    --color-brand-100: #4a2b1f;
+    --color-sage-100: #25352c;
+    --color-honey-100: #44341a;
+    --color-alert-100: #472622;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #1b1613;
-  --bg-elevated: #241d19;
-  --bg-subtle: #2e2621;
-  --fg: #f6ece1;
-  --fg-muted: #b09b88;
-  --line: #3b302a;
-  --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
+  --bg: #1f1d1b;
+  --bg-elevated: #2c2825;
+  --bg-subtle: #373230;
+  --bg-hover: #433c37;
+  --fg: #faf3ec;
+  --fg-muted: #cbc0b6;
+  --line: #433c37;
+  --field-line: #84776e;
+  --ring: #ff9d78;
+  --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.3),
     0 12px 32px -16px rgb(0 0 0 / 0.6);
-  --accent-text: #f29a78;
-  --alert-text: #f0867b;
-  --sage-text: #8ccba9;
-  --notice-bg: #3a2c14;
-  --notice-fg: #f2c879;
+  --accent-text: #ff9d78;
+  --alert-text: #ff9a8f;
+  --sage-text: #9bd8b6;
+  --notice-bg: #44341a;
+  --notice-fg: #ffd58a;
+  --glow: rgb(235 115 75 / 0.2);
+  --color-brand-50: #3a2219;
+  --color-brand-100: #4a2b1f;
+  --color-sage-100: #25352c;
+  --color-honey-100: #44341a;
+  --color-alert-100: #472622;
   color-scheme: dark;
 }
 
@@ -131,6 +162,17 @@
     /* Encoche et barre de gestes iOS */
     padding-bottom: env(safe-area-inset-bottom);
     overscroll-behavior-y: none;
+  }
+
+  /* La lueur est fixe et ne défile pas : un dégradé statique, composité une
+     fois, sans coût au défilement. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(130% 50% at 50% -8%, var(--glow), transparent 70%);
   }
 
   /* Cible tactile confortable partout. */
@@ -165,6 +207,18 @@
     color: var(--fg-muted);
   }
 
+  /* Zone d'appui de 44 px sous une puce plus petite : le visuel ne bouge pas,
+     le doigt, lui, a la place. 36 px → 4 px de chaque côté, 40 px → 2 px. */
+  .tap {
+    position: relative;
+  }
+  .tap::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block: min(0px, calc((100% - 44px) / 2));
+  }
+
   .safe-bottom {
     padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
   }
@@ -185,6 +239,12 @@
   /* Apparition en cascade d'un écran : une seule fois, à l'ouverture.
      `--i` (0, 1, 2…) décale chaque bloc de 45 ms. transform + opacity
      uniquement : rien qui touche à la mise en page. */
+  /* Fondu d'un changement d'écran : l'opacité seule, 160 ms. Un écran qu'on
+     ouvre dix fois par jour n'a pas à faire un numéro. */
+  .page-in {
+    animation: myfamily-fade-in 0.16s ease-out backwards;
+  }
+
   .reveal {
     animation: myfamily-reveal 0.5s var(--ease-out) backwards;
     animation-delay: calc(var(--i, 0) * 45ms);
@@ -308,6 +368,10 @@
   body {
     background: #ffffff;
     color: #000000;
+  }
+
+  body::before {
+    display: none;
   }
 
   main {

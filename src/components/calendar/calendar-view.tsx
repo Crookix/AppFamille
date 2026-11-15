@@ -162,7 +162,7 @@ export function CalendarView({
     <div>
       {/* --- Entête ------------------------------------------------------- */}
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h1 className="truncate text-xl font-extrabold tracking-tight first-letter:uppercase">
+        <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em] first-letter:uppercase">
           {periodLabel}
         </h1>
         <div className="flex shrink-0 items-center gap-1">
@@ -202,7 +202,7 @@ export function CalendarView({
               aria-selected={mode === m.key}
               onClick={() => navigate(anchorDay, m.key)}
               className={cn(
-                'h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-colors',
+                'tap h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-colors',
                 mode === m.key
                   ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-sm'
                   : 'text-[var(--fg-muted)]',
@@ -222,7 +222,7 @@ export function CalendarView({
         >
           <Filter className="h-4 w-4" aria-hidden />
           {filterCount > 0 ? (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--fg)] text-[0.6rem] font-bold text-[var(--bg-elevated)]">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--fg)] text-[0.6875rem] font-bold text-[var(--bg-elevated)]">
               {filterCount}
             </span>
           ) : null}
@@ -258,7 +258,7 @@ export function CalendarView({
               setChildFilter([]);
               setCategoryFilter([]);
             }}
-            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-brand-600 underline underline-offset-2"
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-[var(--accent-text)] underline underline-offset-2"
           >
             <X className="h-3 w-3" aria-hidden />
             Tout effacer
@@ -361,7 +361,7 @@ export function CalendarView({
                       )
                     }
                     className={cn(
-                      'h-9 rounded-full px-3.5 text-sm font-semibold transition-colors',
+                      'tap h-9 rounded-full px-3.5 text-sm font-semibold transition-colors',
                       selectedCategory
                         ? 'text-white'
                         : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)]',
@@ -438,7 +438,7 @@ function AgendaList({
           <h2
             className={cn(
               'mb-2 px-1 text-sm font-bold first-letter:uppercase',
-              day === today ? 'text-brand-600' : 'text-muted',
+              day === today ? 'text-[var(--accent-text)]' : 'text-muted',
             )}
           >
             {formatRelativeDay(day)}
@@ -486,7 +486,7 @@ function FilterGroup({
               aria-checked={isSelected}
               onClick={() => onToggle(option.id)}
               className={cn(
-                'flex h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3.5 text-sm font-semibold transition-colors',
+                'flex tap h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3.5 text-sm font-semibold transition-colors',
                 isSelected
                   ? 'border-transparent text-white'
                   : 'border-[var(--line)] text-[var(--fg)]',

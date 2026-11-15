@@ -198,7 +198,7 @@ export function OnboardingFlow({
 
       {step === 1 ? (
         <form onSubmit={submitHousehold} className="surface rounded-[var(--radius-xl2)] p-5">
-          <h1 className="text-xl font-extrabold tracking-tight">Créons votre foyer</h1>
+          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Créons votre foyer</h1>
           <p className="mt-1 text-sm text-muted">
             Deux informations suffisent pour commencer.
           </p>
@@ -234,7 +234,7 @@ export function OnboardingFlow({
             </div>
 
             <details className="group">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-brand-600">
+              <summary className="cursor-pointer list-none text-sm font-semibold text-[var(--accent-text)]">
                 Options avancées
               </summary>
               <div className="mt-3">
@@ -262,7 +262,7 @@ export function OnboardingFlow({
 
       {step === 2 ? (
         <div className="surface rounded-[var(--radius-xl2)] p-5">
-          <h1 className="text-xl font-extrabold tracking-tight">Vos enfants</h1>
+          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Vos enfants</h1>
           <p className="mt-1 text-sm text-muted">
             Ils n'ont pas besoin de compte. Vous pourrez les associer aux événements,
             aux repas et aux gardes. C'est modifiable à tout moment.
@@ -322,7 +322,7 @@ export function OnboardingFlow({
                       setDraftChildren((current) => current.filter((c) => c.key !== child.key))
                     }
                   >
-                    <Trash2 className="h-4 w-4 text-alert-500" aria-hidden />
+                    <Trash2 className="h-4 w-4 text-[var(--alert-text)]" aria-hidden />
                   </Button>
                 </div>
               </div>
@@ -349,7 +349,7 @@ export function OnboardingFlow({
 
       {step === 3 ? (
         <div className="surface rounded-[var(--radius-xl2)] p-5">
-          <h1 className="text-xl font-extrabold tracking-tight">Invitez l'autre adulte</h1>
+          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Invitez l'autre adulte</h1>
           <p className="mt-1 text-sm text-muted">
             Chacun garde son propre compte ; tout ce qui est partagé se synchronise entre vous.
           </p>
@@ -432,7 +432,7 @@ function StepDots({ current }: { current: 1 | 2 | 3 }) {
                 active
                   ? 'bg-brand-500 text-white'
                   : done
-                    ? 'bg-sage-100 text-sage-700'
+                    ? 'bg-sage-100 text-[var(--sage-text)]'
                     : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)]',
               ].join(' ')}
             >

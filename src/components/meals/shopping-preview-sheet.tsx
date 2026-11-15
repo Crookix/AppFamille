@@ -196,13 +196,13 @@ export function ShoppingPreviewSheet({
                       </p>
                       <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
                         {line.merged ? (
-                          <span className="inline-flex items-center gap-1 font-semibold text-sage-700">
+                          <span className="inline-flex items-center gap-1 font-semibold text-[var(--sage-text)]">
                             <Merge className="h-3 w-3" aria-hidden />
                             regroupé
                           </span>
                         ) : null}
                         {line.alreadyInList ? (
-                          <span className="inline-flex items-center gap-1 font-semibold text-honey-700">
+                          <span className="inline-flex items-center gap-1 font-semibold text-[var(--notice-fg)]">
                             <AlertCircle className="h-3 w-3" aria-hidden />
                             déjà sur la liste
                           </span>

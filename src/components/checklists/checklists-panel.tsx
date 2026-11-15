@@ -304,7 +304,7 @@ function ChecklistCard({
           >
             <span
               className={cn(
-                'block h-full rounded-full transition-all',
+                'block h-full rounded-full transition-[width,background-color]',
                 avancement.complete ? 'bg-sage-500' : 'bg-brand-500',
               )}
               style={{ width: `${Math.round(avancement.ratio * 100)}%` }}

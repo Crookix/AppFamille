@@ -235,7 +235,7 @@ export function GoogleSettings({
       {error ? <ErrorNote className="mb-4">{error}</ErrorNote> : null}
 
       {justConnected && !error ? (
-        <p className="mb-4 flex items-start gap-2 rounded-2xl bg-sage-100 px-3.5 py-2.5 text-sm font-medium text-sage-700">
+        <p className="mb-4 flex items-start gap-2 rounded-2xl bg-sage-100 px-3.5 py-2.5 text-sm font-medium text-[var(--sage-text)]">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           Agenda autorisé. Choisissez maintenant les calendriers à afficher.
         </p>
@@ -248,7 +248,7 @@ export function GoogleSettings({
             className={cn(
               'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
               account?.calendar_authorized
-                ? 'bg-sage-100 text-sage-700'
+                ? 'bg-sage-100 text-[var(--sage-text)]'
                 : 'bg-[var(--bg-subtle)] text-muted',
             )}
           >
@@ -267,7 +267,7 @@ export function GoogleSettings({
             </p>
 
             {account?.last_error ? (
-              <p className="mt-2 flex items-start gap-1.5 text-sm text-alert-700">
+              <p className="mt-2 flex items-start gap-1.5 text-sm text-[var(--alert-text)]">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                 {account.last_error}
               </p>
@@ -403,7 +403,7 @@ export function GoogleSettings({
                           {channelsByCalendar.has(calendar.id) ? (
                             <>
                               <BellRing
-                                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sage-700"
+                                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--sage-text)]"
                                 aria-hidden
                               />
                               Google prévient MyFamily dès que ce calendrier change.
@@ -558,7 +558,7 @@ export function GoogleSettings({
             </strong>
           </p>
 
-          <label className="flex items-start gap-2.5 rounded-2xl bg-alert-100 p-3 text-sm text-alert-700">
+          <label className="flex items-start gap-2.5 rounded-2xl bg-alert-100 p-3 text-sm text-[var(--alert-text)]">
             <input
               type="checkbox"
               checked={removeEvents}
@@ -657,7 +657,7 @@ function AutomationCard({
               className={cn(
                 'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
                 line.active
-                  ? 'bg-sage-100 text-sage-700'
+                  ? 'bg-sage-100 text-[var(--sage-text)]'
                   : 'bg-[var(--bg-subtle)] text-muted',
               )}
             >
@@ -684,7 +684,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <ArrowLeft className="h-4 w-4" aria-hidden />
         Plus
       </Link>
-      <h1 className="mb-4 text-xl font-extrabold tracking-tight">Google Agenda</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Google Agenda</h1>
       {children}
     </div>
   );
@@ -726,7 +726,7 @@ function SetupChecklist({
   return (
     <Card>
       <h2 className="mb-1 flex items-center gap-2 font-bold">
-        <AlertTriangle className="h-4.5 w-4.5 text-honey-700" aria-hidden />
+        <AlertTriangle className="h-4.5 w-4.5 text-[var(--notice-fg)]" aria-hidden />
         Configuration à terminer
       </h2>
       <p className="mb-3 text-sm text-muted">
@@ -739,7 +739,7 @@ function SetupChecklist({
           <li key={item.label} className="flex items-start gap-2.5 text-sm">
             <span
               className={cn(
-                'mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-bold',
+                'mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full text-[0.75rem] font-bold',
                 item.done
                   ? 'bg-sage-500 text-white'
                   : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)]',

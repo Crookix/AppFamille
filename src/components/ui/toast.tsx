@@ -78,7 +78,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                     'animate-in-up pointer-events-auto flex w-full max-w-sm items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-medium shadow-lg',
                     t.tone === 'success' && 'bg-sage-700 text-white',
                     t.tone === 'error' && 'bg-alert-700 text-white',
-                    t.tone === 'info' && 'bg-ink-900 text-white dark:bg-sand-200 dark:text-ink-900',
+                    t.tone === 'info' && 'bg-[var(--fg)] text-[var(--bg)]',
                   )}
                 >
                   {t.tone === 'success' ? (

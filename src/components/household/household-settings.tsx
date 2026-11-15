@@ -141,12 +141,12 @@ export function HouseholdSettings({
         Plus
       </Link>
 
-      <h1 className="mb-4 text-xl font-extrabold tracking-tight">Le foyer</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Le foyer</h1>
 
       {/* --- Nom ---------------------------------------------------------- */}
       <Card className="mb-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-white/5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[var(--accent-text)]">
             <Home className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
@@ -218,7 +218,7 @@ export function HouseholdSettings({
                     {member.id === me.id ? (
                       <X className="h-4 w-4 text-muted" aria-hidden />
                     ) : (
-                      <Trash2 className="h-4 w-4 text-alert-500" aria-hidden />
+                      <Trash2 className="h-4 w-4 text-[var(--alert-text)]" aria-hidden />
                     )}
                   </Button>
                 ) : null}

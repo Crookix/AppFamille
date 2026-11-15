@@ -6,8 +6,8 @@ import { cn, colorHex, initials } from '@/lib/utils';
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 
 const sizes: Record<Size, string> = {
-  xs: 'h-6 w-6 text-[0.6rem]',
-  sm: 'h-8 w-8 text-[0.7rem]',
+  xs: 'h-6 w-6 text-[0.6875rem]',
+  sm: 'h-8 w-8 text-[0.75rem]',
   md: 'h-10 w-10 text-xs',
   lg: 'h-16 w-16 text-lg',
 };
@@ -74,7 +74,7 @@ export function AvatarStack({
   const rest = people.length - shown.length;
 
   return (
-    <span className="flex items-center -space-x-1.5">
+    <span className={cn('flex items-center', size === 'xs' ? '-space-x-0.5' : '-space-x-1.5')}>
       {shown.map((p, i) => (
         <Avatar key={`${p.name}-${i}`} {...p} size={size} ring />
       ))}

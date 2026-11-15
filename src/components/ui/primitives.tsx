@@ -42,8 +42,8 @@ export function SectionHeader({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="mb-2 flex items-center justify-between gap-3 px-1">
-      <h2 className="flex items-center gap-2 text-[0.8rem] font-bold uppercase tracking-wide text-muted">
+    <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
+      <h2 className="flex items-center gap-2 text-[1.375rem] font-extrabold tracking-[-0.02em]">
         {icon}
         {title}
       </h2>
@@ -57,9 +57,10 @@ export function SectionHeader({
 /* -------------------------------------------------------------------------- */
 
 const fieldBase =
-  'w-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] px-4 ' +
+  'w-full rounded-2xl border border-[var(--field-line)] bg-[var(--bg-elevated)] px-4 ' +
   'text-[16px] text-[var(--fg)] placeholder:text-[var(--fg-muted)] ' +
-  'focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-200 ' +
+  'transition-[border-color,box-shadow] ' +
+  'focus:border-[var(--ring)] focus:outline-none focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--ring)_28%,transparent)] ' +
   'disabled:opacity-60';
 // 16 px : en dessous, Safari iOS zoome automatiquement à la mise au point.
 
@@ -116,12 +117,12 @@ export function Field({
     <label className={cn('block', className)}>
       <span className="mb-1.5 flex items-baseline gap-1.5 text-sm font-semibold">
         {label}
-        {required ? <span className="text-brand-500">*</span> : null}
+        {required ? <span className="text-[var(--accent-text)]">*</span> : null}
         {hint ? <span className="text-xs font-normal text-muted">{hint}</span> : null}
       </span>
       {children}
       {error ? (
-        <span className="mt-1.5 flex items-center gap-1 text-xs font-medium text-alert-500">
+        <span className="mt-1.5 flex items-center gap-1 text-xs font-medium text-[var(--alert-text)]">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
           {error}
         </span>
@@ -191,10 +192,10 @@ export function Badge({
 }) {
   const tones = {
     neutral: 'bg-[var(--bg-subtle)] text-[var(--fg-muted)]',
-    brand: 'bg-brand-100 text-brand-700',
-    sage: 'bg-sage-100 text-sage-700',
-    honey: 'bg-honey-100 text-honey-700',
-    alert: 'bg-alert-100 text-alert-700',
+    brand: 'bg-brand-100 text-[var(--accent-text)]',
+    sage: 'bg-sage-100 text-[var(--sage-text)]',
+    honey: 'bg-honey-100 text-[var(--notice-fg)]',
+    alert: 'bg-alert-100 text-[var(--alert-text)]',
   } as const;
 
   return (
@@ -235,7 +236,7 @@ export function EmptyState({
       )}
     >
       {icon ? (
-        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-white/5">
+        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-[var(--accent-text)]">
           {icon}
         </div>
       ) : null}
@@ -278,7 +279,7 @@ export function ErrorNote({
     <p
       role="alert"
       className={cn(
-        'flex items-start gap-2 rounded-2xl bg-alert-100 px-3.5 py-2.5 text-sm font-medium text-alert-700',
+        'flex items-start gap-2 rounded-2xl bg-alert-100 px-3.5 py-2.5 text-sm font-medium text-[var(--alert-text)]',
         className,
       )}
     >

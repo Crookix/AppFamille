@@ -100,7 +100,7 @@ export function MealPlanner({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h1 className="truncate text-xl font-extrabold tracking-tight">
+        <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">
           Semaine du {formatDayLong(monday, { withYear: false })}
         </h1>
         <div className="flex shrink-0 items-center gap-1">
@@ -199,7 +199,7 @@ export function MealPlanner({
             <h2
               className={cn(
                 'mb-2 text-sm font-bold first-letter:uppercase',
-                day === today ? 'text-brand-600' : 'text-muted',
+                day === today ? 'text-[var(--accent-text)]' : 'text-muted',
               )}
             >
               {formatDayLong(day, { withYear: false })}
@@ -226,17 +226,17 @@ export function MealPlanner({
                     className={cn(
                       'rounded-2xl border-2 p-2.5 text-left transition-colors',
                       selecting && hasRecipe && selected
-                        ? 'border-brand-500 bg-brand-50 dark:bg-white/5'
+                        ? 'border-brand-500 bg-brand-50'
                         : selecting && hasRecipe
                           ? 'border-[var(--line)]'
                           : selecting
                             ? 'border-transparent bg-[var(--bg-subtle)] opacity-40'
                             : meal
-                              ? 'border-transparent bg-[var(--bg-subtle)] hover:bg-sand-300/60 dark:hover:bg-white/10'
+                              ? 'border-transparent bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)]'
                               : 'border-dashed border-[var(--line)] hover:bg-[var(--bg-subtle)]',
                     )}
                   >
-                    <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-muted">
+                    <span className="block text-[0.75rem] font-bold uppercase tracking-wide text-muted">
                       {SLOT_LABELS[slot]}
                     </span>
                     {meal ? (
@@ -340,7 +340,7 @@ export function MealPlanner({
                   >
                     {recipe.is_favorite ? (
                       <Star
-                        className="h-4 w-4 shrink-0 text-honey-500"
+                        className="h-4 w-4 shrink-0 text-[var(--notice-fg)]"
                         fill="currentColor"
                         aria-label="Favori"
                       />

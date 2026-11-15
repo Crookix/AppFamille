@@ -212,7 +212,7 @@ export function ChildcareSheet({
         </div>
       ) : nannies.length === 0 ? (
         <div className="py-4 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-500">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-[var(--accent-text)]">
             <Baby className="h-7 w-7" aria-hidden />
           </div>
           <p className="font-bold">Aucune nounou enregistrée</p>
@@ -292,7 +292,7 @@ export function ChildcareSheet({
                         )
                       }
                       className={cn(
-                        'flex h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3.5 text-sm font-semibold transition-colors',
+                        'flex tap h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3.5 text-sm font-semibold transition-colors',
                         selected
                           ? 'border-transparent text-white'
                           : 'border-[var(--line)] text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
@@ -324,7 +324,7 @@ export function ChildcareSheet({
             />
           </Field>
 
-          <p className="flex items-start gap-2 rounded-2xl bg-honey-100 px-3.5 py-2.5 text-xs text-honey-700">
+          <p className="flex items-start gap-2 rounded-2xl bg-honey-100 px-3.5 py-2.5 text-xs text-[var(--notice-fg)]">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
             <span>
               Ce tarif est enregistré dans la garde. Modifier plus tard le tarif de la

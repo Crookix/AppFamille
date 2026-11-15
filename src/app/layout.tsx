@@ -42,8 +42,8 @@ export const viewport: Viewport = {
   // Le zoom reste autorisé : le bloquer nuit à l'accessibilité.
   maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fdf5ec' },
-    { media: '(prefers-color-scheme: dark)', color: '#1b1613' },
+    { media: '(prefers-color-scheme: light)', color: '#faf6f0' },
+    { media: '(prefers-color-scheme: dark)', color: '#1f1d1b' },
   ],
 };
 

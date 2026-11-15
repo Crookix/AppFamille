@@ -44,14 +44,14 @@ export function BottomNav({ householdName }: { householdName: string }) {
     <nav
       aria-label="Navigation principale"
       className={cn(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg-elevated)]/95 backdrop-blur',
-        'safe-bottom pt-1',
+        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg-elevated)]',
+        'safe-bottom pt-1.5',
         'md:inset-y-0 md:right-auto md:left-0 md:w-64 md:border-r md:border-t-0 md:px-3 md:py-6',
       )}
     >
       <div className="hidden px-3 pb-6 md:block">
         <p className="text-xl font-extrabold tracking-tight">
-          <span className="text-brand-500">MyFamily</span>
+          <span className="text-[var(--accent-text)]">MyFamily</span>
         </p>
         <p className="mt-0.5 truncate text-sm text-muted">{householdName}</p>
       </div>
@@ -72,20 +72,20 @@ export function BottomNav({ householdName }: { householdName: string }) {
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex h-full flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[0.68rem] font-semibold transition-colors',
+                  'flex h-full flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[0.6875rem] font-semibold transition-colors',
                   'md:flex-row md:gap-3 md:px-3 md:py-2.5 md:text-[0.95rem]',
                   active
-                    ? 'text-brand-600 md:bg-brand-50 dark:md:bg-white/5'
+                    ? 'text-[var(--accent-text)] md:bg-brand-50'
                     : 'text-[var(--fg-muted)] hover:text-[var(--fg)]',
                 )}
               >
                 <span
                   className={cn(
-                    'flex h-7 w-11 items-center justify-center rounded-full transition-colors md:h-auto md:w-auto',
-                    active ? 'bg-brand-100 md:bg-transparent dark:bg-white/10' : '',
+                    'flex h-8 w-14 items-center justify-center rounded-full transition-colors md:h-auto md:w-auto',
+                    active ? 'bg-brand-100 md:bg-transparent' : '',
                   )}
                 >
-                  <Icon className="h-[1.15rem] w-[1.15rem]" strokeWidth={active ? 2.6 : 2} aria-hidden />
+                  <Icon className="h-[1.3rem] w-[1.3rem]" strokeWidth={active ? 2.5 : 2} aria-hidden />
                 </span>
                 {label}
               </Link>

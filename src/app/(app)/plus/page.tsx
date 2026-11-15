@@ -79,7 +79,7 @@ export default async function PlusPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-extrabold tracking-tight">Plus</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Plus</h1>
 
       <Card className="divide-y divide-[var(--line)] p-0">
         {entries.map(({ href, label, hint, icon: Icon }) => (
@@ -88,7 +88,7 @@ export default async function PlusPage() {
             href={href}
             className="flex items-center gap-3.5 px-4 py-3.5 transition-colors first:rounded-t-[var(--radius-xl2)] last:rounded-b-[var(--radius-xl2)] hover:bg-[var(--bg-subtle)]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-white/5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[var(--accent-text)]">
               <Icon className="h-5 w-5" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">

@@ -24,7 +24,7 @@ export function AppHeader({ unread }: { unread: number }) {
   const { household, me } = useHousehold();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--bg)]/90 backdrop-blur md:hidden">
+    <header className="sticky top-0 z-30 bg-[var(--bg)] md:hidden">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-1.5">
         <p className="min-w-0 truncate text-sm font-semibold text-[var(--fg-muted)]">
           {household.name}

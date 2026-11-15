@@ -161,7 +161,7 @@ export function TaskSheet({
               aria-checked={assignee === null}
               onClick={() => setAssignee(null)}
               className={cn(
-                'h-10 rounded-full border-2 px-4 text-sm font-semibold transition-colors',
+                'tap h-10 rounded-full border-2 px-4 text-sm font-semibold transition-colors',
                 assignee === null
                   ? 'border-transparent bg-[var(--fg)] text-[var(--bg-elevated)]'
                   : 'border-[var(--line)] text-[var(--fg-muted)] hover:text-[var(--fg)]',
@@ -179,7 +179,7 @@ export function TaskSheet({
                   aria-checked={selected}
                   onClick={() => setAssignee(member.id)}
                   className={cn(
-                    'flex h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3.5 text-sm font-semibold transition-colors',
+                    'flex tap h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3.5 text-sm font-semibold transition-colors',
                     selected
                       ? 'border-transparent text-white'
                       : 'border-[var(--line)] text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
@@ -209,7 +209,7 @@ export function TaskSheet({
                 type="button"
                 onClick={() => setDueDate(choice.value)}
                 className={cn(
-                  'h-9 rounded-full px-3.5 text-sm font-semibold transition-colors',
+                  'tap h-9 rounded-full px-3.5 text-sm font-semibold transition-colors',
                   dueDate === choice.value
                     ? 'bg-brand-500 text-white'
                     : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)] hover:text-[var(--fg)]',

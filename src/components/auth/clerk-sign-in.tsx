@@ -64,7 +64,7 @@ function Patience({ portalUrl }: { portalUrl: string | null }) {
 
   return (
     <div className="surface rounded-[var(--radius-xl2)] p-5">
-      <div className="mb-3 flex items-center gap-2 text-honey-700">
+      <div className="mb-3 flex items-center gap-2 text-[var(--notice-fg)]">
         <WifiOff className="h-5 w-5" aria-hidden />
         <h2 className="text-base font-bold">Le formulaire ne s'affiche pas</h2>
       </div>

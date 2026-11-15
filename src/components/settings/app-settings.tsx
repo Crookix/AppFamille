@@ -170,7 +170,7 @@ export function AppSettings({
         Plus
       </Link>
 
-      <h1 className="mb-4 text-xl font-extrabold tracking-tight">Paramètres</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Paramètres</h1>
 
       {/* --- Profil --------------------------------------------------------- */}
       <Card className="mb-4">
@@ -220,7 +220,7 @@ export function AppSettings({
                 className={cn(
                   'flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-3 text-xs font-semibold transition-colors',
                   theme === key
-                    ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-white/5'
+                    ? 'border-brand-500 bg-brand-50 text-[var(--accent-text)]'
                     : 'border-[var(--line)] text-[var(--fg-muted)]',
                 )}
               >
@@ -239,7 +239,7 @@ export function AppSettings({
         </h2>
         <Card>
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-white/5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[var(--accent-text)]">
               <Smartphone className="h-5 w-5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
@@ -294,7 +294,7 @@ export function AppSettings({
           </h2>
           <Card>
             <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-honey-100 text-honey-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-honey-100 text-[var(--notice-fg)]">
                 <FlaskConical className="h-5 w-5" aria-hidden />
               </span>
               <div className="min-w-0 flex-1">

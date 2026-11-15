@@ -208,7 +208,7 @@ export function MonthlySummary({
                 <p className="text-xs font-bold uppercase tracking-wide text-muted">
                   Heures confirmées
                 </p>
-                <p className="text-lg font-extrabold text-sage-700">
+                <p className="text-lg font-extrabold text-[var(--sage-text)]">
                   {formatDuration(summary.confirmedMinutes)}
                 </p>
               </div>
@@ -228,7 +228,7 @@ export function MonthlySummary({
             </div>
 
             {summary.pendingSessionCount > 0 ? (
-              <p className="flex items-start gap-2 rounded-2xl bg-honey-100 px-3.5 py-2.5 text-sm text-honey-700">
+              <p className="flex items-start gap-2 rounded-2xl bg-honey-100 px-3.5 py-2.5 text-sm text-[var(--notice-fg)]">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 <span>
                   {summary.pendingSessionCount} garde
@@ -252,7 +252,7 @@ export function MonthlySummary({
               <span
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
                   settlement?.status === 'paye'
-                    ? 'bg-sage-100 text-sage-700'
+                    ? 'bg-sage-100 text-[var(--sage-text)]'
                     : 'bg-[var(--bg-subtle)] text-muted'
                 }`}
               >
@@ -324,7 +324,7 @@ export function MonthlySummary({
                         <strong>{formatDuration(totals.workedMinutes ?? 0)}</strong>
                       </p>
                     ) : (
-                      <p className="mt-1.5 text-sm text-honey-700">
+                      <p className="mt-1.5 text-sm text-[var(--notice-fg)]">
                         Heures réelles non saisies.
                       </p>
                     )}

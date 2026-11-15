@@ -173,7 +173,7 @@ export function MealSheet({
         <div className="flex gap-2 pb-1">
           {meal ? (
             <Button variant="outline" size="icon" onClick={remove} aria-label="Retirer ce repas">
-              <Trash2 className="h-4 w-4 text-alert-500" aria-hidden />
+              <Trash2 className="h-4 w-4 text-[var(--alert-text)]" aria-hidden />
             </Button>
           ) : null}
           <Button variant="outline" className="flex-1" onClick={onClose} disabled={pending}>

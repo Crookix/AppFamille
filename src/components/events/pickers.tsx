@@ -100,7 +100,7 @@ function PersonChip({
       aria-checked={selected}
       onClick={onToggle}
       className={cn(
-        'flex h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3 text-sm font-semibold transition-all',
+        'flex tap h-10 items-center gap-2 rounded-full border-2 pl-1 pr-3 text-sm font-semibold transition-[background-color,border-color,color]',
         selected
           ? 'border-transparent text-white'
           : 'border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
@@ -245,7 +245,7 @@ export function RecurrencePicker({
                 aria-checked={weekdays.includes(index)}
                 onClick={() => toggleWeekday(index)}
                 className={cn(
-                  'h-10 min-w-11 rounded-full px-3 text-sm font-semibold transition-colors',
+                  'tap h-10 min-w-11 rounded-full px-3 text-sm font-semibold transition-colors',
                   weekdays.includes(index)
                     ? 'bg-brand-500 text-white'
                     : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)] hover:text-[var(--fg)]',
@@ -313,7 +313,7 @@ export function ReminderPicker({
                 )
               }
               className={cn(
-                'h-9 rounded-full px-3.5 text-sm font-semibold transition-colors',
+                'tap h-9 rounded-full px-3.5 text-sm font-semibold transition-colors',
                 selected
                   ? 'bg-sage-500 text-white'
                   : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)] hover:text-[var(--fg)]',
@@ -366,7 +366,7 @@ export function CategoryPicker({
               aria-checked={selected}
               onClick={() => onChange(key)}
               className={cn(
-                'flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors',
+                'flex tap h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors',
                 selected
                   ? 'text-white'
                   : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)] hover:text-[var(--fg)]',
