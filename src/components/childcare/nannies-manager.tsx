@@ -58,7 +58,7 @@ export function NanniesManager({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-extrabold tracking-tight">Nounous et gardes</h1>
+        <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Nounous et gardes</h1>
         {nannies.length > 0 ? (
           <Button size="sm" onClick={() => setPlanning(true)}>
             <Plus className="h-4 w-4" aria-hidden />
@@ -70,7 +70,7 @@ export function NanniesManager({
       {/* --- Heures à confirmer -------------------------------------------- */}
       {toConfirm.length > 0 ? (
         <section>
-          <h2 className="mb-2 flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wide text-honey-700">
+          <h2 className="mb-2 flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wide text-[var(--notice-fg)]">
             <AlertCircle className="h-3.5 w-3.5" aria-hidden />
             Heures à saisir ou confirmer
           </h2>
@@ -108,7 +108,7 @@ export function NanniesManager({
           <Card className="divide-y divide-[var(--line)] p-0">
             {upcoming.map((session) => (
               <div key={session.id} className="flex items-center gap-3 px-4 py-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-white/5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[var(--accent-text)]">
                   <Baby className="h-4 w-4" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">

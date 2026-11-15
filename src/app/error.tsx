@@ -26,10 +26,10 @@ export default function GlobalError({
       id="contenu"
       className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center px-5 text-center"
     >
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-alert-100 text-alert-700">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-alert-100 text-[var(--alert-text)]">
         <TriangleAlert className="h-8 w-8" aria-hidden />
       </div>
-      <h1 className="text-xl font-extrabold tracking-tight">Quelque chose a coincé</h1>
+      <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Quelque chose a coincé</h1>
       <p className="mt-2 text-sm text-muted">
         L'affichage n'a pas abouti. Rien n'est perdu : réessayez, ou revenez à
         l'accueil.
@@ -46,13 +46,13 @@ export default function GlobalError({
 
       <a
         href="/"
-        className="mt-3 text-sm font-semibold text-brand-600 underline underline-offset-2"
+        className="mt-3 text-sm font-semibold text-[var(--accent-text)] underline underline-offset-2"
       >
         Retour à l'accueil
       </a>
 
       {error.digest ? (
-        <p className="mt-6 font-mono text-[0.65rem] text-muted">
+        <p className="mt-6 font-mono text-[0.75rem] text-muted">
           Référence : {error.digest}
         </p>
       ) : null}

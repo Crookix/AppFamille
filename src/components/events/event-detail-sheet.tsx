@@ -283,7 +283,7 @@ export function EventDetailSheet({
                       href={mapsUrl(event.address)}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="text-brand-600 underline underline-offset-2"
+                      className="text-[var(--accent-text)] underline underline-offset-2"
                     >
                       {event.address}
                     </a>

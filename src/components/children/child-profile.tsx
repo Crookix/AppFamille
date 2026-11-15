@@ -78,7 +78,7 @@ export function ChildProfile({
       <div className="flex items-center gap-4">
         <Avatar name={child.first_name} color={child.color} size="lg" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-extrabold tracking-tight">
+          <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">
             {child.first_name}
           </h1>
           <p className="text-sm text-muted">
@@ -99,7 +99,7 @@ export function ChildProfile({
 
       {/* --- Allergies : mises en avant ------------------------------------ */}
       {child.allergies ? (
-        <div className="flex items-start gap-2.5 rounded-[var(--radius-xl2)] bg-alert-100 p-3.5 text-alert-700">
+        <div className="flex items-start gap-2.5 rounded-[var(--radius-xl2)] bg-alert-100 p-3.5 text-[var(--alert-text)]">
           <TriangleAlert className="mt-0.5 h-4.5 w-4.5 shrink-0" aria-hidden />
           <div className="min-w-0">
             <p className="text-sm font-bold">Allergies</p>
@@ -141,7 +141,7 @@ export function ChildProfile({
           <button
             type="button"
             onClick={() => setAddingActivity(true)}
-            className="text-xs font-bold text-brand-600 underline underline-offset-2"
+            className="text-xs font-bold text-[var(--accent-text)] underline underline-offset-2"
           >
             Ajouter
           </button>
@@ -260,7 +260,7 @@ export function ChildProfile({
           <Card className="divide-y divide-[var(--line)] p-0">
             {sessions.map((session) => (
               <div key={session.id} className="flex items-center gap-3 px-4 py-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-white/5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[var(--accent-text)]">
                   <Baby className="h-4 w-4" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">

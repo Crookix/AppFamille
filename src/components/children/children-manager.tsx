@@ -46,7 +46,7 @@ export function ChildrenManager({ archived }: { archived: ChildRow[] }) {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-extrabold tracking-tight">Enfants</h1>
+      <h1 className="mb-4 text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Enfants</h1>
 
       {children.length === 0 ? (
         <EmptyState
@@ -97,7 +97,7 @@ export function ChildrenManager({ archived }: { archived: ChildRow[] }) {
           <button
             type="button"
             onClick={() => setShowArchived((v) => !v)}
-            className="text-sm font-semibold text-brand-600 underline underline-offset-2"
+            className="text-sm font-semibold text-[var(--accent-text)] underline underline-offset-2"
           >
             {showArchived ? 'Masquer' : 'Afficher'} les fiches archivées ({archived.length})
           </button>

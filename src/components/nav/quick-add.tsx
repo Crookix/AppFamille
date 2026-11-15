@@ -17,21 +17,21 @@ const CHOICES: { key: Target; label: string; hint: string; icon: React.ElementTy
     label: 'Un événement',
     hint: 'Rendez-vous, école, déplacement…',
     icon: CalendarPlus,
-    tone: 'bg-brand-100 text-brand-700',
+    tone: 'bg-brand-100 text-[var(--accent-text)]',
   },
   {
     key: 'tache',
     label: 'Une tâche',
     hint: 'À faire, avec un responsable',
     icon: ListPlus,
-    tone: 'bg-sage-100 text-sage-700',
+    tone: 'bg-sage-100 text-[var(--sage-text)]',
   },
   {
     key: 'course',
     label: 'Une course',
     hint: 'Ajout à la liste partagée',
     icon: ShoppingBasket,
-    tone: 'bg-honey-100 text-honey-700',
+    tone: 'bg-honey-100 text-[var(--notice-fg)]',
   },
   {
     key: 'garde',
@@ -45,7 +45,7 @@ const CHOICES: { key: Target; label: string; hint: string; icon: React.ElementTy
     label: 'Une reco',
     hint: 'Film, série, théâtre, idée cadeau',
     icon: Sparkles,
-    tone: 'bg-brand-50 text-brand-600 dark:bg-white/5',
+    tone: 'bg-brand-50 text-[var(--accent-text)]',
   },
 ];
 

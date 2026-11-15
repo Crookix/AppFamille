@@ -218,7 +218,7 @@ export function RecipeSheet({
                 onClick={() => setConfirmingDelete(true)}
                 aria-label="Supprimer la recette"
               >
-                <Trash2 className="h-4 w-4 text-alert-500" aria-hidden />
+                <Trash2 className="h-4 w-4 text-[var(--alert-text)]" aria-hidden />
               </Button>
             ) : null}
             <Button variant="outline" className="flex-1" onClick={onClose} disabled={pending}>
@@ -262,7 +262,7 @@ export function RecipeSheet({
               className={cn(
                 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 text-sm font-semibold transition-colors',
                 isFavorite
-                  ? 'border-transparent bg-honey-100 text-honey-700'
+                  ? 'border-transparent bg-honey-100 text-[var(--notice-fg)]'
                   : 'border-[var(--line)] text-[var(--fg-muted)]',
               )}
             >

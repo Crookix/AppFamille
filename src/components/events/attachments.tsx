@@ -200,7 +200,7 @@ export function AttachmentsField({
               onClick={() => setToDelete(attachment)}
               aria-label={`Supprimer ${attachment.file_name}`}
             >
-              <Trash2 className="h-4 w-4 text-alert-500" aria-hidden />
+              <Trash2 className="h-4 w-4 text-[var(--alert-text)]" aria-hidden />
             </Button>
           </li>
         ))}
@@ -223,7 +223,7 @@ export function AttachmentsField({
               onClick={() => setPending((current) => current.filter((p) => p.id !== item.id))}
               aria-label={`Retirer ${item.file.name}`}
             >
-              <Trash2 className="h-4 w-4 text-alert-500" aria-hidden />
+              <Trash2 className="h-4 w-4 text-[var(--alert-text)]" aria-hidden />
             </Button>
           </li>
         ))}

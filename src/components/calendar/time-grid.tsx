@@ -162,7 +162,7 @@ export function TimeGrid({
           const isToday = day === today;
           const header = (
             <>
-              <span className="text-[0.65rem] font-semibold uppercase text-muted">
+              <span className="text-[0.75rem] font-semibold uppercase text-muted">
                 {weekdayShort(day)}
               </span>
               <span
@@ -201,7 +201,7 @@ export function TimeGrid({
           style={{ gridTemplateColumns: columns }}
         >
           <div className="flex items-start justify-end pr-1.5 pt-1.5">
-            <span className="text-[0.6rem] font-semibold uppercase text-muted">Jour</span>
+            <span className="text-[0.6875rem] font-semibold uppercase text-muted">Jour</span>
           </div>
           {layout.map(({ day, allDay }) => (
             <div key={day} className="min-w-0 space-y-0.5 border-l border-[var(--line)] p-1">
@@ -211,7 +211,7 @@ export function TimeGrid({
                   type="button"
                   onClick={() => onOpen(item)}
                   title={item.event.is_busy_only ? 'Occupé' : item.event.title}
-                  className="block w-full truncate rounded-md px-1.5 py-1 text-left text-[0.7rem] font-semibold text-white"
+                  className="block w-full truncate rounded-md px-1.5 py-1 text-left text-[0.75rem] font-semibold text-white"
                   style={{ backgroundColor: categoryOf(item).color }}
                 >
                   {item.event.is_busy_only ? 'Occupé' : item.event.title}
@@ -221,7 +221,7 @@ export function TimeGrid({
                 <button
                   type="button"
                   onClick={() => onPickDay?.(day)}
-                  className="block w-full px-1.5 text-left text-[0.65rem] font-bold text-muted"
+                  className="block w-full px-1.5 text-left text-[0.75rem] font-bold text-muted"
                 >
                   +{allDay.length - 3}
                 </button>
@@ -245,7 +245,7 @@ export function TimeGrid({
             {HOURS.slice(1).map((h) => (
               <span
                 key={h}
-                className="absolute right-1.5 -translate-y-1/2 text-[0.65rem] font-semibold text-muted tabular-nums"
+                className="absolute right-1.5 -translate-y-1/2 text-[0.75rem] font-semibold text-muted tabular-nums"
                 style={{ top: `calc(var(--hour) * ${h})` }}
               >
                 {h} h
@@ -369,7 +369,7 @@ function EventBlock({
           backgroundColor: `color-mix(in srgb, ${color} 22%, var(--bg-elevated))`,
         }}
       >
-        <span className="flex items-center gap-1 truncate text-[0.7rem] font-bold">
+        <span className="flex items-center gap-1 truncate text-[0.75rem] font-bold">
           <span className="truncate">{title}</span>
           {item.event.kind === 'deplacement' ? (
             <Plane className="h-3 w-3 shrink-0 text-muted" aria-label="Déplacement" />
@@ -383,14 +383,14 @@ function EventBlock({
         </span>
 
         {roomy ? (
-          <span className="truncate text-[0.65rem] text-muted tabular-nums">
+          <span className="truncate text-[0.75rem] text-muted tabular-nums">
             {formatTime(item.startsAt, tz)}
             {detailed ? ` – ${formatTime(item.endsAt, tz)}` : ''}
           </span>
         ) : null}
 
         {detailed && item.event.location && duration >= 90 ? (
-          <span className="truncate text-[0.65rem] text-muted">{item.event.location}</span>
+          <span className="truncate text-[0.75rem] text-muted">{item.event.location}</span>
         ) : null}
 
         {detailed && people.length > 0 && duration >= 60 ? (

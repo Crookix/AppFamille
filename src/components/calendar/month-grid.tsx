@@ -75,7 +75,7 @@ export function MonthGrid({
         {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label) => (
           <span
             key={label}
-            className="py-1.5 text-center text-[0.65rem] font-bold uppercase text-muted"
+            className="py-1.5 text-center text-[0.75rem] font-bold uppercase text-muted"
           >
             {label}
           </span>
@@ -129,7 +129,7 @@ export function MonthGrid({
                 <button
                   type="button"
                   onClick={() => onPickDay(day)}
-                  className="px-0.5 text-left text-[0.6rem] font-bold text-muted hover:text-[var(--fg)]"
+                  className="px-0.5 text-left text-[0.6875rem] font-bold text-muted hover:text-[var(--fg)]"
                 >
                   +{entries.length - MAX_PER_CELL} autre
                   {entries.length - MAX_PER_CELL > 1 ? 's' : ''}
@@ -167,7 +167,7 @@ function MonthChip({
       onClick={() => onOpen(item)}
       title={`${allDay ? 'Journée entière' : formatTime(item.startsAt, tz)} · ${title}`}
       className={cn(
-        'flex w-full items-center gap-1 overflow-hidden rounded px-1 py-px text-left text-[0.6rem] font-semibold leading-tight sm:text-[0.7rem]',
+        'flex w-full items-center gap-1 overflow-hidden rounded px-1 py-px text-left text-[0.6875rem] font-semibold leading-tight sm:text-[0.75rem]',
         allDay ? 'text-white' : 'hover:bg-[var(--bg-subtle)]',
       )}
       style={allDay ? { backgroundColor: color } : undefined}

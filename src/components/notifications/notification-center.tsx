@@ -137,7 +137,7 @@ export function NotificationCenter({ notifications }: { notifications: Notificat
       </Link>
 
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h1 className="text-xl font-extrabold tracking-tight">Notifications</h1>
+        <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">Notifications</h1>
         {unread.length > 0 ? (
           <Button variant="ghost" size="sm" onClick={markAll}>
             <CheckCheck className="h-4 w-4" aria-hidden />
@@ -165,7 +165,7 @@ export function NotificationCenter({ notifications }: { notifications: Notificat
                   className={cn(
                     'flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
                     unreadItem
-                      ? 'bg-brand-100 text-brand-700'
+                      ? 'bg-brand-100 text-[var(--accent-text)]'
                       : 'bg-[var(--bg-subtle)] text-muted',
                   )}
                 >
@@ -231,7 +231,7 @@ export function NotificationCenter({ notifications }: { notifications: Notificat
 
       <Link
         href="/plus/parametres#notifications"
-        className="mt-6 flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline"
+        className="mt-6 flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-[var(--accent-text)] hover:underline"
       >
         <Settings className="h-4 w-4" aria-hidden />
         Choisir les notifications que je reçois

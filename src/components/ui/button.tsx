@@ -7,28 +7,28 @@ import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 rounded-full font-semibold ' +
-    'transition-[background-color,color,box-shadow,transform] active:scale-[0.98] ' +
+    'transition-[background-color,color,box-shadow,transform,opacity] active:scale-[0.97] active:opacity-90 ' +
     'disabled:pointer-events-none disabled:opacity-50 select-none whitespace-nowrap',
   {
     variants: {
       variant: {
         primary:
-          'bg-brand-500 text-white shadow-sm hover:bg-brand-600 focus-visible:outline-brand-600',
+          'bg-brand-500 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_1px_2px_rgb(0_0_0/0.12)] hover:bg-brand-600 focus-visible:outline-brand-600',
         secondary:
-          'bg-[var(--bg-subtle)] text-[var(--fg)] hover:bg-sand-300/70 dark:hover:bg-white/10',
+          'bg-[var(--bg-subtle)] text-[var(--fg)] hover:bg-[var(--bg-hover)]',
         outline:
-          'border border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
+          'border border-[var(--field-line)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
         ghost: 'text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
         danger: 'bg-alert-500 text-white hover:bg-alert-700',
         sage: 'bg-sage-500 text-white hover:bg-sage-700',
       },
       size: {
-        // 44 px : cible tactile confortable recommandée sur mobile.
-        default: 'h-11 px-5 text-[0.95rem]',
-        sm: 'h-9 px-3.5 text-sm',
+        // 48 px : au-dessus des 44 px que demande Apple, pour le pouce.
+        default: 'h-12 px-6 text-[1rem]',
+        sm: 'tap h-9 px-3.5 text-sm',
         lg: 'h-13 px-7 text-base',
-        icon: 'h-11 w-11',
-        iconSm: 'h-9 w-9',
+        icon: 'h-12 w-12',
+        iconSm: 'tap h-9 w-9',
       },
     },
     defaultVariants: { variant: 'primary', size: 'default' },

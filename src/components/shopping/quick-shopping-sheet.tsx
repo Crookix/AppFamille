@@ -249,11 +249,11 @@ export function QuickShoppingSheet({
 
       {added.length > 0 ? (
         <div className="mt-5 rounded-2xl bg-sage-100 px-3.5 py-3">
-          <p className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-sage-700">
+          <p className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-[var(--sage-text)]">
             <Check className="h-4 w-4" strokeWidth={3} aria-hidden />
             Ajouté à la liste
           </p>
-          <p className="text-sm text-sage-700">{added.join(' · ')}</p>
+          <p className="text-sm text-[var(--sage-text)]">{added.join(' · ')}</p>
         </div>
       ) : null}
 
@@ -268,7 +268,7 @@ export function QuickShoppingSheet({
                 disabled={pending}
                 onMouseDown={keepKeyboard}
                 onClick={() => add(item.label, item.unit, item.aisle)}
-                className="h-9 rounded-full bg-[var(--bg-subtle)] px-3.5 text-sm font-semibold text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)] disabled:opacity-50"
+                className="tap h-9 rounded-full bg-[var(--bg-subtle)] px-3.5 text-sm font-semibold text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)] disabled:opacity-50"
               >
                 + {item.label}
               </button>

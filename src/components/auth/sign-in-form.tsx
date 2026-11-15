@@ -105,7 +105,7 @@ export function SignInForm({
   if (sent) {
     return (
       <div className="surface rounded-[var(--radius-xl2)] p-6 text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sage-100 text-sage-700">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sage-100 text-[var(--sage-text)]">
           <MailCheck className="h-7 w-7" aria-hidden />
         </div>
         <h2 className="text-base font-bold">Regardez votre boîte mail</h2>

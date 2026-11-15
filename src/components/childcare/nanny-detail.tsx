@@ -81,7 +81,7 @@ export function NannyDetail({
       <div className="flex items-center gap-4">
         <Avatar name={nanny.name} color={nanny.color} size="lg" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-extrabold tracking-tight">{nanny.name}</h1>
+          <h1 className="truncate text-[1.75rem] leading-tight font-extrabold tracking-[-0.025em]">{nanny.name}</h1>
           <p className="text-sm text-muted">
             {currentRate
               ? `${formatEuros(Number(currentRate.hourly_rate))}/h actuellement`
@@ -104,7 +104,7 @@ export function NannyDetail({
           {nanny.phone ? (
             <a
               href={`tel:${nanny.phone}`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-text)]"
             >
               <Phone className="h-4 w-4" aria-hidden />
               {nanny.phone}
@@ -113,7 +113,7 @@ export function NannyDetail({
           {nanny.email ? (
             <a
               href={`mailto:${nanny.email}`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-text)]"
             >
               <Mail className="h-4 w-4" aria-hidden />
               {nanny.email}
@@ -138,7 +138,7 @@ export function NannyDetail({
           <button
             type="button"
             onClick={() => setAddingRate(true)}
-            className="text-xs font-bold text-brand-600 underline underline-offset-2"
+            className="text-xs font-bold text-[var(--accent-text)] underline underline-offset-2"
           >
             Nouveau tarif
           </button>
@@ -158,7 +158,7 @@ export function NannyDetail({
                   <p className="text-sm font-semibold">
                     {formatEuros(Number(rate.hourly_rate))}/h
                     {rate.id === currentRate?.id ? (
-                      <span className="ml-2 rounded-full bg-sage-100 px-2 py-0.5 text-[0.65rem] font-bold text-sage-700">
+                      <span className="ml-2 rounded-full bg-sage-100 px-2 py-0.5 text-[0.75rem] font-bold text-[var(--sage-text)]">
                         en vigueur
                       </span>
                     ) : null}
@@ -345,7 +345,7 @@ function RateSheet({
           />
         </Field>
 
-        <p className="flex items-start gap-2 rounded-2xl bg-honey-100 px-3.5 py-2.5 text-xs text-honey-700">
+        <p className="flex items-start gap-2 rounded-2xl bg-honey-100 px-3.5 py-2.5 text-xs text-[var(--notice-fg)]">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
           <span>
             Ce tarif s'appliquera aux gardes créées à partir de cette date. Les gardes

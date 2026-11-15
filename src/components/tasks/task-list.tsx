@@ -153,7 +153,7 @@ export function TaskList({
             onClick={() => setFilter(f.key)}
             aria-pressed={filter === f.key}
             className={cn(
-              'flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors',
+              'flex tap h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors',
               filter === f.key
                 ? 'bg-brand-500 text-white'
                 : 'bg-[var(--bg-subtle)] text-[var(--fg-muted)]',
@@ -163,8 +163,8 @@ export function TaskList({
             {f.key === 'retard' && counts.retard > 0 ? (
               <span
                 className={cn(
-                  'rounded-full px-1.5 text-[0.65rem] font-bold',
-                  filter === f.key ? 'bg-white/25' : 'bg-alert-100 text-alert-700',
+                  'rounded-full px-1.5 text-[0.75rem] font-bold',
+                  filter === f.key ? 'bg-white/25' : 'bg-alert-100 text-[var(--alert-text)]',
                 )}
               >
                 {counts.retard}
@@ -173,7 +173,7 @@ export function TaskList({
             {f.key === 'mes_taches' && counts.mes_taches > 0 ? (
               <span
                 className={cn(
-                  'rounded-full px-1.5 text-[0.65rem] font-bold',
+                  'rounded-full px-1.5 text-[0.75rem] font-bold',
                   filter === f.key ? 'bg-white/25' : 'bg-[var(--bg-elevated)]',
                 )}
               >
@@ -244,14 +244,14 @@ export function TaskList({
                   </p>
                   <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
                     {late ? (
-                      <span className="font-bold text-alert-500">
+                      <span className="font-bold text-[var(--alert-text)]">
                         En retard · {formatRelativeDay(task.due_date!, household.timezone)}
                       </span>
                     ) : task.due_date ? (
                       <span>{formatRelativeDay(task.due_date, household.timezone)}</span>
                     ) : null}
                     {task.priority === 'haute' ? (
-                      <span className="font-bold text-brand-600">Priorité haute</span>
+                      <span className="font-bold text-[var(--accent-text)]">Priorité haute</span>
                     ) : null}
                     {task.recurrence_rule ? (
                       <span className="inline-flex items-center gap-1">
@@ -278,7 +278,7 @@ export function TaskList({
                   <button
                     type="button"
                     onClick={() => assignToMe(task)}
-                    className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-1 text-[0.65rem] font-bold text-muted transition-colors hover:text-[var(--fg)]"
+                    className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-1 text-[0.75rem] font-bold text-muted transition-colors hover:text-[var(--fg)]"
                   >
                     Je m'en occupe
                   </button>
