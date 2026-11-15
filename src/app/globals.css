@@ -3,13 +3,10 @@
 /* --------------------------------------------------------------------------
    MyFamily — identité visuelle
    Celle d'un iPhone : police système (SF Pro sur iPhone), fond « groupé »
-   gris très clair avec des cartes blanches, bleu système pour l'action,
-   séparateurs fins, aucune ombre portée. Thème clair par défaut.
-
-   Les noms `brand`, `sage`, `honey` et `alert` datent de la palette
-   terracotta : ils désignent désormais le bleu, le vert, l'orange et le
-   rouge du système. Les renommer toucherait une centaine de classes sans
-   rien changer à l'écran.
+   gris très clair avec des cartes blanches, séparateurs fins, aucune ombre
+   portée, thème clair par défaut. Le vert, l'orange et le rouge sont ceux du
+   système ; l'accent est la terracotta de MyFamily, ce qui est la seule
+   chose qu'on retienne de l'application.
    -------------------------------------------------------------------------- */
 
 @theme {
@@ -28,15 +25,16 @@
   --color-ink-500: #636366;
   --color-ink-300: #aeaeb2;
 
-  /* Bleu système — couleur principale. 500 porte le texte blanc des
-     boutons (4,7:1) ; 50 à 200 sont des teintes de fond. */
-  --color-brand-50: #eaf3fd;
-  --color-brand-100: #d6e8fb;
-  --color-brand-200: #a8cff7;
-  --color-brand-400: #3d95f0;
-  --color-brand-500: #0071e3;
-  --color-brand-600: #0062c6;
-  --color-brand-700: #004e9e;
+  /* Terracotta — la couleur de MyFamily, seul rappel de marque sur un fond
+     d'iOS. 500 porte le texte blanc des boutons (5,0:1) ; 50 à 200 sont des
+     teintes de fond. */
+  --color-brand-50: #fdf1ed;
+  --color-brand-100: #fbdfd6;
+  --color-brand-200: #f2b9a3;
+  --color-brand-400: #e0785a;
+  --color-brand-500: #bc4b2b;
+  --color-brand-600: #a53f23;
+  --color-brand-700: #86321b;
 
   /* Vert système — succès. 500 porte une coche blanche, 700 un texte blanc. */
   --color-sage-100: #e2f5e7;
@@ -67,10 +65,12 @@
   --bg-elevated: #ffffff;
   --bg-subtle: #e9e9ef;
   --bg-hover: #dedee5;
+  /* Segment sélectionné : plus clair que sa piste, en clair comme en sombre. */
+  --bg-segment: #ffffff;
   --fg: #000000;
   /* Texte secondaire : 5,4:1 sur le fond, 6,0:1 sur une carte. */
   --fg-muted: #636366;
-  --line: #d1d1d6;
+  --line: #dcdce1;
   /* Contour d'un champ. Celui d'iOS est plus discret encore ; on garde un
      trait visible, mais on n'atteint pas les 3:1 des composants. */
   --field-line: #c7c7cc;
@@ -79,7 +79,7 @@
   --shadow-card: none;
 
   /* Couleurs de texte d'accent — toutes ≥ 4,5:1 sur leur surface. */
-  --accent-text: #0062c6;
+  --accent-text: #a8412a;
   --alert-text: #c20014;
   --sage-text: #1e7a35;
   --notice-bg: #fff2d5;
@@ -99,18 +99,19 @@
     --bg-elevated: #1c1c1e;
     --bg-subtle: #2c2c2e;
     --bg-hover: #3a3a3c;
+    --bg-segment: #636366;
     --fg: #ffffff;
     --fg-muted: #aeaeb2;
     --line: #38383a;
     --field-line: #48484a;
-    --ring: #4da3ff;
-    --accent-text: #4da3ff;
+    --ring: #ff9d78;
+    --accent-text: #ff9d78;
     --alert-text: #ff8a80;
     --sage-text: #6fd08c;
     --notice-bg: #3d2e0a;
     --notice-fg: #ffc266;
-    --color-brand-50: #0f2a47;
-    --color-brand-100: #163a63;
+    --color-brand-50: #3a2219;
+    --color-brand-100: #4a2b1f;
     --color-sage-100: #12331d;
     --color-honey-100: #3d2e0a;
     --color-alert-100: #471613;
@@ -123,18 +124,19 @@
   --bg-elevated: #1c1c1e;
   --bg-subtle: #2c2c2e;
   --bg-hover: #3a3a3c;
+  --bg-segment: #636366;
   --fg: #ffffff;
   --fg-muted: #aeaeb2;
   --line: #38383a;
   --field-line: #48484a;
-  --ring: #4da3ff;
-  --accent-text: #4da3ff;
+  --ring: #ff9d78;
+  --accent-text: #ff9d78;
   --alert-text: #ff8a80;
   --sage-text: #6fd08c;
   --notice-bg: #3d2e0a;
   --notice-fg: #ffc266;
-  --color-brand-50: #0f2a47;
-  --color-brand-100: #163a63;
+  --color-brand-50: #3a2219;
+  --color-brand-100: #4a2b1f;
   --color-sage-100: #12331d;
   --color-honey-100: #3d2e0a;
   --color-alert-100: #471613;

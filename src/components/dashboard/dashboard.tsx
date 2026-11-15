@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   Baby,
+  Check,
   ChevronRight,
   Plus,
   ShoppingBasket,
@@ -14,6 +15,7 @@ import {
 import { Card, CardTitle, CheckCircle, EmptyState } from '@/components/ui/primitives';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
+import { SwipeRow } from '@/components/ui/swipe-row';
 import { useToast } from '@/components/ui/toast';
 import { useHousehold } from '@/components/providers/household-provider';
 import { EventCard } from '@/components/calendar/event-card';
@@ -162,8 +164,16 @@ export function Dashboard({ data }: { data: DashboardData }) {
               const leavingNow = leaving.includes(task.id);
 
               return (
-                <div
+                <SwipeRow
                   key={task.id}
+                  onSwipeRight={{
+                    label: 'Terminer',
+                    icon: <Check className="h-5 w-5" aria-hidden />,
+                    tone: 'ok',
+                    onTrigger: () => completeTask(task.id),
+                  }}
+                >
+                <div
                   className={cn(
                     'relative flex items-center gap-1 py-1 pl-2 pr-4',
                     'transition-[opacity,transform] duration-200 ease-out',
@@ -202,6 +212,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
                     </span>
                   )}
                 </div>
+                </SwipeRow>
               );
             })}
           </Card>

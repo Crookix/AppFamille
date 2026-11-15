@@ -15,19 +15,19 @@
  * `globals.css` ; c'est le seul endroit du code où ils sont dupliqués.
  */
 
-const RAYON = '1.25rem'; // --radius-xl2
+const RAYON = '1rem'; // --radius-xl2
 
 export const clerkAppearanceClair = {
   variables: {
-    colorPrimary: '#de6f47',          // --color-brand-500
+    colorPrimary: '#bc4b2b',          // --color-brand-500
     colorBackground: '#ffffff',       // --bg-elevated
-    colorText: '#34291f',             // --color-ink-900
-    colorTextSecondary: '#8a7867',    // --color-ink-500
-    colorInputBackground: '#ffffff',
-    colorInputText: '#34291f',
-    colorNeutral: '#5a4a3c',
-    colorDanger: '#c0392b',
-    colorSuccess: '#4f7d52',
+    colorText: '#000000',             // --color-ink-900
+    colorTextSecondary: '#636366',    // --color-ink-500
+    colorInputBackground: '#e9e9ef',
+    colorInputText: '#000000',
+    colorNeutral: '#3a3a3c',
+    colorDanger: '#d70015',
+    colorSuccess: '#208038',
     borderRadius: RAYON,
     fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
     fontSize: '0.95rem',
@@ -37,10 +37,10 @@ export const clerkAppearanceClair = {
 export const clerkAppearanceSombre = {
   variables: {
     ...clerkAppearanceClair.variables,
-    colorBackground: '#241d19',       // --bg-elevated, thème sombre
-    colorText: '#f4ece3',
-    colorTextSecondary: '#b8a695',
-    colorInputBackground: '#2e2621',
-    colorInputText: '#f4ece3',
+    colorBackground: '#1c1c1e',       // --bg-elevated, thème sombre
+    colorText: '#ffffff',
+    colorTextSecondary: '#aeaeb2',
+    colorInputBackground: '#2c2c2e',
+    colorInputText: '#ffffff',
   },
 } as const;

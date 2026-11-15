@@ -333,13 +333,13 @@ export function ReminderPicker({
 /* -------------------------------------------------------------------------- */
 
 export const CATEGORY_META = {
-  famille: { label: 'Famille', color: '#de6f47' },
-  ecole: { label: 'École', color: '#4a90a4' },
-  sante: { label: 'Santé', color: '#c9628a' },
-  activite: { label: 'Activité', color: '#6da887' },
-  voyage: { label: 'Voyage', color: '#8b7bb8' },
-  garde: { label: 'Garde', color: '#e9b04a' },
-  perso: { label: 'Perso', color: '#8a9a5b' },
+  famille: { label: 'Famille', color: '#d9532f' },
+  ecole: { label: 'École', color: '#1f86c4' },
+  sante: { label: 'Santé', color: '#d63d79' },
+  activite: { label: 'Activité', color: '#2e9e5b' },
+  voyage: { label: 'Voyage', color: '#7b61c9' },
+  garde: { label: 'Garde', color: '#c98200' },
+  perso: { label: 'Perso', color: '#6f9a24' },
 } as const;
 
 export type CategoryKey = keyof typeof CATEGORY_META;

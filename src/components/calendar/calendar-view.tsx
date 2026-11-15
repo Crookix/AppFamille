@@ -161,11 +161,11 @@ export function CalendarView({
   return (
     <div>
       {/* --- Entête ------------------------------------------------------- */}
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h1 className="truncate text-[1.75rem] leading-tight font-bold tracking-[-0.025em] first-letter:uppercase">
+      <div className="mb-3 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+        <h1 className="text-balance text-[1.75rem] leading-tight font-bold tracking-[-0.025em] first-letter:uppercase">
           {periodLabel}
         </h1>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="-ml-2 flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="iconSm"
@@ -204,7 +204,7 @@ export function CalendarView({
               className={cn(
                 'tap h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-colors',
                 mode === m.key
-                  ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-sm'
+                  ? 'bg-[var(--bg-segment)] text-[var(--fg)] shadow-sm'
                   : 'text-[var(--fg-muted)]',
               )}
             >

@@ -5,22 +5,29 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Palette assignée aux membres et aux enfants du foyer. */
+/**
+ * Palette assignée aux membres et aux enfants du foyer.
+ *
+ * Les clés sont celles qu'on a en base : elles ne changent jamais. Seules les
+ * teintes ont été remplacées par des couleurs franches, de la famille de
+ * celles d'iOS, pour s'accorder au fond gris et aux cartes blanches. Chacune
+ * porte les initiales blanches d'un avatar à 3:1 au moins.
+ */
 export const MEMBER_COLORS = [
-  { key: 'terracotta', label: 'Terracotta', hex: '#de6f47' },
-  { key: 'sauge', label: 'Sauge', hex: '#6da887' },
-  { key: 'miel', label: 'Miel', hex: '#e9b04a' },
-  { key: 'lavande', label: 'Lavande', hex: '#8b7bb8' },
-  { key: 'ocean', label: 'Océan', hex: '#4a90a4' },
-  { key: 'framboise', label: 'Framboise', hex: '#c9628a' },
-  { key: 'olive', label: 'Olive', hex: '#8a9a5b' },
-  { key: 'ardoise', label: 'Ardoise', hex: '#6b7a8f' },
+  { key: 'terracotta', label: 'Terracotta', hex: '#d9532f' },
+  { key: 'sauge', label: 'Sauge', hex: '#2e9e5b' },
+  { key: 'miel', label: 'Miel', hex: '#c98200' },
+  { key: 'lavande', label: 'Lavande', hex: '#7b61c9' },
+  { key: 'ocean', label: 'Océan', hex: '#1f86c4' },
+  { key: 'framboise', label: 'Framboise', hex: '#d63d79' },
+  { key: 'olive', label: 'Olive', hex: '#6f9a24' },
+  { key: 'ardoise', label: 'Ardoise', hex: '#5b6b85' },
 ] as const;
 
 export type MemberColorKey = (typeof MEMBER_COLORS)[number]['key'];
 
 export function colorHex(key: string | null | undefined): string {
-  return MEMBER_COLORS.find((c) => c.key === key)?.hex ?? '#8a7867';
+  return MEMBER_COLORS.find((c) => c.key === key)?.hex ?? '#8e8e93';
 }
 
 /**
