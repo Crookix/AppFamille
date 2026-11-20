@@ -31,6 +31,8 @@ export function MealSheet({
   day,
   slot,
   meal,
+  suggestedRecipe,
+  onSaved,
   recipes,
   participantMemberIds = [],
   participantChildIds = [],
@@ -41,6 +43,8 @@ export function MealSheet({
   day: string;
   slot: MealSlot;
   meal: MealRow | null;
+  suggestedRecipe?: RecipeRow | null;
+  onSaved?: () => void;
   recipes: RecipeRow[];
   participantMemberIds?: string[];
   participantChildIds?: string[];
@@ -66,9 +70,9 @@ export function MealSheet({
   React.useEffect(() => {
     if (!open) return;
 
-    setTitle(meal?.title ?? '');
-    setRecipeId(meal?.recipe_id ?? null);
-    setServings(meal?.servings ? String(meal.servings) : '');
+    setTitle(suggestedRecipe?.name ?? meal?.title ?? '');
+    setRecipeId(suggestedRecipe?.id ?? meal?.recipe_id ?? null);
+    setServings(String(meal?.servings ?? suggestedRecipe?.servings ?? ''));
     setNotes(meal?.notes ?? '');
     setError(null);
     setMoving(false);
@@ -76,13 +80,11 @@ export function MealSheet({
 
     // Par défaut, tout le foyer est présent : c'est le cas le plus courant.
     setPeople({
-      memberIds:
-        participantMemberIds.length > 0 ? participantMemberIds : members.map((m) => m.id),
-      childIds:
-        participantChildIds.length > 0 ? participantChildIds : children.map((c) => c.id),
+      memberIds: meal ? participantMemberIds : members.map((m) => m.id),
+      childIds: meal ? participantChildIds : children.map((c) => c.id),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, meal?.id, day, slot]);
+  }, [open, meal?.id, suggestedRecipe?.id, day, slot]);
 
   function chooseRecipe(id: string | null) {
     setRecipeId(id);
@@ -125,7 +127,8 @@ export function MealSheet({
 
     toast.success('Repas enregistré.');
     onClose();
-    router.refresh();
+    if (onSaved) onSaved();
+    else router.refresh();
   }
 
   async function remove() {
@@ -186,6 +189,11 @@ export function MealSheet({
       }
     >
       <form onSubmit={submit} className="space-y-5">
+        {suggestedRecipe && meal && meal.recipe_id !== suggestedRecipe.id && (
+          <p className="rounded-2xl bg-[var(--bg-subtle)] p-3 text-sm">
+            Ce créneau est déjà prévu pour <strong>{meal.title}</strong>. Enregistrez pour le remplacer.
+          </p>
+        )}
         <Field label="Au menu" required>
           <Input
             value={title}

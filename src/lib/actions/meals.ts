@@ -68,6 +68,12 @@ export async function saveMealAction(input: MealInput) {
   const meal = parsed.data;
   const { supabase, household, member } = active.data;
 
+  if (meal.recipeId) {
+    const linked = await supabase.from('recipes').select('id')
+      .eq('household_id', household.id).eq('id', meal.recipeId).maybeSingle();
+    if (linked.error || !linked.data) return fail('Cette recette est indisponible dans votre foyer.');
+  }
+
   const { data, error } = await supabase
     .from('meals')
     .upsert(
@@ -312,7 +318,9 @@ export async function saveRecipeAction(input: RecipeInput, recipeId?: string) {
 
   // Les ingrédients sont réécrits en bloc : leur ordre compte et leur nombre
   // est petit.
-  await supabase.from('recipe_ingredients').delete().eq('recipe_id', data.id);
+  const removed = await supabase.from('recipe_ingredients').delete()
+    .eq('recipe_id', data.id).eq('household_id', household.id);
+  if (removed.error) return fail(humanizeDbError(removed.error));
 
   if (recipe.ingredients.length > 0) {
     const { error: ingredientsError } = await supabase.from('recipe_ingredients').insert(
@@ -331,6 +339,8 @@ export async function saveRecipeAction(input: RecipeInput, recipeId?: string) {
   }
 
   revalidatePath('/repas');
+  revalidatePath('/recettes');
+  revalidatePath(`/recettes/${data.id}`);
   return ok({ id: data.id });
 }
 
@@ -347,6 +357,8 @@ export async function deleteRecipeAction(recipeId: string) {
   if (error) return fail(humanizeDbError(error));
 
   revalidatePath('/repas');
+  revalidatePath('/recettes');
+  revalidatePath(`/recettes/${recipeId}`);
   return ok();
 }
 
@@ -363,6 +375,8 @@ export async function toggleRecipeFavoriteAction(recipeId: string, favorite: boo
   if (error) return fail(humanizeDbError(error));
 
   revalidatePath('/repas');
+  revalidatePath('/recettes');
+  revalidatePath(`/recettes/${recipeId}`);
   return ok();
 }
 
