@@ -12,7 +12,7 @@ import {
 /**
  * Parcours 10 — se déplacer dans l'application.
  *
- * La barre du bas a été repensée : cinq destinations, et « Plus » derrière la
+ * La barre du bas présente les destinations, et « Plus » derrière la
  * pastille d'identité de l'entête. Ce parcours vérifie ce que des captures
  * d'écran ne prouvent pas — qu'on arrive bien quelque part en appuyant — et,
  * surtout, qu'aucun libellé n'est coupé ni relégué hors champ à 375 px.
@@ -34,14 +34,14 @@ test.describe.serial('Navigation', () => {
     await deleteUser(admin, user);
   });
 
-  test('la barre porte cinq destinations, lisibles à 375 px', async ({ page, admin }) => {
+  test('la barre porte six destinations, lisibles à 375 px', async ({ page, admin }) => {
     await page.setViewportSize({ width: 375, height: 760 });
     await signIn(page, admin, user);
     await createHousehold(page, `Navigation ${Date.now()}`, 'Camille');
 
     const barre = page.getByRole('navigation', { name: 'Navigation principale' });
 
-    for (const nom of ['Accueil', 'Calendrier', 'Listes', 'Repas', 'Reco']) {
+    for (const nom of ['Accueil', 'Calendrier', 'Listes', 'Repas', 'Recette', 'Reco']) {
       await expect(barre.getByRole('link', { name: nom })).toBeVisible();
     }
 
