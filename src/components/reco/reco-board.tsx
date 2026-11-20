@@ -25,6 +25,7 @@ import { useToast } from '@/components/ui/toast';
 import { useHousehold } from '@/components/providers/household-provider';
 import { useHouseholdRealtime } from '@/components/providers/use-realtime';
 import { RecoSheet } from '@/components/reco/reco-sheet';
+import { RecipientPicker, type Recipient } from '@/components/reco/recipient-picker';
 import {
   createRecommendationAction,
   deleteRecommendationAction,
@@ -33,6 +34,8 @@ import {
 import {
   RECO_KINDS,
   countOpenByKind,
+  formatRecoPrice,
+  isGift,
   recoKind,
   recoStatusLabel,
   sortRecommendations,
@@ -172,6 +175,9 @@ function Genre({
   const meta = recoKind(kind);
 
   const [title, setTitle] = React.useState('');
+  // Pour une idée cadeau : le destinataire reste choisi d'un ajout au suivant,
+  // car on note souvent plusieurs idées d'affilée pour la même personne.
+  const [recipient, setRecipient] = React.useState<Recipient | null>(null);
   const [adding, setAdding] = React.useState(false);
   const [showDone, setShowDone] = React.useState(false);
   const [editing, setEditing] = React.useState<RecommendationWithWants | null>(null);
@@ -191,7 +197,13 @@ function Genre({
     if (!trimmed || adding) return;
 
     setAdding(true);
-    const result = await createRecommendationAction({ kind, title: trimmed });
+    const result = await createRecommendationAction({
+      kind,
+      title: trimmed,
+      ...(isGift(kind)
+        ? { recipientLabel: recipient?.label ?? null, recipientChildId: recipient?.childId ?? null }
+        : {}),
+    });
     setAdding(false);
 
     if (!result.ok) {
@@ -260,6 +272,12 @@ function Genre({
           <Plus className="h-4 w-4" aria-hidden />
         </Button>
       </form>
+
+      {isGift(kind) ? (
+        <div className="mb-4">
+          <RecipientPicker value={recipient} onChange={setRecipient} />
+        </div>
+      ) : null}
 
       {open.length === 0 && done.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted">
@@ -349,6 +367,17 @@ function Ligne({
   onDelete: () => void;
 }) {
   const done = reco.status === 'fait';
+  const { children } = useHousehold();
+
+  // « Pour Léa · anniversaire · 25 € » : ce qui fait d'une idée cadeau une idée
+  // pour quelqu'un. Le prénom de l'enfant d'abord, le libellé saisi sinon.
+  const recipient =
+    children.find((c) => c.id === reco.recipient_child_id)?.first_name ?? reco.recipient_label;
+  const details = isGift(reco.kind)
+    ? [recipient ? `Pour ${recipient}` : null, reco.occasion, formatRecoPrice(reco.price)]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
 
   return (
     <div className="flex items-center gap-1 pl-1 pr-1">
@@ -380,7 +409,14 @@ function Ligne({
           done && 'text-muted line-through',
         )}
       >
-        <span className="min-w-0 break-words">{reco.title}</span>
+        <span className="min-w-0 py-1.5">
+          <span className="block break-words">{reco.title}</span>
+          {details ? (
+            <span className="block text-[0.8125rem] font-normal text-[var(--accent-text)]">
+              {details}
+            </span>
+          ) : null}
+        </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
       </button>
 

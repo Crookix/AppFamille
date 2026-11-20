@@ -77,11 +77,11 @@ test.describe('Carnet et planning des repas', () => {
     await expect(page.getByRole('link', { name: /Gratin de courgettes/ })).toBeVisible();
 
     await page.goto('/repas');
-    await page.getByRole('button', { name: /Déjeuner Ajouter/ }).first().click();
-    await sheet.getByLabel(/Au menu/).fill('Déjeuner à la maison');
+    await page.getByRole('button', { name: /Dîner Ajouter/ }).first().click();
+    await sheet.getByLabel(/Au menu/).fill('Dîner à la maison');
     await sheet.getByRole('button', { name: 'Enregistrer' }).click();
 
-    await page.getByRole('button', { name: /Déjeuner à la maison/ }).click();
+    await page.getByRole('button', { name: /Dîner à la maison/ }).click();
     await sheet.getByLabel(/^Recette/).selectOption({ label: 'Gratin de courgettes (4 pers.)' });
     await sheet.getByRole('button', { name: 'Enregistrer' }).click();
     await page.getByRole('link', { name: 'Voir la recette' }).click();
