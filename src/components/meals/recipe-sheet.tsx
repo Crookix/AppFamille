@@ -7,11 +7,10 @@ import { Sheet } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ErrorNote, Field, Input, Select, Textarea } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/toast';
-import { useSupabase } from '@/components/providers/use-supabase';
 import { deleteRecipeAction, saveRecipeAction } from '@/lib/actions/meals';
 import { AISLE_LABELS, AISLE_ORDER, guessAisle } from '@/lib/ingredients';
 import { cn } from '@/lib/utils';
-import type { RecipeRow, ShopAisle } from '@/lib/database.types';
+import type { RecipeIngredientRow, RecipeRow, ShopAisle } from '@/lib/database.types';
 
 type DraftIngredient = {
   key: string;
@@ -42,74 +41,36 @@ export function RecipeSheet({
   open,
   onClose,
   recipe,
+  initialIngredients,
 }: {
   open: boolean;
   onClose: () => void;
   recipe?: RecipeRow | null;
+  initialIngredients?: RecipeIngredientRow[];
 }) {
   const router = useRouter();
   const toast = useToast();
-  const supabase = useSupabase();
 
-  const [name, setName] = React.useState('');
-  const [servings, setServings] = React.useState('4');
-  const [sourceUrl, setSourceUrl] = React.useState('');
-  const [steps, setSteps] = React.useState('');
-  const [isFavorite, setIsFavorite] = React.useState(false);
-  const [ingredients, setIngredients] = React.useState<DraftIngredient[]>([emptyIngredient()]);
+  const [name, setName] = React.useState(recipe?.name ?? '');
+  const [servings, setServings] = React.useState(String(recipe?.servings ?? 4));
+  const [sourceUrl, setSourceUrl] = React.useState(recipe?.source_url ?? '');
+  const [steps, setSteps] = React.useState(recipe?.steps ?? '');
+  const [notes, setNotes] = React.useState(recipe?.notes ?? '');
+  const [isFavorite, setIsFavorite] = React.useState(recipe?.is_favorite ?? false);
+  const [ingredients, setIngredients] = React.useState<DraftIngredient[]>(() =>
+    initialIngredients?.length
+      ? initialIngredients.map((row) => ({
+          key: row.id,
+          label: row.label,
+          quantity: row.quantity !== null ? String(row.quantity) : '',
+          unit: row.unit ?? '',
+          aisle: row.aisle,
+        }))
+      : [emptyIngredient()],
+  );
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!open) return;
-
-    setError(null);
-    setConfirmingDelete(false);
-
-    if (!recipe) {
-      setName('');
-      setServings('4');
-      setSourceUrl('');
-      setSteps('');
-      setIsFavorite(false);
-      setIngredients([emptyIngredient()]);
-      return;
-    }
-
-    setName(recipe.name);
-    setServings(String(recipe.servings));
-    setSourceUrl(recipe.source_url ?? '');
-    setSteps(recipe.steps ?? '');
-    setIsFavorite(recipe.is_favorite);
-
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from('recipe_ingredients')
-        .select('*')
-        .eq('recipe_id', recipe.id)
-        .order('position');
-
-      if (cancelled) return;
-      setIngredients(
-        (data ?? []).length > 0
-          ? (data ?? []).map((row) => ({
-              key: row.id,
-              label: row.label,
-              quantity: row.quantity !== null ? String(row.quantity) : '',
-              unit: row.unit ?? '',
-              aisle: row.aisle,
-            }))
-          : [emptyIngredient()],
-      );
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, recipe?.id]);
 
   function update(key: string, patch: Partial<DraftIngredient>) {
     setIngredients((current) =>
@@ -145,6 +106,7 @@ export function RecipeSheet({
         name: name.trim(),
         servings: Number(servings) || 4,
         steps,
+        notes,
         sourceUrl,
         isFavorite,
         ingredients: filled.map((item) => ({
@@ -181,7 +143,7 @@ export function RecipeSheet({
     }
     toast.success('Recette supprimée.');
     onClose();
-    router.refresh();
+    router.replace('/recettes');
   }
 
   return (
@@ -376,6 +338,11 @@ export function RecipeSheet({
             rows={5}
             placeholder={'1. Préchauffer le four à 180 °C\n2. …'}
           />
+        </Field>
+
+        <Field label="Notes de cuisine" hint="facultatif">
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000}
+            rows={3} placeholder="Temps de cuisson, préparation à l’avance, réchauffage…" />
         </Field>
 
         {error ? <ErrorNote>{error}</ErrorNote> : null}

@@ -19,9 +19,8 @@ L'état de chaque lot est donné en tête de section :
 
 ### Ce que ça fait
 
-- La barre du bas porte **cinq destinations**, et rien d'autre : **Accueil**,
-  **Calendrier**, **Listes**, **Repas**, **Reco**. Ce sont les cinq endroits où
-  l'on va faire quelque chose, plusieurs fois par jour.
+- La barre du bas donne accès à **Accueil**, **Calendrier**, **Listes**,
+  **Repas**, **Recette** et **Reco**.
 - **« Plus » n'est pas une destination** : c'est le tiroir des réglages —
   enfants, nounous, notifications, Google, foyer, paramètres. Sur téléphone il
   se rejoint depuis n'importe quel écran par la **pastille d'identité** en haut
@@ -44,11 +43,11 @@ tiroir — c'est ce qui était arrivé à la reco.
 
 | # | On fait ceci | On doit obtenir cela |
 | --- | --- | --- |
-| 0.1 | Afficher n'importe quel écran à 375 px | Cinq onglets lisibles, aucun libellé coupé, aucun défilement horizontal |
+| 0.1 | Afficher n'importe quel écran à 375 px | Six onglets lisibles, aucun libellé coupé, aucun défilement horizontal |
 | 0.2 | Afficher « Listes » à 375 px | Les trois onglets visibles d'un coup, « Check-lists » compris |
 | 0.3 | Appuyer sur la pastille depuis le calendrier | On arrive sur « Plus » |
 | 0.4 | Avoir une notification non lue | Une puce sur la pastille ; elle s'éteint une fois la notification lue |
-| 0.5 | Afficher l'application sur ordinateur | La colonne latérale porte les cinq destinations **et** « Plus » ; l'entête de téléphone disparaît |
+| 0.5 | Afficher l'application sur ordinateur | La colonne latérale porte les six destinations **et** « Plus » ; l'entête de téléphone disparaît |
 | 0.6 | Chercher la reco | Elle est dans la barre, pas dans « Plus » |
 
 **Ce qui a été vérifié, et comment.** Les critères 0.1, 0.2, 0.5 et 0.6 ont été
@@ -182,7 +181,10 @@ récupère l'enfant, et le billet de train en pièce jointe.
 
 - Planning de la semaine, deux services par jour (midi et soir).
 - Un repas est soit un texte libre, soit une recette du foyer.
-- Recettes : ingrédients avec quantités, portions, temps, notes, favoris.
+- L’onglet **Recette** ouvre le carnet du foyer. Chaque fiche présente les
+  quantités, les portions, les étapes et les notes de cuisine. On peut choisir
+  un créneau depuis la fiche ou associer la recette depuis le planning.
+  « Voir la recette » la rouvre depuis un repas déjà planifié.
 - Glisser un repas d'un jour à l'autre ; copier toute une semaine.
 - **Génération des courses** : à partir des repas d'une période, la liste des
   ingrédients manquants, agrégés par produit et convertis quand c'est possible

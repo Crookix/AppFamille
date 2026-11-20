@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Repas' };
 export default async function RepasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ semaine?: string }>;
+  searchParams: Promise<{ semaine?: string; recette?: string }>;
 }) {
   const params = await searchParams;
   const { household } = await requireHousehold();
@@ -60,9 +60,11 @@ export default async function RepasPage({
 
   return (
     <MealPlanner
+      key={monday}
       monday={monday}
       meals={meals}
       recipes={recipesResult.data ?? []}
+      planningRecipe={recipesResult.data?.find((r) => r.id === params.recette) ?? null}
       participants={participants}
       defaultListId={listResult.data?.[0]?.id ?? null}
     />

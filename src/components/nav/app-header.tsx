@@ -12,7 +12,7 @@ import { useHousehold } from '@/components/providers/household-provider';
  *
  * Il porte ce que la barre du bas a cessé de porter : l'accès aux réglages,
  * derrière la pastille d'identité. C'est la contrepartie du choix fait dans
- * `bottom-nav.tsx` — les cinq places de la barre vont aux destinations, et
+ * `bottom-nav.tsx` — les places de la barre vont aux destinations, et
  * « Plus » se rejoint depuis n'importe quel écran en un appui, ici.
  *
  * Deux gains au passage. Le nom du foyer devient visible partout, alors qu'il

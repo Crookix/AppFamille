@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  BookOpen,
   CalendarDays,
   House,
   ListChecks,
@@ -15,20 +16,14 @@ import { cn } from '@/lib/utils';
 /**
  * Les entrées de la navigation.
  *
- * `sidebarOnly` distingue les deux natures qui cohabitaient jusqu'ici dans la
- * même barre : cinq DESTINATIONS, où l'on va faire quelque chose plusieurs fois
- * par jour, et « Plus », un tiroir de réglages qu'on ouvre une fois par mois.
- * Le tiroir occupait un cinquième de la surface la plus précieuse de
- * l'application — c'est ce qui avait repoussé la reco deux appuis plus loin.
- *
- * Sur téléphone il quitte donc la barre pour l'entête ; sur grand écran la
- * colonne de 256 px n'a aucune rareté à arbitrer et le garde.
+ * « Plus » reste dans l'entête sur téléphone et dans la colonne sur ordinateur.
  */
 const TABS = [
   { href: '/', label: 'Accueil', icon: House },
   { href: '/calendrier', label: 'Calendrier', icon: CalendarDays },
   { href: '/listes', label: 'Listes', icon: ListChecks },
   { href: '/repas', label: 'Repas', icon: UtensilsCrossed },
+  { href: '/recettes', label: 'Recette', icon: BookOpen },
   { href: '/reco', label: 'Reco', icon: Sparkles },
   { href: '/plus', label: 'Plus', icon: MoreHorizontal, sidebarOnly: true },
 ] as const;
@@ -66,25 +61,20 @@ export function BottomNav({ householdName }: { householdName: string }) {
           return (
             <li
               key={href}
-              className={cn('flex-1 md:flex-none', sidebarOnly && 'hidden md:block')}
+              className={cn('min-w-0 flex-1 md:flex-none', sidebarOnly && 'hidden md:block')}
             >
               <Link
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex h-full flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[0.6875rem] font-semibold transition-colors',
+                  'flex h-full min-h-11 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[0.6875rem] font-semibold transition-colors',
                   'md:flex-row md:gap-3 md:px-3 md:py-2.5 md:text-[0.95rem]',
                   active
                     ? 'text-[var(--accent-text)] md:bg-brand-50'
                     : 'text-[var(--fg-muted)] hover:text-[var(--fg)]',
                 )}
               >
-                <span
-                  className={cn(
-                    'flex h-7 w-14 items-center justify-center md:h-auto md:w-auto',
-                    
-                  )}
-                >
+                <span className="flex h-7 items-center justify-center md:h-auto">
                   <Icon className="h-[1.3rem] w-[1.3rem]" strokeWidth={active ? 2.5 : 2} aria-hidden />
                 </span>
                 {label}
